@@ -1,0 +1,47 @@
+module Arrow where
+
+import Relation.Binary.PropositionalEquality as Eq
+open Eq using (_≡_; refl; cong)
+open import Data.List using (List; _∷_; [])
+open import Data.String using (String; _≟_)
+open import Level using (Level; suc; zero)
+
+Id : Set
+Id = String
+
+record Preorder (A : Set) : Set₁ where
+  field
+    _≤_ : A → A → Set
+    PO-refl : ∀ {a : A} → a ≤ a
+    PO-anti-sym : ∀ {a b : A} → a ≤ b → b ≤ a → a ≡ b
+    PO-trans : ∀ {a b c : A} → a ≤ b → b ≤ c → a ≤ c
+open Preorder
+
+record Voter : Set where
+  field
+    id : Id
+open Voter
+
+record Candidate : Set where
+  field
+    id : Id
+open Candidate
+
+record Ballot (Candidate : Set) : Set₁ where
+  field
+    voter : Voter
+    preorder : Preorder Candidate
+open Ballot
+
+-- The use of List in Agda buys us finiteness of the set of ballots. 
+-- It also provides an order, which we may want.
+
+Election : ∀ (Candidate : Set) → Set₁
+Election Candidate = List (Ballot Candidate)
+
+-- Note that this sets up SocialPreferences as a *relation* on Elections x Outcomes.
+
+data SocialPreference (Candidate : Set) : Set₁ where
+  outcome : Election Candidate → Preorder Candidate → SocialPreference Candidate
+
+
