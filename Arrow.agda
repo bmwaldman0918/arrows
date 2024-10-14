@@ -12,7 +12,8 @@ open import Relation.Nullary.Negation using (contradiction; contraposition)
 module Arrow where
 
 private
-    postulate
+    variable
+        Candidate : Set
         a b c : Candidate
 
 exists-pivot : (election : socialPreference) → Any (decisive a b election) (toList (socialPreference.ballots election))
