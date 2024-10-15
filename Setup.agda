@@ -1,104 +1,83 @@
+module Setup where
+
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.List.NonEmpty.Base using (List⁺; toList)
 open import Data.List.Relation.Unary.All using (All)
 open import Relation.Unary using (Pred)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
-open import Level using (0ℓ; Level; suc)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Data.Empty
 open import Data.Bool using (true; false)
 open import Function.Bundles using (_↔_)
 
-module Setup where
+private
+    variable
+        Candidate : Set
+        a b c : Candidate
+        _R_ : Candidate → Candidate → Set
 
-1L : Level
-1L = suc 0ℓ
+--- definitions and properties of weak preference
 
-2L : Level
-2L = suc 1L
-        
---- weak preference
-
-record Preference {Candidate : Set} (_R_ : Candidate → Candidate → Set) : Set₁ where
+record Preference {Candidate : Set} (_R_ : Candidate → Candidate → Set) : Set where
     field
-        R-refl : (a : Candidate) → a R a
-        R-trans : {a b c : Candidate} → a R b → b R c → a R c
-        R-complete : (a b : Candidate) → (a R b) ⊎ (b R a)
-        R-dec : (a b : Candidate) → (a R b) ⊎ ¬ (a R b)
+        R-trans : a R b → b R c → a R c
+        R-complete : (a R b) ⊎ (b R a)
+        R-dec : (a R b) ⊎ ¬ (a R b)
 open Preference
 
+R-refl : (v : Preference _R_) → (a : Candidate) → a R a
+R-refl v a with R-complete v {a} 
+... | inj₁ aRa = aRa
+... | inj₂ aRa = aRa
+
 --- definitions and properties of strict preference 
+P : (Preference {Candidate} _R_) → (a b : Candidate) → Set
+P {_R_ = _R_} _ a b = ¬ (b R a)
 
-data P : {Candidate : Set} → {_R_ : Candidate → Candidate → Set} → 
-        (Preference _R_) → (a b : Candidate) → Set₁ where
-    P-gen : {Candidate : Set} → {_R_ : Candidate → Candidate → Set} → 
-            (election : Preference _R_) → 
-            (a b : Candidate) → ¬ (b R a) → P election a b
+P→R : {a b : Candidate} → {v : Preference _R_} → (P v a b) → a R b
+P→R {a = a} {b = b} {v = v} ¬bRa with R-complete v {a} {b} 
+... | inj₁ aRb = aRb
+... | inj₂ bRa = ⊥-elim (¬bRa bRa)
 
-P→R : {Candidate : Set} → {Candidate : Set} → {_R_ : Candidate → Candidate → Set} → {a b : Candidate} → 
-        {v : Preference _R_} → (P v a b) → a R b
-P→R (P-gen v a b ¬bRa) with R-dec v a b | R-complete v a b
-... | inj₁ aRb  | _        = aRb
-... | _         | inj₁ aRb = aRb
-... | _         | inj₂ bRa = ⊥-elim (¬bRa bRa)
+P↛≡ : {v : Preference _R_} → (P v a b) → ¬ (a ≡ b)
+P↛≡ {b = b} {v = v} ¬bRb a≡b rewrite a≡b = ¬bRb (R-refl v b)
 
-P↛≡ : {Candidate : Set} → {_R_ : Candidate → Candidate → Set} → {a b : Candidate} → (v : Preference _R_) → 
-        (P v a b) → ¬ (a ≡ b)
-P↛≡ v (P-gen _ a b ¬bRa) a≡b rewrite a≡b = ¬bRa (R-refl v b)
-
-P→¬R : {Candidate : Set} → {_R_ : Candidate → Candidate → Set} → {a b : Candidate} → {v : Preference _R_} → 
-        (P v a b) → ¬ (b R a)
-P→¬R (P-gen _ _ _ ¬bRa) = ¬bRa
-
-P-trans : {Candidate : Set} → {_R_ : Candidate → Candidate → Set} → {a b c : Candidate} → {v : Preference _R_} → 
-            P v a b → P v b c → P v a c
-P-trans (P-gen election a b ¬bRa) (P-gen election b c ¬cRb) with (R-dec election a b) 
-                                        | (R-complete election a b) 
-                                        | (R-dec election b c) 
-                                        | (R-complete election b c)
-... | inj₁ _ | inj₁ aRb | inj₁ _ | inj₁ bRc = 
-            P-gen election a c λ cRa → ¬cRb (R-trans election cRa aRb)
-
-... | inj₂ ¬aRb | inj₁ aRb | _          | _        = ⊥-elim (¬aRb aRb)
-... | _         | inj₂ bRa | _          | _        = ⊥-elim (¬bRa bRa)
-... | _         | _        | inj₂ ¬bRc  | inj₁ bRc = ⊥-elim (¬bRc bRc)
-... | _         | _        | _          | inj₂ cRb = ⊥-elim (¬cRb cRb)
+P-trans : {v : Preference _R_} → P v a b → P v b c → P v a c
+P-trans {a = a} {b = b} {c = c} {v = v} with (R-dec v {a} {b})
+                                            | (R-complete v {a} {b}) 
+... | inj₁ aRb  | _        = λ bRc ¬cRb cRa → ¬cRb (R-trans v cRa aRb)
+... | inj₂ ¬aRb | inj₁ aRb = λ ¬bRa ¬cRb cRa → ⊥-elim (¬aRb aRb)
+... | _         | inj₂ bRa = λ ¬bRa ¬cRb cRa → ⊥-elim (¬bRa bRa)
 
 --- functions related to voter preference
-record Voter : Set₁ where
-        field
-                r : {Candidate : Set} → Candidate → Candidate → Set
-                prefs : Preference r
+record Voter {Candidate : Set} : Set₁ where
+    field
+        r : Candidate → Candidate → Set
+        prefs : Preference r
 open Voter
 
-dec-prefers : {Candidate : Set} → {_R_ : Candidate → Candidate → Set} → (a b : Candidate) → (v : Preference _R_) → Set₁ 
-dec-prefers a b v = Dec (P v a b)
+Dec-Prefers : (v : Preference {Candidate} _R_) → (a b : Candidate) → Set
+Dec-Prefers v a b = Dec (P v a b)
 
-prefers? : {Candidate : Set} → {_R_ : Candidate → Candidate → Set} → (a b : Candidate) → (v : Preference _R_) → 
-        (dec-prefers a b v)
-prefers? a b v with Preference.R-dec v b a | Preference.R-dec v a b | R-complete v a b
-... | inj₁ bRa | inj₁ aRb | _ = false because ofⁿ (λ aPb → P→¬R aPb bRa)
-... | inj₁ bRa | inj₂ ¬aRb | _ = false because ofⁿ (λ aPb → P→¬R aPb bRa)
-... | inj₂ ¬bRa | inj₁ aRb | _ = true because (ofʸ (P-gen v a b ¬bRa))
-... | inj₂ ¬bRa | inj₂ ¬aRb | inj₁ aRb = ⊥-elim (¬aRb aRb)
-... | inj₂ ¬bRa | inj₂ ¬aRb | inj₂ bRa = ⊥-elim (¬bRa bRa)
-
-Voter→Pref : {Candidate : Set} → (v : Voter) → Preference (r v)
-Voter→Pref record { r = r ; prefs = prefs } = prefs
+Prefers? : (a b : Candidate) → (v : Preference {Candidate} _R_) → (Dec-Prefers v a b)
+Prefers? a b v with R-dec v {b} {a}
+... | inj₁ bRa  = false because (ofⁿ (λ ¬bRa → ¬bRa bRa))
+... | inj₂ ¬bRa = true because ofʸ ¬bRa
 
 --- curried version of P for convenience
-prefers : {Candidate : Set} → (a b : Candidate) → (v : Voter) → Set₁
-prefers a b v = P (Voter→Pref {! v  !}) a b
+Prefers : (a b : Candidate) → (v : Voter {Candidate}) → Set
+Prefers a b record { r = r' ; prefs = prefs' } = P {_R_ = r'} prefs' a b
 
-record socialPreference : Set₁ where
+
+record SocialPreference {Candidate : Set} : Set₁ where
     field
-        ballots : List⁺ (Voter)
-        socialPreferenceFunction : Voter
-        unanimity : {Candidate : Set} → (a b : Candidate) → All (prefers a b) (toList ballots) → (prefers a b socialPreferenceFunction)
-open socialPreference
+        Ballots : List⁺ (Voter {Candidate})
+        SocialPreferenceFunction : Voter {Candidate}
+        Unanimity : (a b : Candidate) → All (Prefers a b) (toList Ballots) → (Prefers a b SocialPreferenceFunction)
+open SocialPreference
 
-decisive : {Candidate : Set} → (a b : Candidate) → (socialPreference) → (v : Voter) → Set₁
-decisive a b sp v = P {!   !} a b →  P {!   !} a b
- 
-dictator : {candidate : Set} → (socialPreference) → (v : Voter) → Set₁
-dictator {candidate} sp v = ∀ (a b : candidate) → decisive a b sp v
+Decisive : (a b : Candidate) → (SocialPreference) → (v : Voter) → Set
+Decisive a b sp v = Prefers a b v → Prefers a b (SocialPreferenceFunction sp)
+
+Dictator : (SocialPreference {Candidate}) → (v : Voter {Candidate}) → Set
+Dictator {Candidate} sp v = ∀ (a b : Candidate) → Decisive a b sp v
