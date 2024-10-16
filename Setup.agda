@@ -8,7 +8,6 @@ open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Data.Empty
 open import Data.Bool using (true; false)
-open import Function.Bundles using (_↔_)
 
 private
     variable
@@ -59,8 +58,8 @@ open Voter
 Dec-Prefers : (v : Preference {Candidate} _R_) → (a b : Candidate) → Set
 Dec-Prefers v a b = Dec (P v a b)
 
-Prefers? : (a b : Candidate) → (v : Preference {Candidate} _R_) → (Dec-Prefers v a b)
-Prefers? a b v with R-dec v {b} {a}
+Prefers? : (a b : Candidate) → (v : Voter {Candidate}) → (Dec-Prefers (prefs v) a b)
+Prefers? a b v with R-dec (prefs v) {b} {a}
 ... | inj₁ bRa  = false because (ofⁿ (λ ¬bRa → ¬bRa bRa))
 ... | inj₂ ¬bRa = true because ofʸ ¬bRa
 
