@@ -67,6 +67,16 @@ Prefers? a b v with R-dec (prefs v) {b} {a}
 Prefers : (a b : Candidate) → (v : Voter {Candidate}) → Set
 Prefers a b record { r = r' ; prefs = prefs' } = P {_R_ = r'} prefs' a b
 
+Dec-weaklyPrefers : (v : Preference {Candidate} _R_) → (a b : Candidate) → Set
+Dec-weaklyPrefers {_R_ = _R_} v a b = Dec (a R b)
+
+weaklyPrefers : (a b : Candidate) → (v : Voter {Candidate}) → Set
+weaklyPrefers a b record { r = r' ; prefs = prefs' } = r' a b
+
+weaklyPrefers? : (a b : Candidate) → (v : Voter {Candidate}) → (Dec-weaklyPrefers (prefs v) a b)
+weaklyPrefers? a b v with R-dec (prefs v) {a} {b}
+... | inj₁ x = true because ofʸ x
+... | inj₂ y = false because ofⁿ y
 
 record SocialPreference {Candidate : Set} : Set₁ where
     field
