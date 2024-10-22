@@ -1,0 +1,20 @@
+arrows:
+https://www.rochester.edu/college/faculty/markfey/papers/ArrowProof3.pdf
+hyper-informal: https://users.ssc.wisc.edu/~dquint/econ698/lecture%202.pdf
+
+mays: positive version of arrows, only majority rule w two candidates can guarantee anonymous neutral and monotone
+https://pi.math.cornell.edu/~mec/Summer2008/anema/maystheorem.html
+gibbard satterwaite: rcv is either a) dictatorial, b) manipulable, or c) has only 2 candidates
+https://www.sciencedirect.com/science/article/pii/S0165176500003128
+sens theorem: cannot satisfy a) all individuals are treated equally b) pareto efficiency and c) free choice
+
+relations stuff
+https://math.libretexts.org/Bookshelves/Mathematical_Logic_and_Proof/Gentle_Introduction_to_the_Art_of_Mathematics_(Fields)/06%3A_Relations_and_Functions/6.04%3A_Ordering_Relations
+
+
+10.11
+data electionCases
+from an election we can build electionCases
+from electioncases we can build arrows theorem
+
+check who cites papers
