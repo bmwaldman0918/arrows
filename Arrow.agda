@@ -11,6 +11,7 @@ open import Relation.Nullary.Negation using (contradiction; contraposition)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Data.Bool using (true; false)
 open import Data.Empty
+open import Level using (zero; suc; _⊔_)
 open import ListUtil
 
 module Arrow where
@@ -21,13 +22,15 @@ private
         a b c : Candidate
 
 ¬Any-aPb→All-bRa : {lv : List Voter} → ¬ (Any (Prefers a b) lv) → All (weaklyPrefers b a)  lv
+¬Any-aPb→All-bRa = λ x → {! ¬AnyP→AllCP  ? ?  !}
+{-
 ¬Any-aPb→All-bRa {a = a} {b = b} {lv} ¬Any-aPb with lv
 ... | List.[] = []
 ... | x ∷ xs with (Preference.R-dec (Voter.prefs x) {b} {a}) | all? (weaklyPrefers? b a) xs
 ... | inj₁ bRa | false because ofⁿ ¬All-aPb = ⊥-elim (¬All-aPb (¬Any-aPb→All-bRa λ any-xs-aPb → ¬Any-aPb (there any-xs-aPb)))
 ... | inj₁ bRa | true because ofʸ p = bRa All.∷ p
 ... | inj₂ aPb | _ = ⊥-elim (¬Any-aPb (here aPb))
-
+-}
 ∃VoterInAgreementWithElection : {election : SocialPreference {Candidate}} → Prefers a b (SocialPreference.SocialPreferenceFunction election) → Any (Prefers a b) (toList (SocialPreference.Ballots election))
 ∃VoterInAgreementWithElection {a = a} {b = b} {election = election} election-aPb with any? (Prefers? a b) (toList (SocialPreference.Ballots election))
 ... | true because ofʸ any-aPb = any-aPb

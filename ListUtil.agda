@@ -39,7 +39,7 @@ AllCP→¬AnyP (_ All.∷ p) (there p') = AllCP→¬AnyP p p'
 ¬AllP→AnyCP {P = P} {head ∷ x ∷ tail} dec ¬AllP | true because ofʸ p-head | false because ofⁿ ¬p-tail = there (¬AllP→AnyCP dec ¬p-tail)
 ...                                             | true because ofʸ p-tail                             = ⊥-elim (¬AllP (p-head All.∷ p-tail)) 
 
-¬AnyP→AllCP : {a : Level} → {A : Set a} → {P : Pred A a} → {xs : List A} → (Decidable P) → ¬ Any P xs → All (∁ P) xs
+¬AnyP→AllCP : ∀ {a b} → {A : Set a} → {P : Pred A b} → {xs : List A} → (Decidable P) → ¬ Any P xs → All (∁ P) xs
 ¬AnyP→AllCP {P = P} {xs = List.[]} _ _             = [] 
 ¬AnyP→AllCP {P = P} {xs = x ∷ xs} dec ¬AnyP with dec x | any? dec xs 
 ... | false because ofⁿ ¬p | false because ofⁿ ¬px = ¬p All.∷ (¬AnyP→AllCP dec λ anyCPxs → ¬px anyCPxs)
