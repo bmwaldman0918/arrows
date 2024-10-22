@@ -82,7 +82,7 @@ record SocialPreference {Candidate : Set} : Set₁ where
     field
         Ballots : List⁺ (Voter {Candidate})
         SocialPreferenceFunction : Voter {Candidate}
-        Unanimity : (a b : Candidate) → All (Prefers a b) (toList Ballots) → (Prefers a b SocialPreferenceFunction)
+        Unanimity : (a b : Candidate) → All (weaklyPrefers a b) (toList Ballots) → (weaklyPrefers a b SocialPreferenceFunction)
 open SocialPreference
 
 Decisive : (a b : Candidate) → (SocialPreference) → (v : Voter) → Set

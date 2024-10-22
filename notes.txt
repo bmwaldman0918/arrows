@@ -1,6 +1,7 @@
 arrows:
 https://www.rochester.edu/college/faculty/markfey/papers/ArrowProof3.pdf
 hyper-informal: https://users.ssc.wisc.edu/~dquint/econ698/lecture%202.pdf
+https://elischolar.library.yale.edu/cgi/viewcontent.cgi?article=2368&context=cowles-discussion-paper-series
 
 mays: positive version of arrows, only majority rule w two candidates can guarantee anonymous neutral and monotone
 https://pi.math.cornell.edu/~mec/Summer2008/anema/maystheorem.html
