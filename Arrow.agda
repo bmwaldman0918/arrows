@@ -1,9 +1,9 @@
-open import Setup using (Voter; SocialPreference; Decisive; Prefers?; Prefers; Preference; P→R; Dec-Prefers; weaklyPrefers; weaklyPrefers?)
+open import Setup using (Voter; SocialPreference; Decisive; Prefers?; Prefers; Preference; P→R; Dec-Prefers; weaklyPrefers; weaklyPrefers?; wP⊆C-P; C-P⊆wP)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.List.NonEmpty.Base using (List⁺; toList; _∷_)
 open import Data.List using (_∷_; List)
 open import Data.List.Relation.Unary.All using (All; []; all?; uncons; map)
-open import Data.List.Relation.Unary.Any using (Any; any?; here; there; satisfied)
+open import Data.List.Relation.Unary.Any as Any using (Any; any?; here; there; satisfied; map)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Relation.Nullary using (Dec)
 open import Data.Product using (Σ; _,_; ∃; Σ-syntax; ∃-syntax)
@@ -31,15 +31,16 @@ private
 ∃VoterInAgreementWithElection : {election : SocialPreference {Candidate}} → Prefers a b (SocialPreference.SocialPreferenceFunction election) → Any (Prefers a b) (toList (SocialPreference.Ballots election))
 ∃VoterInAgreementWithElection {a = a} {b = b} {election = election} election-aPb with any? (Prefers? a b) (toList (SocialPreference.Ballots election))
 ... | true because ofʸ any-aPb = any-aPb
-... | false because ofⁿ ¬any-aPb = ⊥-elim (election-aPb  (SocialPreference.Unanimity election b a (¬Any-aPb→All-bRa ¬any-aPb)))
-
+... | false because ofⁿ ¬any-aPb = ⊥-elim (election-aPb  (SocialPreference.weakUnanimity election b a (¬Any-aPb→All-bRa ¬any-aPb)))
 
 ExistsPivot : (election : SocialPreference {Candidate}) → Any (Decisive a b election) (toList (SocialPreference.Ballots election))
-ExistsPivot {a = a} {b = b} election with any? (Prefers? a b) (toList (SocialPreference.Ballots election)) | (Prefers? a b) (SocialPreference.SocialPreferenceFunction election)
-... | false because ofⁿ ¬any-aPb | false because ofⁿ election-bRa = {!   !}
-... | false because ofⁿ ¬any-aPb | true because ofʸ election-aPb = {!   !}
-... | true because ofʸ any-aPb | false because ofⁿ election-bRa = {!   !}
-... | true because ofʸ any-aPb | true because ofʸ election-aPb = {!   !}
+ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPreference.Ballots election)) | (Prefers? a b) (SocialPreference.SocialPreferenceFunction election)
+... |  _                            | true because ofʸ election-aPb = here (λ x election-bRa → election-aPb election-bRa)
+... | true because ofʸ p            | false because ofⁿ ¬election-aPb = ⊥-elim (¬election-aPb (SocialPreference.Unanimity election a b p))
+... | false because ofⁿ ¬all-aPb    | false because ofⁿ ¬election-bRa with ¬AllP→AnyCP (Prefers? a b) ¬all-aPb 
+... | any-bRa = Any.map (λ x v-aPb election-bRa → x v-aPb) any-bRa
+
+
 {-
 arrows-theorem : (election : SocialPreference) → Any (dictator election) (toList (socialPreference.ballots election))
 arrows-theorem e with (toList (socialPreference.ballots e))

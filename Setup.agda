@@ -2,12 +2,14 @@ module Setup where
 
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.List.NonEmpty.Base using (List⁺; toList)
-open import Data.List.Relation.Unary.All using (All)
-open import Relation.Unary using (Pred)
+open import Data.List.Relation.Unary.All using (All; map)
+open import Relation.Unary using (Pred; ∁; _⊆_)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Data.Empty
 open import Data.Bool using (true; false)
+open import Data.List.Relation.Unary.Any as Any using (Any; any?)
+open import ListUtil
 
 private
     variable
@@ -82,7 +84,8 @@ record SocialPreference {Candidate : Set} : Set₁ where
     field
         Ballots : List⁺ (Voter {Candidate})
         SocialPreferenceFunction : Voter {Candidate}
-        Unanimity : (a b : Candidate) → All (weaklyPrefers a b) (toList Ballots) → (weaklyPrefers a b SocialPreferenceFunction)
+        Unanimity : (a b : Candidate) → All (Prefers a b) (toList Ballots) → (Prefers a b SocialPreferenceFunction)
+        weakUnanimity : (a b : Candidate) → All (weaklyPrefers a b) (toList Ballots) → (weaklyPrefers a b SocialPreferenceFunction)
 open SocialPreference
 
 Decisive : (a b : Candidate) → (SocialPreference) → (v : Voter) → Set
@@ -90,3 +93,13 @@ Decisive a b sp v = Prefers a b v → Prefers a b (SocialPreferenceFunction sp)
 
 Dictator : (SocialPreference {Candidate}) → (v : Voter {Candidate}) → Set
 Dictator {Candidate} sp v = ∀ (a b : Candidate) → Decisive a b sp v
+
+C-P⊆wP : (a b : Candidate) →  (∁ (Prefers a b)) ⊆ weaklyPrefers b a
+C-P⊆wP a b {record { r = r' ; prefs = prefs' }} x with (R-dec prefs') {b} {a}
+... | inj₁ y = y 
+... | inj₂ z = ⊥-elim (x z)
+
+wP⊆C-P : (a b : Candidate) →  weaklyPrefers b a ⊆ (∁ (Prefers a b))
+wP⊆C-P a b {v} x with Prefers? a b v 
+... | false because ofⁿ ¬p = λ y → y x 
+... | true because ofʸ p = λ _ → p x 
