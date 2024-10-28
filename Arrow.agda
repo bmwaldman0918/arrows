@@ -41,6 +41,16 @@ ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPre
 ... | any-bRa = Any.map (λ x v-aPb election-bRa → x v-aPb) any-bRa
 
 
+--- cases!
+--- first, non b cases
+--- assume pivot a > c
+--- pivot a > b implies a > b
+--- create new profile such that for all voters b > a implies b > c and a > b implies c > b
+--- moving b cannot change opinion of a vs c 
+--- we need IIA postulate
+--- IIA -- from an election we can construct a list of voters preferences for two candidates
+--- IIA says if the elections have the same list of voter prefs, same spf pref
+
 {-
 arrows-theorem : (election : SocialPreference) → Any (dictator election) (toList (socialPreference.ballots election))
 arrows-theorem e with (toList (socialPreference.ballots e))
