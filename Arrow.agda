@@ -19,7 +19,7 @@ private
     variable
         Candidate : Set
         a b c : Candidate
-
+{-
 ¬Any-aPb→All-bRa : {lv : List Voter} → ¬ (Any (Prefers a b) lv) → All (weaklyPrefers b a)  lv
 ¬Any-aPb→All-bRa {a = a} {b = b} {lv} ¬Any-aPb with lv
 ... | List.[] = []
@@ -32,6 +32,7 @@ private
 ∃VoterInAgreementWithElection {a = a} {b = b} {election = election} election-aPb with any? (Prefers? a b) (toList (SocialPreference.Ballots election))
 ... | true because ofʸ any-aPb = any-aPb
 ... | false because ofⁿ ¬any-aPb = ⊥-elim (election-aPb  (SocialPreference.weakUnanimity election b a (¬Any-aPb→All-bRa ¬any-aPb)))
+-}
 
 ExistsPivot : (election : SocialPreference {Candidate}) → Any (Decisive a b election) (toList (SocialPreference.Ballots election))
 ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPreference.Ballots election)) | (Prefers? a b) (SocialPreference.SocialPreferenceFunction election)

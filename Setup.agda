@@ -1,8 +1,8 @@
 module Setup where
 
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.List.NonEmpty.Base using (List⁺; toList)
-open import Data.List.Relation.Unary.All using (All; map)
+open import Data.List.NonEmpty.Base using (List⁺; toList; map)
+open import Data.List.Relation.Unary.All as All using (All)
 open import Relation.Unary using (Pred; ∁; _⊆_)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
@@ -103,3 +103,9 @@ wP⊆C-P : (a b : Candidate) →  weaklyPrefers b a ⊆ (∁ (Prefers a b))
 wP⊆C-P a b {v} x with Prefers? a b v 
 ... | false because ofⁿ ¬p = λ y → y x 
 ... | true because ofʸ p = λ _ → p x 
+
+VoterPreferences : (sp : SocialPreference {Candidate}) → (a b : Candidate) → List⁺ Set
+VoterPreferences e a b = map (λ x → Dec-Prefers (prefs x) a b) (Ballots e) 
+
+VoterPreferences? : (sp : SocialPreference {Candidate}) → (a b : Candidate) → VoterPreferences sp a b
+VoterPreferences? = ? 

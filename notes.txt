@@ -19,3 +19,6 @@ from an election we can build electionCases
 from electioncases we can build arrows theorem
 
 check who cites papers
+
+cleanup
+strong/weak unanimity
