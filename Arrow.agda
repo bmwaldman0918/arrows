@@ -58,6 +58,11 @@ ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPre
 
 --- how to manipulate elections to change preferences of voters in them/profile switching stuff
 
-arrows-theorem : (election : SocialPreference) → Any (Dictator election) (toList (SocialPreference.Ballots election))
-arrows-theorem e with (ExistsPivot e)
-... | pivot = Any.map (λ isPivot a b pivot-aPb → {!   !}) pivot
+aDb→aDc : {v : Voter} → (election : SocialPreference {Candidate}) → (Decisive a b election v) → (Decisive a c election v)
+aDb→aDc {a = a} {b = b} {c = c} e aDb v-aPc with Prefers? a c (SocialPreference.SocialPreferenceFunction e) 
+... | false because ofⁿ ¬p = {!   !}
+... | true because ofʸ p = p
+
+arrows-theorem : (election : SocialPreference {Candidate}) → Any (Dictator election) (toList (SocialPreference.Ballots election))
+arrows-theorem e with (ExistsPivot e)  
+... | pivot = Any.map (λ isPivot a b → {! !}) pivot
