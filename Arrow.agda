@@ -23,7 +23,7 @@ private
         a b c : Candidate
         
 postulate 
-    IndepdenceOfIrrelevantAlternatives : {e1 e2 : SocialPreference {Candidate}} 
+    IndependenceOfIrrelevantAlternatives : {e1 e2 : SocialPreference {Candidate}} 
         → VoterPreferences e1 ≡ VoterPreferences e2
         → Prefers a b (SocialPreferenceFunction e1) 
           -----------------------------------------

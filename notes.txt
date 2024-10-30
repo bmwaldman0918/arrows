@@ -22,3 +22,11 @@ check who cites papers
 
 cleanup
 strong/weak unanimity
+
+pretty up IIA
+
+function from e to e
+
+make candidate finset
+
+plfa de bruijn indexing chapter
