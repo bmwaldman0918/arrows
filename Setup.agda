@@ -7,8 +7,10 @@ open import Relation.Unary using (Pred; ∁; _⊆_)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Data.Empty
-open import Data.Bool using (true; false)
+open import Data.Bool using (true; false; Bool)
 open import Data.List.Relation.Unary.Any as Any using (Any; any?)
+open import Data.Product using (_×_; _,_)
+open import Relation.Nullary.Decidable.Core using (isYes)
 open import ListUtil
 
 private
@@ -57,10 +59,10 @@ record Voter {Candidate : Set} : Set₁ where
         prefs : Preference r
 open Voter
 
-Dec-Prefers : (v : Preference {Candidate} _R_) → (a b : Candidate) → Set
-Dec-Prefers v a b = Dec (P v a b)
+Dec-Prefers : (a b : Candidate) → (v : Preference {Candidate} _R_) → Set
+Dec-Prefers a b v = Dec (P v a b)
 
-Prefers? : (a b : Candidate) → (v : Voter {Candidate}) → (Dec-Prefers (prefs v) a b)
+Prefers? : (a b : Candidate) → (v : Voter {Candidate}) → (Dec-Prefers a b (prefs v))
 Prefers? a b v with R-dec (prefs v) {b} {a}
 ... | inj₁ bRa  = false because (ofⁿ (λ ¬bRa → ¬bRa bRa))
 ... | inj₂ ¬bRa = true because ofʸ ¬bRa
@@ -104,8 +106,5 @@ wP⊆C-P a b {v} x with Prefers? a b v
 ... | false because ofⁿ ¬p = λ y → y x 
 ... | true because ofʸ p = λ _ → p x 
 
-VoterPreferences : (sp : SocialPreference {Candidate}) → (a b : Candidate) → List⁺ Set
-VoterPreferences e a b = map (λ x → Dec-Prefers (prefs x) a b) (Ballots e) 
-
-VoterPreferences? : (sp : SocialPreference {Candidate}) → (a b : Candidate) → VoterPreferences sp a b
-VoterPreferences? = ? 
+VoterPreferences : (sp : SocialPreference {Candidate}) → (a b : Candidate) → List⁺ Bool × List⁺ Bool
+VoterPreferences e a b = map (λ x → isYes (weaklyPrefers? a b x)) (Ballots e) , map ((λ x → isYes (weaklyPrefers? b a x))) (Ballots e)

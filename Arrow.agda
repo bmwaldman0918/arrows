@@ -1,4 +1,4 @@
-open import Setup using (Voter; SocialPreference; Decisive; Prefers?; Prefers; Preference; P→R; Dec-Prefers; weaklyPrefers; weaklyPrefers?; wP⊆C-P; C-P⊆wP)
+open import Setup
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.List.NonEmpty.Base using (List⁺; toList; _∷_)
 open import Data.List using (_∷_; List)
@@ -12,6 +12,7 @@ open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Data.Bool using (true; false)
 open import Data.Empty
 open import ListUtil
+open import Relation.Nullary.Decidable.Core using (isYes)
 
 module Arrow where
 
@@ -19,6 +20,10 @@ private
     variable
         Candidate : Set
         a b c : Candidate
+        
+postulate IndepdenceOfIrrelevantAlternatives : {e1 e2 : SocialPreference {Candidate}} → (VoterPreferences e1) ≡ (VoterPreferences e2) → 
+            (Prefers a b) (SocialPreference.SocialPreferenceFunction e1) → (Prefers a b) (SocialPreference.SocialPreferenceFunction e2)
+
 {-
 ¬Any-aPb→All-bRa : {lv : List Voter} → ¬ (Any (Prefers a b) lv) → All (weaklyPrefers b a)  lv
 ¬Any-aPb→All-bRa {a = a} {b = b} {lv} ¬Any-aPb with lv
@@ -41,7 +46,6 @@ ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPre
 ... | false because ofⁿ ¬all-aPb    | false because ofⁿ ¬election-bRa with ¬AllP→AnyCP (Prefers? a b) ¬all-aPb 
 ... | any-bRa = Any.map (λ x v-aPb election-bRa → x v-aPb) any-bRa
 
-
 --- cases!
 --- first, non b cases
 --- assume pivot a > c
@@ -52,9 +56,8 @@ ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPre
 --- IIA -- from an election we can construct a list of voters preferences for two candidates
 --- IIA says if the elections have the same list of voter prefs, same spf pref
 
-{-
-arrows-theorem : (election : SocialPreference) → Any (dictator election) (toList (socialPreference.ballots election))
-arrows-theorem e with (toList (socialPreference.ballots e))
-... | x = {!   !}
--}              
---- step 2      
+--- how to manipulate elections to change preferences of voters in them/profile switching stuff
+
+arrows-theorem : (election : SocialPreference) → Any (Dictator election) (toList (SocialPreference.Ballots election))
+arrows-theorem e with (ExistsPivot e)
+... | pivot = Any.map (λ isPivot a b pivot-aPb → {!   !}) pivot
