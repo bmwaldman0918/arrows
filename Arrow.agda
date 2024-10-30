@@ -15,14 +15,19 @@ open import ListUtil
 open import Relation.Nullary.Decidable.Core using (isYes)
 
 module Arrow where
+open SocialPreference
 
 private
     variable
         Candidate : Set
         a b c : Candidate
         
-postulate IndepdenceOfIrrelevantAlternatives : {e1 e2 : SocialPreference {Candidate}} → (VoterPreferences e1) ≡ (VoterPreferences e2) → 
-            (Prefers a b) (SocialPreference.SocialPreferenceFunction e1) → (Prefers a b) (SocialPreference.SocialPreferenceFunction e2)
+postulate 
+    IndepdenceOfIrrelevantAlternatives : {e1 e2 : SocialPreference {Candidate}} 
+        → VoterPreferences e1 ≡ VoterPreferences e2
+        → Prefers a b (SocialPreferenceFunction e1) 
+          -----------------------------------------
+        → Prefers a b (SocialPreferenceFunction e2)
 
 {-
 ¬Any-aPb→All-bRa : {lv : List Voter} → ¬ (Any (Prefers a b) lv) → All (weaklyPrefers b a)  lv
@@ -65,4 +70,4 @@ aDb→aDc {a = a} {b = b} {c = c} e aDb v-aPc with Prefers? a c (SocialPreferenc
 
 arrows-theorem : (election : SocialPreference {Candidate}) → Any (Dictator election) (toList (SocialPreference.Ballots election))
 arrows-theorem e with (ExistsPivot e)  
-... | pivot = Any.map (λ isPivot a b → {! !}) pivot
+... | pivot = Any.map (λ isPivot a b → {! !}) pivot 

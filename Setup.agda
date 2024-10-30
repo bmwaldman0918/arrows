@@ -106,5 +106,9 @@ wP⊆C-P a b {v} x with Prefers? a b v
 ... | false because ofⁿ ¬p = λ y → y x 
 ... | true because ofʸ p = λ _ → p x 
 
-VoterPreferences : (sp : SocialPreference {Candidate}) → (a b : Candidate) → List⁺ Bool × List⁺ Bool
-VoterPreferences e a b = map (λ x → isYes (weaklyPrefers? a b x)) (Ballots e) , map ((λ x → isYes (weaklyPrefers? b a x))) (Ballots e)
+VoterPreferences : (sp : SocialPreference {Candidate}) 
+    → (a b : Candidate) 
+    → List⁺ Bool × List⁺ Bool
+VoterPreferences e a b 
+    = map (λ x → isYes (weaklyPrefers? a b x)) (Ballots e) 
+    , map (λ x → isYes (weaklyPrefers? b a x)) (Ballots e)
