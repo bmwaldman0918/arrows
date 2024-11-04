@@ -1,4 +1,10 @@
+module Arrow where
+
 open import Setup
+open Election
+open VoterBehavior
+open SocialPreference
+
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.List.NonEmpty.Base using (List⁺; toList; _∷_)
 open import Data.List using (_∷_; List)
@@ -15,9 +21,6 @@ open import ListUtil
 open import Relation.Nullary.Decidable.Core using (isYes)
 open import Data.Nat as ℕ
 open import Data.Fin
-
-module Arrow where
-open SocialPreference
 
 private
     variable
@@ -50,11 +53,7 @@ ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPre
 --- IIA says if the elections have the same list of voter prefs, same spf pref
 
 --- how to manipulate elections to change preferences of voters in them/profile switching stuff
-
-swap-ab : (a b : Fin n) → Voter → Voter
-swap-ab {n = n} a b record { r = r ; prefs = prefs } with prefs {n}
-... | record { R-trans = R-trans ; R-complete = R-complete ; R-dec = R-dec } 
-    = record { prefs = record { R-dec = λ a' b' → {!   !} ; R-complete = {!   !} }}
+  
 
 aDb→aDc : {v : Voter} → (election : SocialPreference) → (Decisive a b election v) → (Decisive a c election v)
 aDb→aDc {a = a} {b = b} {c = c} e aDb v-aPc with Prefers? a c (SocialPreference.SocialPreferenceFunction e) 
