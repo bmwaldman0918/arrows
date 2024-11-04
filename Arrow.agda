@@ -13,18 +13,21 @@ open import Data.Bool using (true; false)
 open import Data.Empty
 open import ListUtil
 open import Relation.Nullary.Decidable.Core using (isYes)
+open import Data.Nat as ℕ
+open import Data.Fin
 
 module Arrow where
 open SocialPreference
 
 private
     variable
-        Candidate : Set
-        a b c : Candidate
+        n : ℕ
+        a b c : Fin n
         
 postulate 
-    IndependenceOfIrrelevantAlternatives : {e1 e2 : SocialPreference {Candidate}} 
-        → VoterPreferences e1 ≡ VoterPreferences e2
+    IndependenceOfIrrelevantAlternatives : {n : ℕ} 
+        → {e1 e2 : SocialPreference} 
+        → VoterPreferences {n} e1 ≡ VoterPreferences e2
         → Prefers a b (SocialPreferenceFunction e1) 
           -----------------------------------------
         → Prefers a b (SocialPreferenceFunction e2)
@@ -44,7 +47,7 @@ postulate
 ... | false because ofⁿ ¬any-aPb = ⊥-elim (election-aPb  (SocialPreference.weakUnanimity election b a (¬Any-aPb→All-bRa ¬any-aPb)))
 -}
 
-ExistsPivot : (election : SocialPreference {Candidate}) → Any (Decisive a b election) (toList (SocialPreference.Ballots election))
+ExistsPivot : (election : SocialPreference) → Any (Decisive a b election) (toList (SocialPreference.Ballots election))
 ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPreference.Ballots election)) | (Prefers? a b) (SocialPreference.SocialPreferenceFunction election)
 ... |  _                            | true because ofʸ election-aPb = here (λ x election-bRa → election-aPb election-bRa)
 ... | true because ofʸ p            | false because ofⁿ ¬election-aPb = ⊥-elim (¬election-aPb (SocialPreference.Unanimity election a b p))
@@ -63,11 +66,10 @@ ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPre
 
 --- how to manipulate elections to change preferences of voters in them/profile switching stuff
 
-aDb→aDc : {v : Voter} → (election : SocialPreference {Candidate}) → (Decisive a b election v) → (Decisive a c election v)
+aDb→aDc : {v : Voter} → (election : SocialPreference) → (Decisive a b election v) → (Decisive a c election v)
 aDb→aDc {a = a} {b = b} {c = c} e aDb v-aPc with Prefers? a c (SocialPreference.SocialPreferenceFunction e) 
 ... | false because ofⁿ ¬p = {!   !}
 ... | true because ofʸ p = p
 
-arrows-theorem : (election : SocialPreference {Candidate}) → Any (Dictator election) (toList (SocialPreference.Ballots election))
-arrows-theorem e with (ExistsPivot e)  
-... | pivot = Any.map (λ isPivot a b → {! !}) pivot 
+arrows-theorem : (election : SocialPreference) → Any (Dictator {n} election) (toList (SocialPreference.Ballots election))
+arrows-theorem e = {!   !}
