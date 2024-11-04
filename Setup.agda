@@ -25,13 +25,13 @@ private
 
 record Preference {n : ℕ} (_R_ : Fin n → Fin n → Set) : Set where
     field
-        R-trans : a R b → b R c → a R c
-        R-complete : (a R b) ⊎ (b R a)
-        R-dec : (a R b) ⊎ ¬ (a R b)
+        R-trans    : (a b c : Fin n) → a R b → b R c → a R c
+        R-complete : (a b : Fin n)   → (a R b) ⊎ (b R a)
+        R-dec      : (a b : Fin n)   → (a R b) ⊎ ¬ (a R b)
 open Preference
 
 R-refl : (v : Preference _R_) → (a : Fin n) → a R a
-R-refl v a with R-complete v {a} 
+R-refl v a with R-complete v a a
 ... | inj₁ aRa = aRa
 ... | inj₂ aRa = aRa
 
@@ -41,7 +41,7 @@ P {_R_ = _R_} _ a b = ¬ (b R a)
 
 
 P→R : {a b : Fin n} → {v : Preference {n} _R_} → (P v a b) → a R b
-P→R {a = a} {b = b} {v = v} ¬bRa with R-complete v {a} {b} 
+P→R {a = a} {b = b} {v = v} ¬bRa with R-complete v a b
 ... | inj₁ aRb = aRb
 ... | inj₂ bRa = ⊥-elim (¬bRa bRa)
 
@@ -49,9 +49,9 @@ P↛≡ : {v : Preference {n} _R_} → (P v a b) → ¬ (a ≡ b)
 P↛≡ {b = b} {v = v} ¬bRb a≡b rewrite a≡b = ¬bRb (R-refl v b)
 
 P-trans : {v : Preference {n} _R_} → P v a b → P v b c → P v a c
-P-trans {a = a} {b = b} {c = c} {v = v} with (R-dec v {a} {b})
-                                            | (R-complete v {a} {b}) 
-... | inj₁ aRb  | _        = λ bRc ¬cRb cRa → ¬cRb (R-trans v cRa aRb)
+P-trans {a = a} {b = b} {c = c} {v = v} with (R-dec v a b)
+                                            | (R-complete v a b) 
+... | inj₁ aRb  | _        = λ bRc ¬cRb cRa → ¬cRb (R-trans v c a b cRa aRb)
 ... | inj₂ ¬aRb | inj₁ aRb = λ ¬bRa ¬cRb cRa → ⊥-elim (¬aRb aRb)
 ... | _         | inj₂ bRa = λ ¬bRa ¬cRb cRa → ⊥-elim (¬bRa bRa)
 
@@ -66,7 +66,7 @@ Dec-Prefers : (a b : Fin n) → (v : Preference {n} _R_) → Set
 Dec-Prefers a b v = Dec (P v a b)
 
 Prefers? : (a b : Fin n) → (v : Voter) → (Dec-Prefers a b (prefs v))
-Prefers? a b v with R-dec (prefs v) {b} {a}
+Prefers? a b v with R-dec (prefs v) b a
 ... | inj₁ bRa  = false because (ofⁿ (λ ¬bRa → ¬bRa bRa))
 ... | inj₂ ¬bRa = true because ofʸ ¬bRa
 
@@ -81,7 +81,7 @@ weaklyPrefers : (a b : Fin n) → (v : Voter) → Set
 weaklyPrefers a b record { r = r' ; prefs = prefs' } = r' a b
 
 weaklyPrefers? : (a b : Fin n) → (v : Voter) → (Dec-weaklyPrefers (prefs v) a b)
-weaklyPrefers? a b v with R-dec (prefs v) {a} {b}
+weaklyPrefers? a b v with R-dec (prefs v) a b
 ... | inj₁ x = true because ofʸ x
 ... | inj₂ y = false because ofⁿ y
 
@@ -100,7 +100,7 @@ Dictator : {n : ℕ} → (SocialPreference) → (v : Voter) → Set
 Dictator {n = n} sp v = ∀ (a b : Fin n) → Decisive a b sp v
 
 C-P⊆wP : {n : ℕ} → (a b : Fin n) →  (∁ (Prefers a b)) ⊆ weaklyPrefers b a
-C-P⊆wP {n = n} a b {record { r = r' ; prefs = prefs' }} x with (R-dec prefs') {b} {a}
+C-P⊆wP {n = n} a b {record { r = r' ; prefs = prefs' }} x with (R-dec prefs') b a
 ... | inj₁ y = y 
 ... | inj₂ z = ⊥-elim (x z)
 

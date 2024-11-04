@@ -32,21 +32,6 @@ postulate
           -----------------------------------------
         → Prefers a b (SocialPreferenceFunction e2)
 
-{-
-¬Any-aPb→All-bRa : {lv : List Voter} → ¬ (Any (Prefers a b) lv) → All (weaklyPrefers b a)  lv
-¬Any-aPb→All-bRa {a = a} {b = b} {lv} ¬Any-aPb with lv
-... | List.[] = []
-... | x ∷ xs with (Preference.R-dec (Voter.prefs x) {b} {a}) | all? (weaklyPrefers? b a) xs
-... | inj₁ bRa | false because ofⁿ ¬All-aPb = ⊥-elim (¬All-aPb (¬Any-aPb→All-bRa λ any-xs-aPb → ¬Any-aPb (there any-xs-aPb)))
-... | inj₁ bRa | true because ofʸ p = bRa All.∷ p
-... | inj₂ aPb | _ = ⊥-elim (¬Any-aPb (here aPb))
-
-∃VoterInAgreementWithElection : {election : SocialPreference {Candidate}} → Prefers a b (SocialPreference.SocialPreferenceFunction election) → Any (Prefers a b) (toList (SocialPreference.Ballots election))
-∃VoterInAgreementWithElection {a = a} {b = b} {election = election} election-aPb with any? (Prefers? a b) (toList (SocialPreference.Ballots election))
-... | true because ofʸ any-aPb = any-aPb
-... | false because ofⁿ ¬any-aPb = ⊥-elim (election-aPb  (SocialPreference.weakUnanimity election b a (¬Any-aPb→All-bRa ¬any-aPb)))
--}
-
 ExistsPivot : (election : SocialPreference) → Any (Decisive a b election) (toList (SocialPreference.Ballots election))
 ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPreference.Ballots election)) | (Prefers? a b) (SocialPreference.SocialPreferenceFunction election)
 ... |  _                            | true because ofʸ election-aPb = here (λ x election-bRa → election-aPb election-bRa)
@@ -65,6 +50,11 @@ ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPre
 --- IIA says if the elections have the same list of voter prefs, same spf pref
 
 --- how to manipulate elections to change preferences of voters in them/profile switching stuff
+
+swap-ab : (a b : Fin n) → Voter → Voter
+swap-ab {n = n} a b record { r = r ; prefs = prefs } with prefs {n}
+... | record { R-trans = R-trans ; R-complete = R-complete ; R-dec = R-dec } 
+    = record { prefs = record { R-dec = λ a' b' → {!   !} ; R-complete = {!   !} }}
 
 aDb→aDc : {v : Voter} → (election : SocialPreference) → (Decisive a b election v) → (Decisive a c election v)
 aDb→aDc {a = a} {b = b} {c = c} e aDb v-aPc with Prefers? a c (SocialPreference.SocialPreferenceFunction e) 
