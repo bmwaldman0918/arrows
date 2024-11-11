@@ -1,7 +1,7 @@
 module Setup where
 
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.List.NonEmpty.Base using (List⁺; toList; map)
+open import Data.Vec
 open import Data.List.Relation.Unary.All as All using (All)
 open import Relation.Unary using (Pred; ∁; _⊆_)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
@@ -12,8 +12,9 @@ open import Data.List.Relation.Unary.Any as Any using (Any; any?)
 open import Data.Product using (_×_; _,_)
 open import Relation.Nullary.Decidable.Core using (isYes)
 open import ListUtil
-open import Data.Nat as ℕ
-open import Data.Fin
+open import Data.Nat as ℕ hiding (_≟_)
+open import Data.Fin as Fin
+open import Data.Fin.Properties using (_≟_)
 
 private
     variable
@@ -139,9 +140,9 @@ module Election where
         --- a list of voters
         --- a function that determines an order of candidates
         --- a proof that if all voters agree on a relative ordering of candidates, the function does too
-    record SocialPreference : Set₁ where
+    record SocialPreference {m : ℕ} : Set₁ where
         field
-            Ballots : List⁺ (Voter)
+            Ballots : Vec (Voter) m
             SocialPreferenceFunction : Voter
             Unanimity : (a b : Fin n) → All (Prefers a b) (toList Ballots) → (Prefers a b SocialPreferenceFunction)
             --- TODO DEFINE ONE Unanimity IN TERMS OF OTHER
@@ -149,16 +150,17 @@ module Election where
     open SocialPreference
 
     --- A voter is decisive if their preference between two candidates implies the election shares that preference
-    Decisive : (a b : Fin n) 
-                → (SocialPreference) 
+    Decisive : {m n : ℕ} 
+                → (a b : Fin n) 
+                → (SocialPreference {m}) 
                 → (v : Voter) 
                 --------------------
                 → Set
     Decisive a b sp v = Prefers a b v → Prefers a b (SocialPreferenceFunction sp)
 
     --- A voter is a dictator if they are decisive over all pairs of candidates
-    Dictator : {n : ℕ} 
-                → (SocialPreference) 
+    Dictator : {m n : ℕ} 
+                → (SocialPreference {m}) 
                 → (v : Voter) 
                 --------------------
                 → Set
@@ -184,12 +186,46 @@ module Election where
     ... | true  because ofʸ  p = λ _ → p x 
 
     --- function that defines the preferences of all voters across two candidates
-    VoterPreferences : {n : ℕ} 
-        → (sp : SocialPreference) 
+    VoterPreferences : {m n : ℕ} 
+        → (sp : SocialPreference {m}) 
         → (a b : Fin n)
         -------------------------
-        → List⁺ Bool × List⁺ Bool
+        → Vec Bool m × Vec Bool m
     VoterPreferences e a b 
         = map (λ x → isYes (weaklyPrefers? a b x)) (Ballots e) 
         , map (λ x → isYes (weaklyPrefers? b a x)) (Ballots e)
 open Election
+
+module SwapVoter where
+    data R' : (p : Preference {n} _R_) → (d a b : Fin n) → Set where
+        normal  : (p : Preference {n} _R_) → (d a b : Fin n) → ¬ (d ≡ a) → ¬ (d ≡ b) → (a R b) → R' p d a b
+        swapped : (p : Preference {n} _R_) → (d a b : Fin n) →   (d ≡ a)  ⊎  (d ≡ b) → (a R b) → R' p d b a
+
+    R'-complete : (p : Preference {n} _R_) → (d a b : Fin n) → R' p d a b ⊎ R' p d b a
+    R'-complete p d a b with d ≟ a | d ≟ b | R-complete p a b 
+    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₁ aRb = inj₁ (normal p d a b ¬d≡a ¬d≡b aRb)
+    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ bRa = inj₂ (normal p d b a ¬d≡b ¬d≡a bRa)
+    ... | _                      | true because ofʸ   d≡b | inj₁ aRb = inj₂ (swapped p d a b (inj₂ d≡b) aRb)
+    ... | _                      | true because ofʸ   d≡b | inj₂ bRa = inj₁ (swapped p d b a (inj₁ d≡b) bRa)
+    ... | true because ofʸ d≡a   | _                      | inj₁ aRb = inj₂ (swapped p d a b (inj₁ d≡a) aRb)
+    ... | true because ofʸ d≡a   | _                      | inj₂ bRa = inj₁ (swapped p d b a (inj₂ d≡a) bRa)
+
+    R'-dec : (p : Preference {n} _R_) → (d a b : Fin n) → R' p d a b ⊎ ¬ (R' p d a b)
+    R'-dec p d a b with d ≟ a | d ≟ b | R-dec p a b | R-dec p b a 
+    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₁  aRb | _        = inj₁     (normal p d a b ¬d≡a ¬d≡b aRb)
+    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ ¬aRb | inj₁ bRa = inj₂ λ { (normal .p .d .a .b _ _ aRb) → ¬aRb aRb
+                                                                                          ; (swapped .p .d .b .a (inj₁ d≡b) _) → ¬d≡b d≡b
+                                                                                          ; (swapped .p .d .b .a (inj₂ d≡a) _) → ¬d≡a d≡a }
+    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ ¬aRb | inj₂ y = {!   !}
+    ... | _                      | true because ofʸ   d≡b | inj₁  aRb | x = inj₁ {!   !}
+    ... | _                      | true because ofʸ   d≡b | inj₂ ¬aRb | x = {!   !}
+    ... | true because ofʸ d≡a   | _                      | inj₁  aRb | x = {!   !}
+    ... | true because ofʸ d≡a   | _                      | inj₂ ¬aRb | x = {!   !}
+
+    R'-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R' p d a b → R' p d b c → R' p d a c
+    R'-trans = {!   !}
+
+    SwappedPreference : (p : Preference {n} _R_) → (a : Fin n) → Preference {n} (R' p a)
+    SwappedPreference {n = n} p d = record { R-trans    = R'-trans p d
+                                           ; R-complete = R'-complete p d 
+                                           ; R-dec      = R'-dec p d }

@@ -42,6 +42,8 @@ ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (toList (SocialPre
 ... | false because ofⁿ ¬all-aPb    | false because ofⁿ ¬election-bRa with ¬AllP→AnyCP (Prefers? a b) ¬all-aPb 
 ... | any-bRa = Any.map (λ x v-aPb election-bRa → x v-aPb) any-bRa
 
+
+
 --- cases!
 --- first, non b cases
 --- assume pivot a > c
