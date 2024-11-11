@@ -233,8 +233,10 @@ module SwapVoter where
 
     R'-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R' p d a b → R' p d b c → R' p d a c
     R'-trans p d a b c (normal .p .d .a .b ¬d≡a ¬d≡b aRb)   (normal .p .d .b .c _    ¬d≡c bRc) = normal p d a c ¬d≡a ¬d≡c (R-trans p a b c aRb bRc)
-    R'-trans p d a b c (swapped .p .d .b .a (inj₁ d≡b) bRa) (normal .p .d .b .c ¬d≡b ¬d≡c bRc) = {!   !}
-    R'-trans p d a b c (swapped .p .d .b .a (inj₂ d≡a) bRa) (normal .p .d .b .c ¬d≡b ¬d≡c bRc) = {!   !}
+    R'-trans p d a b c (swapped .p .d .b .a (inj₁ d≡b) bRa) (normal .p .d .b .c ¬d≡b ¬d≡c bRc) = ⊥-elim (¬d≡b d≡b)
+    R'-trans p d a b c (swapped .p .d .b .a (inj₂ d≡a) bRa) (normal .p .d .b .c ¬d≡b ¬d≡c bRc) with R-complete p a c 
+    ... | inj₁  aRc = {!   !} -- we have b > a > c but we want a < c
+    ... | inj₂  cRa = swapped p d c a (inj₂ d≡a) cRa
     R'-trans p d a b c (normal .p .d .a .b x x₁ x₂) (swapped .p .d .c .b x₃ x₄)   = {!   !}
     R'-trans p d a b c (swapped .p .d .b .a x x₁)   (swapped .p .d .c .b x₂ x₃)   = {!   !}
 
