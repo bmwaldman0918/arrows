@@ -225,7 +225,7 @@ module SwapVoter where
     ... | _                      | true because ofʸ   d≡b | inj₁  aRb | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
     ... | _                      | true because ofʸ   d≡b | _         | inj₂ ¬bRa = inj₂ λ { (normal .p .d .a .b _ ¬d≡b _)      → ¬d≡b d≡b
                                                                                            ; (swapped .p .d .b .a _ bRa)        → ¬bRa bRa }
-    ... | _                      | true because ofʸ d≡b   | inj₂ ¬aRb | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
+    ... | _                      | true because ofʸ   d≡b | inj₂ ¬aRb | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
     ... | true because ofʸ d≡a   | _                      | inj₁  aRb | x = {!   !}
     ... | true because ofʸ d≡a   | _                      | inj₂ ¬aRb | x = {!   !}
 
