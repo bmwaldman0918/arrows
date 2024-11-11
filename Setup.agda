@@ -40,6 +40,11 @@ module WeakPreference where
     R-refl v a with R-complete v a a
     ... | inj₁ aRa = aRa
     ... | inj₂ aRa = aRa
+
+    ¬R-dec→⊥ : {p : Preference {n} _R_} → {a b : Fin n} → ¬ (a R b) → ¬ (b R a) → ⊥
+    ¬R-dec→⊥ {p = p} {a = a} {b = b} ¬aRb ¬bRa with R-complete p a b 
+    ... | inj₁ aRb = ¬aRb aRb
+    ... | inj₂ bRa = ¬bRa bRa
 open WeakPreference
 open Preference
 
@@ -212,13 +217,15 @@ module SwapVoter where
 
     R'-dec : (p : Preference {n} _R_) → (d a b : Fin n) → R' p d a b ⊎ ¬ (R' p d a b)
     R'-dec p d a b with d ≟ a | d ≟ b | R-dec p a b | R-dec p b a 
-    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₁  aRb | _        = inj₁     (normal p d a b ¬d≡a ¬d≡b aRb)
-    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ ¬aRb | inj₁ bRa = inj₂ λ { (normal .p .d .a .b _ _ aRb) → ¬aRb aRb
-                                                                                          ; (swapped .p .d .b .a (inj₁ d≡b) _) → ¬d≡b d≡b
-                                                                                          ; (swapped .p .d .b .a (inj₂ d≡a) _) → ¬d≡a d≡a }
-    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ ¬aRb | inj₂ y = {!   !}
-    ... | _                      | true because ofʸ   d≡b | inj₁  aRb | x = inj₁ {!   !}
-    ... | _                      | true because ofʸ   d≡b | inj₂ ¬aRb | x = {!   !}
+    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₁  aRb | _         = inj₁     (normal p d a b ¬d≡a ¬d≡b aRb)
+    --- what is an extended lambda and why does it work?
+    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ ¬aRb | _         = inj₂ λ { (normal .p .d .a .b _ _ aRb)       → ¬aRb aRb
+                                                                                           ; (swapped .p .d .b .a (inj₁ d≡b) _) → ¬d≡b d≡b
+                                                                                           ; (swapped .p .d .b .a (inj₂ d≡a) _) → ¬d≡a d≡a }
+    ... | _                      | true because ofʸ   d≡b | inj₁  aRb | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
+    ... | _                      | true because ofʸ   d≡b | _         | inj₂ ¬bRa = inj₂ λ { (normal .p .d .a .b _ ¬d≡b _)      → ¬d≡b d≡b
+                                                                                           ; (swapped .p .d .b .a _ bRa)        → ¬bRa bRa }
+    ... | _                      | true because ofʸ d≡b   | inj₂ ¬aRb | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
     ... | true because ofʸ d≡a   | _                      | inj₁  aRb | x = {!   !}
     ... | true because ofʸ d≡a   | _                      | inj₂ ¬aRb | x = {!   !}
 
