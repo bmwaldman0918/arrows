@@ -1,3 +1,5 @@
+{-# OPTIONS --large-indices #-}
+
 module Setup where
 
 open import Data.Sum using (_⊎_; inj₁; inj₂)
@@ -222,15 +224,19 @@ module SwapVoter where
     ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ ¬aRb | _         = inj₂ λ { (normal .p .d .a .b _ _ aRb)       → ¬aRb aRb
                                                                                            ; (swapped .p .d .b .a (inj₁ d≡b) _) → ¬d≡b d≡b
                                                                                            ; (swapped .p .d .b .a (inj₂ d≡a) _) → ¬d≡a d≡a }
-    ... | _                      | true because ofʸ   d≡b | inj₁  aRb | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
+    ... | _                      | true because ofʸ   d≡b | _         | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
     ... | _                      | true because ofʸ   d≡b | _         | inj₂ ¬bRa = inj₂ λ { (normal .p .d .a .b _ ¬d≡b _)      → ¬d≡b d≡b
                                                                                            ; (swapped .p .d .b .a _ bRa)        → ¬bRa bRa }
-    ... | _                      | true because ofʸ   d≡b | inj₂ ¬aRb | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
-    ... | true because ofʸ d≡a   | _                      | inj₁  aRb | x = {!   !}
-    ... | true because ofʸ d≡a   | _                      | inj₂ ¬aRb | x = {!   !}
+    ... | true because ofʸ d≡a   | _                      | _         | inj₁  bRa = inj₁     (swapped p d b a (inj₂ d≡a) bRa)
+    ... | true because ofʸ d≡a   | _                      | _         | inj₂ ¬bRa = inj₂ λ { (normal .p .d .a .b ¬d≡a _ _)      → ¬d≡a d≡a
+                                                                                           ; (swapped .p .d .b .a _ bRa)        → ¬bRa bRa }
 
     R'-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R' p d a b → R' p d b c → R' p d a c
-    R'-trans = {!   !}
+    R'-trans p d a b c (normal .p .d .a .b ¬d≡a ¬d≡b aRb)   (normal .p .d .b .c _    ¬d≡c bRc) = normal p d a c ¬d≡a ¬d≡c (R-trans p a b c aRb bRc)
+    R'-trans p d a b c (swapped .p .d .b .a (inj₁ d≡b) bRa) (normal .p .d .b .c ¬d≡b ¬d≡c bRc) = {!   !}
+    R'-trans p d a b c (swapped .p .d .b .a (inj₂ d≡a) bRa) (normal .p .d .b .c ¬d≡b ¬d≡c bRc) = {!   !}
+    R'-trans p d a b c (normal .p .d .a .b x x₁ x₂) (swapped .p .d .c .b x₃ x₄)   = {!   !}
+    R'-trans p d a b c (swapped .p .d .b .a x x₁)   (swapped .p .d .c .b x₂ x₃)   = {!   !}
 
     SwappedPreference : (p : Preference {n} _R_) → (a : Fin n) → Preference {n} (R' p a)
     SwappedPreference {n = n} p d = record { R-trans    = R'-trans p d
