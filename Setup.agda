@@ -203,44 +203,36 @@ module Election where
         , map (λ x → isYes (weaklyPrefers? b a x)) (Ballots e)
 open Election
 
-module SwapVoter where
-    data R' : (p : Preference {n} _R_) → (d a b : Fin n) → Set where
-        normal  : (p : Preference {n} _R_) → (d a b : Fin n) → ¬ (d ≡ a) → ¬ (d ≡ b) → (a R b) → R' p d a b
-        swapped : (p : Preference {n} _R_) → (d a b : Fin n) →   (d ≡ a)  ⊎  (d ≡ b) → (a R b) → R' p d b a
+module ProfileIIIVoter where
+    data R-one (b : Fin n) (p : Preference {n} _R_) : (a c : Fin n) → Set where
+        normal  : (a c : Fin n) → ¬ (b ≡ a) → ¬ (b ≡ c) → (a R c) → R-one b p a c
+        swapped : (a c : Fin n) →   (b ≡ a) →                       R-one b p a c
 
-    R'-complete : (p : Preference {n} _R_) → (d a b : Fin n) → R' p d a b ⊎ R' p d b a
-    R'-complete p d a b with d ≟ a | d ≟ b | R-complete p a b 
-    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₁ aRb = inj₁ (normal p d a b ¬d≡a ¬d≡b aRb)
-    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ bRa = inj₂ (normal p d b a ¬d≡b ¬d≡a bRa)
-    ... | _                      | true because ofʸ   d≡b | inj₁ aRb = inj₂ (swapped p d a b (inj₂ d≡b) aRb)
-    ... | _                      | true because ofʸ   d≡b | inj₂ bRa = inj₁ (swapped p d b a (inj₁ d≡b) bRa)
-    ... | true because ofʸ d≡a   | _                      | inj₁ aRb = inj₂ (swapped p d a b (inj₁ d≡a) aRb)
-    ... | true because ofʸ d≡a   | _                      | inj₂ bRa = inj₁ (swapped p d b a (inj₂ d≡a) bRa)
+    R1-complete : (p : Preference {n} _R_) → (b a c : Fin n) → R-one b p a c ⊎ R-one b p c a
+    R1-complete p b a c with b ≟ a | b ≟ c | R-complete p a c 
+    ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁ aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
+    ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₂ cRa = inj₂ (normal c a ¬b≡c ¬b≡a cRa)
+    ... | _                      | true because ofʸ   b≡c | _        = inj₂ (swapped c a b≡c)
+    ... | true because ofʸ   b≡a | _                      | _        = inj₁ (swapped a c b≡a)
 
-    R'-dec : (p : Preference {n} _R_) → (d a b : Fin n) → R' p d a b ⊎ ¬ (R' p d a b)
-    R'-dec p d a b with d ≟ a | d ≟ b | R-dec p a b | R-dec p b a 
-    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₁  aRb | _         = inj₁     (normal p d a b ¬d≡a ¬d≡b aRb)
-    --- what is an extended lambda and why does it work?
-    ... | false because ofⁿ ¬d≡a | false because ofⁿ ¬d≡b | inj₂ ¬aRb | _         = inj₂ λ { (normal .p .d .a .b _ _ aRb)       → ¬aRb aRb
-                                                                                           ; (swapped .p .d .b .a (inj₁ d≡b) _) → ¬d≡b d≡b
-                                                                                           ; (swapped .p .d .b .a (inj₂ d≡a) _) → ¬d≡a d≡a }
-    ... | _                      | true because ofʸ   d≡b | _         | inj₁  bRa = inj₁     (swapped p d b a (inj₁ d≡b) bRa)
-    ... | _                      | true because ofʸ   d≡b | _         | inj₂ ¬bRa = inj₂ λ { (normal .p .d .a .b _ ¬d≡b _)      → ¬d≡b d≡b
-                                                                                           ; (swapped .p .d .b .a _ bRa)        → ¬bRa bRa }
-    ... | true because ofʸ d≡a   | _                      | _         | inj₁  bRa = inj₁     (swapped p d b a (inj₂ d≡a) bRa)
-    ... | true because ofʸ d≡a   | _                      | _         | inj₂ ¬bRa = inj₂ λ { (normal .p .d .a .b ¬d≡a _ _)      → ¬d≡a d≡a
-                                                                                           ; (swapped .p .d .b .a _ bRa)        → ¬bRa bRa }
+    R1-dec : (p : Preference {n} _R_) → (b a c : Fin n) → R-one b p a c ⊎ ¬ (R-one b p a c)
+    R1-dec {_R_ = _R_} p b a c with b ≟ a | b ≟ c | R-dec p a c 
+    ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁  aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
+    ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₂ ¬aRc = inj₂ λ { (normal .a .c x _ aRc) → ¬aRc aRc
+                                                                               ; (swapped .a .c b≡a)    → ¬b≡a b≡a}
+    ... | false because ofⁿ ¬b≡a | true because ofʸ   b≡c | inj₁  aRc = inj₂ λ { (normal .a .c _ ¬b≡c _) → ¬b≡c b≡c
+                                                                               ; (swapped .a .c b≡a) → ¬b≡a b≡a}
+    ... | true because ofʸ   b≡a | true because ofʸ   b≡c | inj₁  aRc rewrite b≡c = inj₁ (swapped a c b≡a)
+    ... | _                      | true because ofʸ   b≡c | inj₂ ¬aRc rewrite b≡c = inj₂ λ { (normal .a .c _ ¬b≡c aRc) → ¬b≡c Eq.refl
+                                                                                           ; (swapped .a .c b≡a) → ¬aRc {!   !} } ---(R-refl {_R_ = _R_} {!   !} {!   !})
+    ... | true because ofʸ   b≡a | _                      | _         = inj₁ (swapped a c b≡a)
 
-    R'-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R' p d a b → R' p d b c → R' p d a c
-    R'-trans p d a b c (normal .p .d .a .b ¬d≡a ¬d≡b aRb)   (normal .p .d .b .c _    ¬d≡c bRc) = normal p d a c ¬d≡a ¬d≡c (R-trans p a b c aRb bRc)
-    R'-trans p d a b c (swapped .p .d .b .a (inj₁ d≡b) bRa) (normal .p .d .b .c ¬d≡b ¬d≡c bRc) = ⊥-elim (¬d≡b d≡b)
-    R'-trans p d a b c (swapped .p .d .b .a (inj₂ d≡a) bRa) (normal .p .d .b .c ¬d≡b ¬d≡c bRc) with R-complete p a c 
-    ... | inj₁  aRc = {!   !} -- we have b > a > c but we want a < c
-    ... | inj₂  cRa = swapped p d c a (inj₂ d≡a) cRa
-    R'-trans p d a b c (normal .p .d .a .b x x₁ x₂) (swapped .p .d .c .b x₃ x₄)   = {!   !}
-    R'-trans p d a b c (swapped .p .d .b .a x x₁)   (swapped .p .d .c .b x₂ x₃)   = {!   !}
+    R1-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R-one d p a b → R-one d p b c → R-one d p a c
+    R1-trans p d a b c (normal .a .b ¬d≡a ¬d≡b aRb) (normal .b .c _ ¬d≡c bRc) = normal a c ¬d≡a ¬d≡c (R-trans p a b c aRb bRc)
+    R1-trans p d a b c (normal .a .b ¬d≡a ¬d≡b aRb) (swapped .b .c d≡b) = ⊥-elim (¬d≡b d≡b)
+    R1-trans p d a b c (swapped .a .b d≡a) _ = swapped a c d≡a
 
-    SwappedPreference : (p : Preference {n} _R_) → (a : Fin n) → Preference {n} (R' p a)
-    SwappedPreference {n = n} p d = record { R-trans    = R'-trans p d
-                                           ; R-complete = R'-complete p d 
-                                           ; R-dec      = R'-dec p d }
+    R1Preference : (p : Preference {n} _R_) → (b : Fin n) → Preference {n} (R-one b p)
+    R1Preference {n = n} p d = record { R-trans    = R1-trans p d
+                                      ; R-complete = R1-complete p d 
+                                      ; R-dec      = R1-dec p d }
