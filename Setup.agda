@@ -1,19 +1,19 @@
-{-# OPTIONS --large-indices #-}
+--- {-# OPTIONS --large-indices #-}
 
 module Setup where
 
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Vec
-open import Data.List.Relation.Unary.All as All using (All)
+open import Data.Vec.Relation.Unary.All as All using (All)
 open import Relation.Unary using (Pred; ∁; _⊆_)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Data.Empty
 open import Data.Bool using (true; false; Bool)
-open import Data.List.Relation.Unary.Any as Any using (Any; any?)
+open import Data.Vec.Relation.Unary.Any as Any using (Any; any?)
 open import Data.Product using (_×_; _,_)
 open import Relation.Nullary.Decidable.Core using (isYes)
-open import ListUtil
+open import VecUtil
 open import Data.Nat as ℕ hiding (_≟_)
 open import Data.Fin as Fin
 open import Data.Fin.Properties using (_≟_)
@@ -149,11 +149,11 @@ module Election where
         --- a proof that if all voters agree on a relative ordering of candidates, the function does too
     record SocialPreference {m : ℕ} : Set₁ where
         field
-            Ballots : Vec (Voter) m
+            Ballots : Vec (Voter) (suc m)
             SocialPreferenceFunction : Voter
-            Unanimity : (a b : Fin n) → All (Prefers a b) (toList Ballots) → (Prefers a b SocialPreferenceFunction)
+            Unanimity : (a b : Fin n) → All (Prefers a b) Ballots → (Prefers a b SocialPreferenceFunction)
             --- TODO DEFINE ONE Unanimity IN TERMS OF OTHER
-            weakUnanimity : (a b : Fin n) → All (weaklyPrefers a b) (toList Ballots) → (weaklyPrefers a b SocialPreferenceFunction)
+            weakUnanimity : (a b : Fin n) → All (weaklyPrefers a b) Ballots → (weaklyPrefers a b SocialPreferenceFunction)
     open SocialPreference
 
     --- A voter is decisive if their preference between two candidates implies the election shares that preference
@@ -197,7 +197,7 @@ module Election where
         → (sp : SocialPreference {m}) 
         → (a b : Fin n)
         -------------------------
-        → Vec Bool m × Vec Bool m
+        → Vec Bool (suc m) × Vec Bool (suc m)
     VoterPreferences e a b 
         = map (λ x → isYes (weaklyPrefers? a b x)) (Ballots e) 
         , map (λ x → isYes (weaklyPrefers? b a x)) (Ballots e)
@@ -218,14 +218,11 @@ module ProfileIIIVoter where
     R1-dec : (p : Preference {n} _R_) → (b a c : Fin n) → R-one b p a c ⊎ ¬ (R-one b p a c)
     R1-dec {_R_ = _R_} p b a c with b ≟ a | b ≟ c | R-dec p a c 
     ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁  aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
-    ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₂ ¬aRc = inj₂ λ { (normal .a .c x _ aRc) → ¬aRc aRc
+    ... | true because ofʸ   b≡a | _                      | _         = inj₁ (swapped a c b≡a)
+    ... | false because ofⁿ ¬b≡a | _                      | inj₂ ¬aRc = inj₂ λ { (normal .a .c x _ aRc) → ¬aRc aRc
                                                                                ; (swapped .a .c b≡a)    → ¬b≡a b≡a}
     ... | false because ofⁿ ¬b≡a | true because ofʸ   b≡c | inj₁  aRc = inj₂ λ { (normal .a .c _ ¬b≡c _) → ¬b≡c b≡c
                                                                                ; (swapped .a .c b≡a) → ¬b≡a b≡a}
-    ... | true because ofʸ   b≡a | true because ofʸ   b≡c | inj₁  aRc rewrite b≡c = inj₁ (swapped a c b≡a)
-    ... | _                      | true because ofʸ   b≡c | inj₂ ¬aRc rewrite b≡c = inj₂ λ { (normal .a .c _ ¬b≡c aRc) → ¬b≡c Eq.refl
-                                                                                           ; (swapped .a .c b≡a) → ¬aRc {!   !} } ---(R-refl {_R_ = _R_} {!   !} {!   !})
-    ... | true because ofʸ   b≡a | _                      | _         = inj₁ (swapped a c b≡a)
 
     R1-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R-one d p a b → R-one d p b c → R-one d p a c
     R1-trans p d a b c (normal .a .b ¬d≡a ¬d≡b aRb) (normal .b .c _ ¬d≡c bRc) = normal a c ¬d≡a ¬d≡c (R-trans p a b c aRb bRc)
@@ -236,3 +233,33 @@ module ProfileIIIVoter where
     R1Preference {n = n} p d = record { R-trans    = R1-trans p d
                                       ; R-complete = R1-complete p d 
                                       ; R-dec      = R1-dec p d }
+
+    data R-two (b : Fin n) (p : Preference {n} _R_) : (a c : Fin n) → Set where
+        normal  : (a c : Fin n) → ¬ (b ≡ a) → ¬ (b ≡ c) → (a R c) → R-two b p a c
+        swapped : (a c : Fin n) →   (b ≡ a) →                       R-two b p c a
+
+    R2-complete : (p : Preference {n} _R_) → (b a c : Fin n) → R-two b p a c ⊎ R-two b p c a
+    R2-complete p b a c with b ≟ a | b ≟ c | R-complete p a c 
+    ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁ aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
+    ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₂ cRa = inj₂ (normal c a ¬b≡c ¬b≡a cRa)
+    ... | _                      | true because ofʸ   b≡c | _        = inj₁ (swapped c a b≡c)
+    ... | true because ofʸ   b≡a | _                      | _        = inj₂ (swapped a c b≡a)
+
+    R2-dec : (p : Preference {n} _R_) → (b a c : Fin n) → R-two b p a c ⊎ ¬ (R-two b p a c)
+    R2-dec {_R_ = _R_} p b a c with b ≟ a | b ≟ c | R-dec p a c     
+    ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁  aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
+    ... | _                      | true because ofʸ   b≡c | _         = inj₁ (swapped c a b≡c)
+    ... | _                      | false because ofⁿ ¬b≡c | inj₂ ¬aRc = inj₂ λ { (normal .a .c _ _ aRc) → ¬aRc aRc
+                                                                               ; (swapped .c .a b≡c) → ¬b≡c b≡c }
+    ... | true because ofʸ   b≡a | false because ofⁿ ¬b≡c | _         = inj₂ λ { (normal .a .c ¬b≡a _ _) → ¬b≡a b≡a
+                                                                               ; (swapped .c .a b≡c) → ¬b≡c b≡c }
+
+    R2-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R-two d p a b → R-two d p b c → R-two d p a c
+    R2-trans p d a b c (normal .a .b ¬d≡a ¬d≡b aRb) (normal .b .c _ ¬d≡c bRc) = normal a c ¬d≡a ¬d≡c (R-trans p a b c aRb bRc)
+    R2-trans p d a b c (swapped .b .a d≡b) (normal .b .c ¬d≡b ¬d≡c bRc) = ⊥-elim (¬d≡b d≡b)
+    R2-trans p d a b c _ (swapped .c .b d≡c) = swapped c a d≡c
+
+    R2Preference : (p : Preference {n} _R_) → (b : Fin n) → Preference {n} (R-two b p)
+    R2Preference {n = n} p d = record { R-trans    = R2-trans p d
+                                      ; R-complete = R2-complete p d 
+                                      ; R-dec      = R2-dec p d }
