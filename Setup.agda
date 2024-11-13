@@ -1,5 +1,3 @@
---- {-# OPTIONS --large-indices #-}
-
 module Setup where
 
 open import Data.Sum using (_⊎_; inj₁; inj₂)
@@ -21,13 +19,14 @@ open import Data.Fin.Properties using (_≟_)
 private
     variable
         n : ℕ
+        n>1 : n ℕ.> 1
         a b c : Fin n
         _R_ : Fin n → Fin n → Set
 
 module WeakPreference where
     --- A weak preference is transitive, complete, and decidable relation
     --- A weak preference is not anti-symmetric, so voters can be indifferent between candidates
-    record Preference {n : ℕ} (_R_ : Fin n → Fin n → Set) : Set where
+    record Preference {n : ℕ} {n>1 : n ℕ.> 1} (_R_ : Fin n → Fin n → Set) : Set where
         field
             R-trans    : (a b c : Fin n) → a R b → b R c → a R c
             R-complete : (a b : Fin n)   → (a R b) ⊎   (b R a)
@@ -35,7 +34,7 @@ module WeakPreference where
     open Preference
 
     --- Weak preferences are reflexive
-    R-refl : (v : Preference _R_) 
+    R-refl : (v : Preference {n>1 = n>1} _R_) 
         → (a : Fin n) 
         ----------------------
         → a R a
@@ -43,7 +42,7 @@ module WeakPreference where
     ... | inj₁ aRa = aRa
     ... | inj₂ aRa = aRa
 
-    ¬R-dec→⊥ : {p : Preference {n} _R_} → {a b : Fin n} → ¬ (a R b) → ¬ (b R a) → ⊥
+    ¬R-dec→⊥ : {p : Preference {n} {n>1} _R_} → {a b : Fin n} → ¬ (a R b) → ¬ (b R a) → ⊥
     ¬R-dec→⊥ {p = p} {a = a} {b = b} ¬aRb ¬bRa with R-complete p a b 
     ... | inj₁ aRb = ¬aRb aRb
     ... | inj₂ bRa = ¬bRa bRa
@@ -52,7 +51,7 @@ open Preference
 
 module StrictPreference where
     --- Strict preferences are the absence of the inverted weak preference
-    P : (Preference {n} _R_) 
+    P : (Preference {n} {n>1} _R_) 
         → (a b : Fin n) 
         ----------------------
         → Set
@@ -60,7 +59,7 @@ module StrictPreference where
 
     --- Strict preferences imply weak preferences
     P→R : {a b : Fin n} 
-        → {v : Preference {n} _R_} 
+        → {v : Preference {n} {n>1} _R_} 
         → (P v a b) 
         --------------------------
         → a R b
@@ -69,14 +68,14 @@ module StrictPreference where
     ... | inj₂ bRa = ⊥-elim (¬bRa bRa)
 
     --- Strict preferences imply inequality
-    P↛≡ : {v : Preference {n} _R_} 
+    P↛≡ : {v : Preference {n} {n>1} _R_} 
         → (P v a b) 
         --------------------------
         → ¬ (a ≡ b)
     P↛≡ {b = b} {v = v} ¬bRb a≡b rewrite a≡b = ¬bRb (R-refl v b)
 
     --- Strict preference is transitive
-    P-trans : {v : Preference {n} _R_} 
+    P-trans : {v : Preference {n} {n>1} _R_} 
             → P v a b 
             → P v b c 
             --------------------------
@@ -93,12 +92,12 @@ module VoterBehavior where
     record Voter : Set₁ where
         field
             r : Fin n → Fin n → Set
-            prefs : Preference {n} r
+            prefs : Preference {n} {n>1} r
     open Voter
 
     --- Strict preference is decidable
     Dec-Prefers : (a b : Fin n) 
-                → (v : Preference {n} _R_) 
+                → (v : Preference {n} {n>1} _R_) 
                 --------------------------
                 → Set
     Dec-Prefers a b v = Dec (P v a b)
@@ -106,21 +105,22 @@ module VoterBehavior where
     Prefers? : (a b : Fin n) 
             → (v : Voter)
             ----------------------------
-            → (Dec-Prefers a b (prefs v))
-    Prefers? a b v with R-dec (prefs v) b a
+            → (Dec-Prefers {n} {n>1} a b (prefs v))
+    Prefers? {n} {n>1} a b v with R-dec {n} {n>1} (prefs v) b a
     ...                 | inj₁ bRa  = false because ofⁿ (λ ¬bRa → ¬bRa bRa)
     ...                 | inj₂ ¬bRa = true  because ofʸ ¬bRa
 
     --- Strict preference is defined for voters
-    Prefers : (a b : Fin n) 
+    Prefers : {n>1 : n ℕ.> 1} 
+            → (a b : Fin n) 
             → (v : Voter) 
             ---------------
             → Set
-    Prefers a b record { r = r' ; prefs = prefs' }
-                    = P {_R_ = r'} prefs' a b
+    Prefers {n} {n>1} a b record { r = r' ; prefs = prefs' } 
+            = P (prefs' {n} {n>1}) a b
 
     --- Weak preference is decidable
-    Dec-weaklyPrefers : (v : Preference {n} _R_) 
+    Dec-weaklyPrefers : (v : Preference {n} {n>1} _R_) 
                     → (a b : Fin n) 
                     ----------------------------
                     → Set
@@ -129,8 +129,8 @@ module VoterBehavior where
     weaklyPrefers? : (a b : Fin n) 
                     → (v : Voter)
                     -----------------------------------
-                    → (Dec-weaklyPrefers (prefs v) a b)
-    weaklyPrefers? a b v with R-dec (prefs v) a b
+                    → (Dec-weaklyPrefers {n} {n>1} (prefs v) a b)
+    weaklyPrefers? {n} {n>1} a b v with R-dec {n} {n>1} (prefs v) a b
     ...                  | inj₁ x = true  because ofʸ x
     ...                  | inj₂ y = false because ofⁿ y
 
@@ -151,71 +151,76 @@ module Election where
         field
             Ballots : Vec (Voter) (suc m)
             SocialPreferenceFunction : Voter
-            Unanimity : (a b : Fin n) → All (Prefers a b) Ballots → (Prefers a b SocialPreferenceFunction)
+            Unanimity : (a b : Fin n) → All (Prefers {n} {n>1} a b) Ballots → (Prefers {n} {n>1} a b SocialPreferenceFunction)
             --- TODO DEFINE ONE Unanimity IN TERMS OF OTHER
             weakUnanimity : (a b : Fin n) → All (weaklyPrefers a b) Ballots → (weaklyPrefers a b SocialPreferenceFunction)
     open SocialPreference
 
     --- A voter is decisive if their preference between two candidates implies the election shares that preference
-    Decisive : {m n : ℕ} 
+    Decisive : {m n : ℕ}
+                → {n>1 : n ℕ.> 1}
                 → (a b : Fin n) 
                 → (SocialPreference {m}) 
                 → (v : Voter) 
                 --------------------
                 → Set
-    Decisive a b sp v = Prefers a b v → Prefers a b (SocialPreferenceFunction sp)
+    Decisive {m} {n} {n>1} a b sp v = Prefers {n} {n>1} a b v → Prefers {n} {n>1} a b (SocialPreferenceFunction sp)
 
     --- A voter is a dictator if they are decisive over all pairs of candidates
     Dictator : {m n : ℕ} 
+                → {n>1 : n ℕ.> 1}
                 → (SocialPreference {m}) 
                 → (v : Voter) 
                 --------------------
                 → Set
-    Dictator {n = n} sp v = ∀ (a b : Fin n) → Decisive a b sp v
+    Dictator {m} {n} {n>1} sp v = ∀ (a b : Fin n) → Decisive {m} {n} {n>1} a b sp v
 
     --- utility predicates for list operations
     C-P⊆wP :  {n : ℕ} 
+            → {n>1 : n ℕ.> 1}
             → (a b : Fin n)
             ----------------------------------------
-            → (∁ (Prefers a b)) ⊆ weaklyPrefers b a
-    C-P⊆wP {n = n} a b {record { r = r' ; prefs = prefs' }} x 
-            with (R-dec prefs') b a
+            → (∁ (Prefers {n} {n>1} a b)) ⊆ weaklyPrefers b a
+    C-P⊆wP {n} {n>1} a b {record { r = r' ; prefs = prefs' }} x 
+            with (R-dec {n} {n>1} prefs') b a
     ...     | inj₁ y = y 
     ...     | inj₂ z = ⊥-elim (x z)
 
     wP⊆C-P :  {n : ℕ} 
+            → {n>1 : n ℕ.> 1}
             → (a b : Fin n)
             ----------------------------------------
-            → weaklyPrefers b a ⊆ (∁ (Prefers a b))
-    wP⊆C-P a b {v} x 
-            with Prefers? a b v 
+            → weaklyPrefers b a ⊆ (∁ (Prefers {n} {n>1} a b))
+    wP⊆C-P {n} {n>1} a b {v} x 
+            with Prefers? {n} {n>1} a b v 
     ... | false because ofⁿ ¬p = λ y → y x 
     ... | true  because ofʸ  p = λ _ → p x 
 
     --- function that defines the preferences of all voters across two candidates
     VoterPreferences : {m n : ℕ} 
+        → {n>1 : n ℕ.> 1}
         → (sp : SocialPreference {m}) 
         → (a b : Fin n)
         -------------------------
         → Vec Bool (suc m) × Vec Bool (suc m)
-    VoterPreferences e a b 
-        = map (λ x → isYes (weaklyPrefers? a b x)) (Ballots e) 
-        , map (λ x → isYes (weaklyPrefers? b a x)) (Ballots e)
+    VoterPreferences {m} {n} {n>1} e a b 
+        = map (λ x → isYes (weaklyPrefers? {n} {n>1} a b x)) (Ballots e) 
+        , map (λ x → isYes (weaklyPrefers? {n} {n>1} b a x)) (Ballots e)
 open Election
 
 module ProfileIIIVoter where
-    data R-one (b : Fin n) (p : Preference {n} _R_) : (a c : Fin n) → Set where
+    data R-one (b : Fin n) (p : Preference {n} {n>1} _R_) : (a c : Fin n) → Set where
         normal  : (a c : Fin n) → ¬ (b ≡ a) → ¬ (b ≡ c) → (a R c) → R-one b p a c
         swapped : (a c : Fin n) →   (b ≡ a) →                       R-one b p a c
 
-    R1-complete : (p : Preference {n} _R_) → (b a c : Fin n) → R-one b p a c ⊎ R-one b p c a
+    R1-complete : (p : Preference {n} {n>1} _R_) → (b a c : Fin n) → R-one b p a c ⊎ R-one b p c a
     R1-complete p b a c with b ≟ a | b ≟ c | R-complete p a c 
     ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁ aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
     ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₂ cRa = inj₂ (normal c a ¬b≡c ¬b≡a cRa)
     ... | _                      | true because ofʸ   b≡c | _        = inj₂ (swapped c a b≡c)
     ... | true because ofʸ   b≡a | _                      | _        = inj₁ (swapped a c b≡a)
 
-    R1-dec : (p : Preference {n} _R_) → (b a c : Fin n) → R-one b p a c ⊎ ¬ (R-one b p a c)
+    R1-dec : (p : Preference {n} {n>1} _R_) → (b a c : Fin n) → R-one b p a c ⊎ ¬ (R-one b p a c)
     R1-dec {_R_ = _R_} p b a c with b ≟ a | b ≟ c | R-dec p a c 
     ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁  aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
     ... | true because ofʸ   b≡a | _                      | _         = inj₁ (swapped a c b≡a)
@@ -224,28 +229,28 @@ module ProfileIIIVoter where
     ... | false because ofⁿ ¬b≡a | true because ofʸ   b≡c | inj₁  aRc = inj₂ λ { (normal .a .c _ ¬b≡c _) → ¬b≡c b≡c
                                                                                ; (swapped .a .c b≡a) → ¬b≡a b≡a}
 
-    R1-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R-one d p a b → R-one d p b c → R-one d p a c
+    R1-trans : (p : Preference {n} {n>1} _R_) → (d a b c : Fin n) → R-one d p a b → R-one d p b c → R-one d p a c
     R1-trans p d a b c (normal .a .b ¬d≡a ¬d≡b aRb) (normal .b .c _ ¬d≡c bRc) = normal a c ¬d≡a ¬d≡c (R-trans p a b c aRb bRc)
     R1-trans p d a b c (normal .a .b ¬d≡a ¬d≡b aRb) (swapped .b .c d≡b) = ⊥-elim (¬d≡b d≡b)
     R1-trans p d a b c (swapped .a .b d≡a) _ = swapped a c d≡a
 
-    R1Preference : (p : Preference {n} _R_) → (b : Fin n) → Preference {n} (R-one b p)
+    R1Preference : (p : Preference {n} {n>1} _R_) → (b : Fin n) → Preference {n} {n>1} (R-one b p)
     R1Preference {n = n} p d = record { R-trans    = R1-trans p d
                                       ; R-complete = R1-complete p d 
                                       ; R-dec      = R1-dec p d }
 
-    data R-two (b : Fin n) (p : Preference {n} _R_) : (a c : Fin n) → Set where
+    data R-two (b : Fin n) (p : Preference {n} {n>1} _R_) : (a c : Fin n) → Set where
         normal  : (a c : Fin n) → ¬ (b ≡ a) → ¬ (b ≡ c) → (a R c) → R-two b p a c
         swapped : (a c : Fin n) →   (b ≡ a) →                       R-two b p c a
 
-    R2-complete : (p : Preference {n} _R_) → (b a c : Fin n) → R-two b p a c ⊎ R-two b p c a
+    R2-complete : (p : Preference {n} {n>1} _R_) → (b a c : Fin n) → R-two b p a c ⊎ R-two b p c a
     R2-complete p b a c with b ≟ a | b ≟ c | R-complete p a c 
     ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁ aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
     ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₂ cRa = inj₂ (normal c a ¬b≡c ¬b≡a cRa)
     ... | _                      | true because ofʸ   b≡c | _        = inj₁ (swapped c a b≡c)
     ... | true because ofʸ   b≡a | _                      | _        = inj₂ (swapped a c b≡a)
 
-    R2-dec : (p : Preference {n} _R_) → (b a c : Fin n) → R-two b p a c ⊎ ¬ (R-two b p a c)
+    R2-dec : (p : Preference {n} {n>1} _R_) → (b a c : Fin n) → R-two b p a c ⊎ ¬ (R-two b p a c)
     R2-dec {_R_ = _R_} p b a c with b ≟ a | b ≟ c | R-dec p a c     
     ... | false because ofⁿ ¬b≡a | false because ofⁿ ¬b≡c | inj₁  aRc = inj₁ (normal a c ¬b≡a ¬b≡c aRc)
     ... | _                      | true because ofʸ   b≡c | _         = inj₁ (swapped c a b≡c)
@@ -254,12 +259,12 @@ module ProfileIIIVoter where
     ... | true because ofʸ   b≡a | false because ofⁿ ¬b≡c | _         = inj₂ λ { (normal .a .c ¬b≡a _ _) → ¬b≡a b≡a
                                                                                ; (swapped .c .a b≡c) → ¬b≡c b≡c }
 
-    R2-trans : (p : Preference {n} _R_) → (d a b c : Fin n) → R-two d p a b → R-two d p b c → R-two d p a c
+    R2-trans : (p : Preference {n} {n>1} _R_) → (d a b c : Fin n) → R-two d p a b → R-two d p b c → R-two d p a c
     R2-trans p d a b c (normal .a .b ¬d≡a ¬d≡b aRb) (normal .b .c _ ¬d≡c bRc) = normal a c ¬d≡a ¬d≡c (R-trans p a b c aRb bRc)
     R2-trans p d a b c (swapped .b .a d≡b) (normal .b .c ¬d≡b ¬d≡c bRc) = ⊥-elim (¬d≡b d≡b)
     R2-trans p d a b c _ (swapped .c .b d≡c) = swapped c a d≡c
 
-    R2Preference : (p : Preference {n} _R_) → (b : Fin n) → Preference {n} (R-two b p)
+    R2Preference : (p : Preference {n} {n>1} _R_) → (b : Fin n) → Preference {n} {n>1} (R-two b p)
     R2Preference {n = n} p d = record { R-trans    = R2-trans p d
                                       ; R-complete = R2-complete p d 
                                       ; R-dec      = R2-dec p d }

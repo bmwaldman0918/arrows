@@ -22,26 +22,25 @@ open import Data.Fin
 
 private
     variable
-        m n : ℕ
-        m>0 : m ℕ.> 0
+        m n : ℕ --- numbers of ballots/number of candidates
+        m>0 : m ℕ.> 0 --- at least ballot
+        n>1 : n ℕ.> 1 --- at least two candidates
         a b c : Fin n
         
 postulate 
     IndependenceOfIrrelevantAlternatives :  {e1 e2 : SocialPreference} 
-        → VoterPreferences {m} {n} e1 ≡ VoterPreferences e2
-        → Prefers a b (SocialPreferenceFunction e1) 
+        → VoterPreferences {m} {n} {n>1} e1 ≡ VoterPreferences {m} {n} {n>1} e2
+        → Prefers {n} {n>1} a b (SocialPreferenceFunction e1) 
           -----------------------------------------
-        → Prefers a b (SocialPreferenceFunction e2)
+        → Prefers {n} {n>1} a b (SocialPreferenceFunction e2)
 
-ExistsPivot : (election : SocialPreference {n}) → Any (Decisive a b election) (SocialPreference.Ballots election)
-ExistsPivot {a = a} {b = b} election with all? (Prefers? a b) (SocialPreference.Ballots election) | (Prefers? a b) (SocialPreference.SocialPreferenceFunction election) 
-ExistsPivot {n} {a = a} {b = b} election  | false because ofⁿ ¬p | true because ofʸ p = {!   !}
-... | true because ofʸ p | .true because ofʸ p₁ = {!   !}
-... | true because ofʸ p | .false because ofⁿ ¬p = {!   !}
-ExistsPivot {ℕ.zero} {a = a} {b = b} election | false because ofⁿ ¬all-aPb | false because ofⁿ ¬p₁ with SocialPreference.Ballots election
-... | y = {!   !}
-ExistsPivot {ℕ.suc n} {a = a} {b = b} election | false because ofⁿ ¬all-aPb | false because ofⁿ ¬p₁ with ¬AllP→AnyCP {m>0 = ℕ.s≤s ℕ.z≤n} (Prefers? a b) ¬all-aPb 
-... | any-bRa = Any.map (λ x v-aPb _ → x v-aPb) any-bRa
+ExistsPivot : {m>0 : m ℕ.> 0}
+            → (election : SocialPreference {m}) 
+            -----------------------------------
+            → Any (Decisive {m} {n} {n>1} a b election) (Ballots election)
+ExistsPivot {m = m} {n = n} {n>1 = n>1} {a = a} {b = b} election 
+            with Ballots election
+... | x Data.Vec.Base.Vec.∷ x₁ = ?
 
 
 --- cases!
@@ -56,7 +55,7 @@ ExistsPivot {ℕ.suc n} {a = a} {b = b} election | false because ofⁿ ¬all-aPb
 
 --- how to manipulate elections to change preferences of voters in them/profile switching stuff
   
-
+{-
 aDb→aDc : {v : Voter} → (election : SocialPreference {n}) → (Decisive a b election v) → (Decisive a c election v)
 aDb→aDc {a = a} {b = b} {c = c} e aDb v-aPc with Prefers? a c (SocialPreference.SocialPreferenceFunction e) 
 ... | false because ofⁿ ¬p = {!   !}
@@ -64,3 +63,4 @@ aDb→aDc {a = a} {b = b} {c = c} e aDb v-aPc with Prefers? a c (SocialPreferenc
 
 arrows-theorem : (election : SocialPreference {n}) → Any (Dictator {n} {m} election) (SocialPreference.Ballots election)
 arrows-theorem e = {!   !}
+-}
