@@ -149,7 +149,7 @@ module Election where
         --- a proof that if all voters agree on a relative ordering of candidates, the function does too
     record SocialPreference {m : ℕ} : Set₁ where
         field
-            Ballots : Vec (Voter) (suc m)
+            Ballots : Vec (Voter) m
             SocialPreferenceFunction : Voter
             Unanimity : (a b : Fin n) → All (Prefers {n} {n>1} a b) Ballots → (Prefers {n} {n>1} a b SocialPreferenceFunction)
             --- TODO DEFINE ONE Unanimity IN TERMS OF OTHER
@@ -202,7 +202,7 @@ module Election where
         → (sp : SocialPreference {m}) 
         → (a b : Fin n)
         -------------------------
-        → Vec Bool (suc m) × Vec Bool (suc m)
+        → Vec Bool m × Vec Bool m
     VoterPreferences {m} {n} {n>1} e a b 
         = map (λ x → isYes (weaklyPrefers? {n} {n>1} a b x)) (Ballots e) 
         , map (λ x → isYes (weaklyPrefers? {n} {n>1} b a x)) (Ballots e)
