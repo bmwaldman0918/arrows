@@ -6,6 +6,7 @@ open VoterBehavior
 open SocialPreference
 
 open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Vec.Base as Vec using (Vec; []; _∷_)
 open import Data.Vec.Relation.Unary.All using (All; []; all?; uncons; map)
 open import Data.Vec.Relation.Unary.Any as Any using (Any; any?; here; there; satisfied; map)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
@@ -40,7 +41,7 @@ ExistsPivot : {m>0 : m ℕ.> 0}
             → Any (Decisive {m} {n} {n>1} a b election) (Ballots election)
 ExistsPivot {m = m} {n = n} {n>1 = n>1} {a = a} {b = b} election 
             with Ballots election
-... | x Data.Vec.Base.Vec.∷ x₁ = ?
+... | x ∷ xs = {!   !}
 
 
 --- cases!
