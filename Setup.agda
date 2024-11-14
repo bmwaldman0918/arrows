@@ -282,3 +282,17 @@ module ProfileIIIVoter where
         ; prefs = record { R-trans = R2-trans prefs b 
                          ; R-complete = R2-complete prefs b 
                          ; R-dec = R2-dec prefs b}}
+
+    data Pivot (a : Fin n) (b : Fin n) (p : Preference {n} {n>1} _R_) : (c d : Fin n) → Set where
+        normal   : (c d : Fin n) → ¬ (a ≡ c) → ¬ (a ≡ d) → ¬ (b ≡ c) → ¬ (b ≡ d) → (c R d) → Pivot a b p c d
+        a-first  : (c d : Fin n) →   (a ≡ c) →                                               Pivot a b p c d
+        b-second : (c d : Fin n) →   (b ≡ c) → ¬ (a ≡ d) →                                   Pivot a b p c d
+    
+    Pivot-complete : (p : Preference {n} {n>1} _R_) → (a b c d : Fin n) → Pivot a b p c d ⊎ Pivot a b p d c
+    Pivot-complete p a b c d with a ≟ c | a ≟ d | b ≟ c | b ≟ d | R-complete p c d 
+    ... | true because ofʸ a≡c | _ | _ | _ | _ = inj₁ (a-first c d a≡c) 
+    ... | _ | true because ofʸ a≡d | _ | _ | _ = inj₂ (a-first d c a≡d)
+    ... | _ | false because ofⁿ ¬a≡d | true because ofʸ b≡c | _ | _ = inj₁ (b-second c d b≡c ¬a≡d)
+    ... | false because ofⁿ ¬a≡c | _ | _ | true because ofʸ b≡d | _ = inj₂ (b-second d c b≡d ¬a≡c)
+    ... | false because ofⁿ ¬a≡c | false because ofⁿ ¬a≡d | false because ofⁿ ¬b≡c | false because ofⁿ ¬b≡d | inj₁ cRd = inj₁ (normal c d ¬a≡c ¬a≡d ¬b≡c ¬b≡d cRd)
+    ... | false because ofⁿ ¬a≡c | false because ofⁿ ¬a≡d | false because ofⁿ ¬b≡c | false because ofⁿ ¬b≡d | inj₂ dRc = inj₂ (normal d c ¬a≡d ¬a≡c ¬b≡d ¬b≡c dRc) 
