@@ -89,7 +89,7 @@ open StrictPreference
 
 module VoterBehavior where
     --- A voter is a weak preference organized in a specific way for convenience
-    record Voter {n : ℕ} : Set₁ where
+    record Voter (n : ℕ) : Set₁ where
         field
             r : Fin n → Fin n → Set
             prefs : Preference {n} {n>1} r
@@ -103,7 +103,7 @@ module VoterBehavior where
     Dec-Prefers a b v = Dec (P v a b)
 
     Prefers? : (a b : Fin n) 
-            → (v : Voter)
+            → (v : Voter n)
             ----------------------------
             → (Dec-Prefers {n} {n>1} a b (prefs v))
     Prefers? {n} {n>1} a b v with R-dec {n} {n>1} (prefs v) b a
@@ -113,7 +113,7 @@ module VoterBehavior where
     --- Strict preference is defined for voters
     Prefers : {n>1 : n ℕ.> 1} 
             → (a b : Fin n) 
-            → (v : Voter {n}) 
+            → (v : Voter n) 
             ---------------
             → Set
     Prefers {n} {n>1} a b record { r = r' ; prefs = prefs' } 
@@ -127,7 +127,7 @@ module VoterBehavior where
     Dec-weaklyPrefers {_R_ = _R_} v a b = Dec (a R b)
 
     weaklyPrefers? : (a b : Fin n) 
-                    → (v : Voter)
+                    → (v : Voter n)
                     -----------------------------------
                     → (Dec-weaklyPrefers {n} {n>1} (prefs v) a b)
     weaklyPrefers? {n} {n>1} a b v with R-dec {n} {n>1} (prefs v) a b
@@ -136,7 +136,7 @@ module VoterBehavior where
 
     --- Weak preference is defined for voters
     weaklyPrefers : (a b : Fin n) 
-                    → (v : Voter)
+                    → (v : Voter n)
                     ---------------
                     → Set
     weaklyPrefers a b record { r = r' ; prefs = prefs' } = r' a b
@@ -147,21 +147,18 @@ module Election where
         --- a list of voters
         --- a function that determines an order of candidates
         --- a proof that if all voters agree on a relative ordering of candidates, the function does too
-    record SocialPreference {m : ℕ} : Set₁ where
+    record SocialPreference (m n : ℕ) : Set₁ where
         field
-            Ballots : Vec (Voter {n}) m
-            SocialPreferenceFunction : Voter {n}
-            Unanimity : (a b : Fin n) → All (Prefers {n} {n>1} a b) Ballots → (Prefers {n} {n>1} a b SocialPreferenceFunction)
-            --- TODO DEFINE ONE Unanimity IN TERMS OF OTHER
-            weakUnanimity : (a b : Fin n) → All (weaklyPrefers a b) Ballots → (weaklyPrefers a b SocialPreferenceFunction)
+            Ballots : Vec (Voter n) m
+            SocialPreferenceFunction : Voter n
     open SocialPreference
 
     --- A voter is decisive if their preference between two candidates implies the election shares that preference
     Decisive : {m n : ℕ}
                 → {n>1 : n ℕ.> 1}
                 → (a b : Fin n) 
-                → (SocialPreference {m}) 
-                → (v : Voter) 
+                → (SocialPreference m n) 
+                → (v : Voter n) 
                 --------------------
                 → Set
     Decisive {m} {n} {n>1} a b sp v = Prefers {n} {n>1} a b v → Prefers {n} {n>1} a b (SocialPreferenceFunction sp)
@@ -169,8 +166,8 @@ module Election where
     --- A voter is a dictator if they are decisive over all pairs of candidates
     Dictator : {m n : ℕ} 
                 → {n>1 : n ℕ.> 1}
-                → (SocialPreference {m}) 
-                → (v : Voter) 
+                → (SocialPreference m n) 
+                → (v : Voter n) 
                 --------------------
                 → Set
     Dictator {m} {n} {n>1} sp v = ∀ (a b : Fin n) → Decisive {m} {n} {n>1} a b sp v
@@ -199,13 +196,13 @@ module Election where
     --- function that defines the preferences of all voters across two candidates
     VoterPreferences : {m n : ℕ} 
         → {n>1 : n ℕ.> 1}
-        → (sp : SocialPreference {m}) 
+        → (sp : SocialPreference m n) 
         → (a b : Fin n)
         -------------------------
         → Vec Bool m × Vec Bool m
     VoterPreferences {m} {n} {n>1} e a b 
         = map (λ x → isYes (weaklyPrefers? {n} {n>1} a b x)) (Ballots e) 
-        , map (λ x → isYes (weaklyPrefers? {n} {n>1} b a x)) (Ballots e)
+        , {!   !} ---map (λ x → (weaklyPrefers? {n} {n>1} b a x)) (Ballots e)
 open Election
 
 module ProfileIIIVoter where
@@ -239,7 +236,7 @@ module ProfileIIIVoter where
                                       ; R-complete = R1-complete p d 
                                       ; R-dec      = R1-dec p d }
     
-    Voter→R1Voter : {n>1 : n ℕ.> 1} → Fin n → Voter {n} → Voter {n}
+    Voter→R1Voter : {n>1 : n ℕ.> 1} → Fin n → Voter n → Voter n
     Voter→R1Voter {n} {n>1} b record { r = r ; prefs = prefs } = 
         record { r = R-one {n} {n>1} b prefs 
         ; prefs = record { R-trans = R1-trans prefs b 
@@ -276,7 +273,7 @@ module ProfileIIIVoter where
                                       ; R-complete = R2-complete p d 
                                       ; R-dec      = R2-dec p d }
 
-    Voter→R2Voter : {n>1 : n ℕ.> 1} → Fin n → Voter {n} → Voter {n}
+    Voter→R2Voter : {n>1 : n ℕ.> 1} → Fin n → Voter n → Voter n
     Voter→R2Voter {n} {n>1} b record { r = r ; prefs = prefs } = 
         record { r = R-two {n} {n>1} b prefs 
         ; prefs = record { R-trans = R2-trans prefs b 
@@ -323,7 +320,7 @@ module ProfileIIIVoter where
     Pivot-trans p a b c d e (b-second .c .d _ ¬a≡d) (a-first .d .e a≡d) = ⊥-elim (¬a≡d a≡d)
     Pivot-trans p a b c d e (b-second .c .d b≡c _) (b-second .d .e _ ¬a≡e) = b-second c e b≡c ¬a≡e
     
-    Voter→PivotalVoter : {n>1 : n ℕ.> 1} → Fin n → Fin n → Voter {n} → Voter {n}
+    Voter→PivotalVoter : {n>1 : n ℕ.> 1} → Fin n → Fin n → Voter n → Voter n
     Voter→PivotalVoter {n} {n>1} a b record { r = r ; prefs = prefs } = 
                         record { r = Pivot {n} {n>1} a b prefs 
                                 ; prefs = record { R-trans = Pivot-trans prefs a b
