@@ -89,7 +89,7 @@ open StrictPreference
 
 module VoterBehavior where
     --- A voter is a weak preference organized in a specific way for convenience
-    record Voter : Set₁ where
+    record Voter {n : ℕ} : Set₁ where
         field
             r : Fin n → Fin n → Set
             prefs : Preference {n} {n>1} r
@@ -113,11 +113,11 @@ module VoterBehavior where
     --- Strict preference is defined for voters
     Prefers : {n>1 : n ℕ.> 1} 
             → (a b : Fin n) 
-            → (v : Voter) 
+            → (v : Voter {n}) 
             ---------------
             → Set
     Prefers {n} {n>1} a b record { r = r' ; prefs = prefs' } 
-            = P (prefs' {n} {n>1}) a b
+            = P (prefs' {n>1}) a b
 
     --- Weak preference is decidable
     Dec-weaklyPrefers : (v : Preference {n} {n>1} _R_) 
@@ -149,8 +149,8 @@ module Election where
         --- a proof that if all voters agree on a relative ordering of candidates, the function does too
     record SocialPreference {m : ℕ} : Set₁ where
         field
-            Ballots : Vec (Voter) m
-            SocialPreferenceFunction : Voter
+            Ballots : Vec (Voter {n}) m
+            SocialPreferenceFunction : Voter {n}
             Unanimity : (a b : Fin n) → All (Prefers {n} {n>1} a b) Ballots → (Prefers {n} {n>1} a b SocialPreferenceFunction)
             --- TODO DEFINE ONE Unanimity IN TERMS OF OTHER
             weakUnanimity : (a b : Fin n) → All (weaklyPrefers a b) Ballots → (weaklyPrefers a b SocialPreferenceFunction)
@@ -238,6 +238,13 @@ module ProfileIIIVoter where
     R1Preference {n = n} p d = record { R-trans    = R1-trans p d
                                       ; R-complete = R1-complete p d 
                                       ; R-dec      = R1-dec p d }
+    
+    Voter→R1Voter : {n>1 : n ℕ.> 1} → Fin n → Voter {n} → Voter {n}
+    Voter→R1Voter {n} {n>1} b record { r = r ; prefs = prefs } = 
+        record { r = R-one {n} {n>1} b prefs 
+        ; prefs = record { R-trans = R1-trans prefs b 
+                         ; R-complete = R1-complete prefs b 
+                         ; R-dec = R1-dec prefs b}}
 
     data R-two (b : Fin n) (p : Preference {n} {n>1} _R_) : (a c : Fin n) → Set where
         normal  : (a c : Fin n) → ¬ (b ≡ a) → ¬ (b ≡ c) → (a R c) → R-two b p a c
@@ -268,3 +275,10 @@ module ProfileIIIVoter where
     R2Preference {n = n} p d = record { R-trans    = R2-trans p d
                                       ; R-complete = R2-complete p d 
                                       ; R-dec      = R2-dec p d }
+
+    Voter→R2Voter : {n>1 : n ℕ.> 1} → Fin n → Voter {n} → Voter {n}
+    Voter→R2Voter {n} {n>1} b record { r = r ; prefs = prefs } = 
+        record { r = R-two {n} {n>1} b prefs 
+        ; prefs = record { R-trans = R2-trans prefs b 
+                         ; R-complete = R2-complete prefs b 
+                         ; R-dec = R2-dec prefs b}}
