@@ -296,3 +296,36 @@ module ProfileIIIVoter where
     ... | false because ofⁿ ¬a≡c | _ | _ | true because ofʸ b≡d | _ = inj₂ (b-second d c b≡d ¬a≡c)
     ... | false because ofⁿ ¬a≡c | false because ofⁿ ¬a≡d | false because ofⁿ ¬b≡c | false because ofⁿ ¬b≡d | inj₁ cRd = inj₁ (normal c d ¬a≡c ¬a≡d ¬b≡c ¬b≡d cRd)
     ... | false because ofⁿ ¬a≡c | false because ofⁿ ¬a≡d | false because ofⁿ ¬b≡c | false because ofⁿ ¬b≡d | inj₂ dRc = inj₂ (normal d c ¬a≡d ¬a≡c ¬b≡d ¬b≡c dRc) 
+
+    Pivot-decidable : (p : Preference {n} {n>1} _R_) → (a b c d : Fin n) → Pivot a b p c d ⊎ ¬ (Pivot a b p c d)
+    Pivot-decidable p a b c d with a ≟ c | a ≟ d | b ≟ c | b ≟ d | R-dec p c d
+    ... | true because ofʸ a≡c | _ | _ | _ | _ = inj₁ (a-first c d a≡c)
+    ... | _ | false because ofⁿ ¬a≡d | true because ofʸ b≡c | _ | _ = inj₁ (b-second c d b≡c ¬a≡d)
+    ... | false because ofⁿ ¬a≡c | false because ofⁿ ¬a≡d | false because ofⁿ ¬b≡c | false because ofⁿ ¬b≡d | inj₁ cRd = inj₁ (normal c d ¬a≡c ¬a≡d ¬b≡c ¬b≡d cRd)
+    ... | false because ofⁿ ¬a≡c | _ | false because ofⁿ ¬b≡c | true because ofʸ b≡d | _ = inj₂ λ { (normal .c .d _ _ _ ¬b≡d _) → ¬b≡d b≡d
+                                                                                                  ; (a-first .c .d a≡c) → ¬a≡c a≡c
+                                                                                                  ; (b-second .c .d b≡c _) → ¬b≡c b≡c }
+    ... | false because ofⁿ ¬a≡c | true because ofʸ a≡d | _ | true because ofʸ b≡d | _ = inj₂ λ { (normal .c .d _ _ _ ¬b≡d _) → ¬b≡d b≡d
+                                                                                                ; (a-first .c .d a≡c) → ¬a≡c a≡c
+                                                                                                ; (b-second .c .d _ ¬a≡d) → ¬a≡d a≡d }
+    ... | false because ofⁿ ¬a≡c | true because ofʸ a≡d | _ | _ | _ = inj₂ λ { (normal .c .d _ ¬a≡d _ _ _) → ¬a≡d a≡d
+                                                                             ; (a-first .c .d a≡c) → ¬a≡c a≡c
+                                                                             ; (b-second .c .d _ ¬a≡d) → ¬a≡d a≡d }
+    ... | false because ofⁿ ¬a≡c | _ | false because ofⁿ ¬b≡c | _ | inj₂ ¬cRd = inj₂ λ {(normal .c .d _ _ _ _ cRd) → ¬cRd cRd
+                                                                                       ; (a-first .c .d a≡c) → ¬a≡c a≡c
+                                                                                       ; (b-second .c .d b≡c _) → ¬b≡c b≡c}
+    Pivot-trans : (p : Preference {n} {n>1} _R_) → (a b c d e : Fin n) → Pivot a b p c d → Pivot a b p d e → Pivot a b p c e
+    Pivot-trans p a b c d e (normal .c .d ¬a≡c ¬a≡d ¬b≡c ¬b≡d cRd) (normal .d .e _ ¬a≡e _ ¬b≡e dRe) = normal c e ¬a≡c ¬a≡e ¬b≡c ¬b≡e (R-trans p c d e cRd dRe)
+    Pivot-trans p a b c d e (normal .c .d _ ¬a≡d _ _ _) (a-first .d .e a≡d) = ⊥-elim (¬a≡d a≡d)
+    Pivot-trans p a b c d e (normal .c .d _ _ _ ¬b≡d _) (b-second .d .e b≡d _) = ⊥-elim (¬b≡d b≡d)
+    Pivot-trans p a b c d e (a-first .c .d a≡c) _ = a-first c e a≡c
+    Pivot-trans p a b c d e (b-second .c .d b≡c _) (normal .d .e _ ¬a≡e _ _ _) = b-second c e b≡c ¬a≡e
+    Pivot-trans p a b c d e (b-second .c .d _ ¬a≡d) (a-first .d .e a≡d) = ⊥-elim (¬a≡d a≡d)
+    Pivot-trans p a b c d e (b-second .c .d b≡c _) (b-second .d .e _ ¬a≡e) = b-second c e b≡c ¬a≡e
+    
+    Voter→PivotalVoter : {n>1 : n ℕ.> 1} → Fin n → Fin n → Voter {n} → Voter {n}
+    Voter→PivotalVoter {n} {n>1} a b record { r = r ; prefs = prefs } = 
+                        record { r = Pivot {n} {n>1} a b prefs 
+                                ; prefs = record { R-trans = Pivot-trans prefs a b
+                                                 ; R-complete = Pivot-complete prefs a b
+                                                 ; R-dec = Pivot-decidable prefs a b}}

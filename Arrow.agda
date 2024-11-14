@@ -71,9 +71,9 @@ ExistsPivot {m = m} {n = n} {n>1 = n>1} {a = a} {b = b} election
 ProfileIII-helper : {n>1 : n ℕ.> 1} → (b : Fin n) → Vec (Voter {n}) m → Vec (Voter {n}) m
 ProfileIII-helper {n} {m} {n>1} b post-pivot = Vec.map (Voter→R2Voter {n} {n>1} b) post-pivot
 
-ProfileIII : {n>1 : n ℕ.> 1} → (idx : Fin m) → (b : Fin n) → Vec (Voter {n}) m → Vec (Voter {n}) m
-ProfileIII {n} {m} {n>1} zero b (x ∷ profileIV) = x ∷ ProfileIII-helper {n>1 = n>1} b profileIV
-ProfileIII {n} {m} {n>1} (suc idx) b (x ∷ profileIV) = ((Voter→R2Voter {n>1 = n>1} b x) ∷ [])++(ProfileIII {n>1 = n>1} idx b profileIV)
+ProfileIII : {n>1 : n ℕ.> 1} → (idx : Fin m) → (a b : Fin n) → Vec (Voter {n}) m → Vec (Voter {n}) m
+ProfileIII {n} {m} {n>1} zero a b (x ∷ profileIV) = Voter→PivotalVoter {n>1 = n>1} a b x ∷ ProfileIII-helper {n>1 = n>1} b profileIV
+ProfileIII {n} {m} {n>1} (suc idx) a b (x ∷ profileIV) = ((Voter→R2Voter {n>1 = n>1} b x) ∷ [])++(ProfileIII {n>1 = n>1} idx a b profileIV)
 
 aDb→aDc : {v : Voter} → (election : SocialPreference {m}) → (Decisive {m} {n} {n>1} a b election v) → (Decisive {m} {n} {n>1} a c election v)
 aDb→aDc {n = n} {n>1 = n>1} {a = a} {b = b} {c = c} e aDb v-aPc with Prefers? {n} {n>1} a c (SocialPreferenceFunction e) 
