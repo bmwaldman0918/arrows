@@ -202,7 +202,7 @@ module Election where
         → Vec Bool m × Vec Bool m
     VoterPreferences {m} {n} {n>1} e a b 
         = map (λ x → isYes (weaklyPrefers? {n} {n>1} a b x)) (Ballots e) 
-        , {!   !} ---map (λ x → (weaklyPrefers? {n} {n>1} b a x)) (Ballots e)
+        , map (λ x → isYes (weaklyPrefers? {n} {n>1} b a x)) (Ballots e)
 open Election
 
 module ProfileIIIVoter where
