@@ -23,4 +23,6 @@ check who cites papers
 cleanup
 strong/weak unanimity
 
-function from e to e
+Voter stuff
+altered type doesn't work with voter type, would need whole new type system for altered-voters
+then that doesn't play nice with IIA
