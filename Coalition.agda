@@ -14,9 +14,10 @@ open import Relation.Binary as B
 open import Data.Fin as Fin hiding (splitAt; _≟_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
+open import Relation.Nullary.Decidable using (isYes)
 
 --- questions for stu
---- thoughts on using bool?
+--- thoughts on using bool? also list?
 --- decidable equality of functions?
 
 
@@ -56,9 +57,9 @@ LocallyDecisive {G = G} n>1 coalition Result x y
                 → Result x y ≡ b
 
 Similar : Fin n → Fin n → Vec (Voter n) m → Vec (Voter n) m → Dec Bool
-Similar x y [] [] = true because ?
+Similar x y [] [] = true because {!   !}
 Similar x y (h ∷ orig) (h' ∷ alt) with Bool._≟_ (h x y) (h' x y)
-... | sim because proof = ? --- (sim ∧ (Similar x y orig alt)) 
+... | sim because proof = {!   !} --- (sim ∧ (Similar x y orig alt)) 
 
 postulate
   Transitivity : (e : Constitution m n n>1 all-ballots) 
@@ -97,7 +98,7 @@ Altered-For-FieldExpansion {n = n} {G = G} x y z ballots c = helper x y z ballot
   helper {n} x y z (v ∷ tail) = Alter-Voter-For-FieldExpansion x y z v G ∷ (helper x y z tail) 
 
 Altered-Similar : (c : Coalition all-ballots G) → 
-        Similar x y all-ballots (Altered-For-FieldExpansion x y z all-ballots c) ≡ true
+        isYes (Similar x y all-ballots (Altered-For-FieldExpansion x y z all-ballots c)) ≡ true
 Altered-Similar {all-ballots = all-ballots} {x = x} {y = y} {z = z} c with (Altered-For-FieldExpansion x y z all-ballots c)
 ... | f with Similar x y all-ballots f 
 ... | g = {!   !}
