@@ -13,19 +13,9 @@ open import Relation.Unary as U using (Pred; ∁; _⊆_; _∈_)
 open import Relation.Binary as B 
 open import Data.Fin as Fin hiding (splitAt; _≟_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
+open import Relation.Nullary.Decidable using (isYes)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
-
---- questions for stu
---- thoughts on using bool?
---- decidable equality of functions?
-
-
-Voter : ℕ → Set
-Voter n = Fin n → Fin n → Bool
-
-infix 4 _≟_ 
-_≟_ : ∀ {n} → Decidable {A = Voter n} _≡_
-_≟_ x y = {!   !}
+open import FinFun
 
 private
     variable
@@ -55,10 +45,17 @@ LocallyDecisive {G = G} n>1 coalition Result x y
                 → ListAll.All (λ v → v x y ≡ b) G 
                 → Result x y ≡ b
 
-Similar : Fin n → Fin n → Vec (Voter n) m → Vec (Voter n) m → Dec Bool
-Similar x y [] [] = true because ?
-Similar x y (h ∷ orig) (h' ∷ alt) with Bool._≟_ (h x y) (h' x y)
-... | sim because proof = ? --- (sim ∧ (Similar x y orig alt)) 
+Similar : (m : ℕ) → Fin n → Fin n → Vec (Voter n) m → Vec (Voter n) m → Set
+Similar m x y orig alt = ∀ (i : Fin m) → (Vec.lookup orig i) x y ≡ (Vec.lookup alt i) x y
+
+Similar? : (x y : Fin n) → (orig alt : Vec (Voter n) m) → Dec (Similar m x y orig alt)
+Similar? x y [] [] = true because ofʸ (λ i → Eq.refl)
+Similar? x y (h-orig ∷ orig) (h-alt ∷ alt) with (h-orig x y) Bool.≟ (h-alt x y)
+... | false because ofⁿ ¬p = false because ofⁿ λ sim → ¬p (sim zero)
+... | true because ofʸ p with Similar? x y orig alt
+... | false because ofⁿ ¬p = false because ofⁿ λ sim → ¬p λ i → sim (raise (suc zero) i)
+... | true because ofʸ p' = true because ofʸ λ {zero → p
+                                              ; (suc i) → p' i}
 
 postulate
   Transitivity : (e : Constitution m n n>1 all-ballots) 
@@ -72,7 +69,7 @@ postulate
   IIA : (e : Constitution m n n>1 all-ballots)
       → (e' : Constitution m n n>1 altered-ballots)
       → (b : Bool)
-      → isYes (Similar x y all-ballots altered-ballots) ≡ true
+      → (Similar m x y all-ballots altered-ballots)
       → (e  x y) ≡ b
       → (e' x y) ≡ b
 
@@ -96,12 +93,22 @@ Altered-For-FieldExpansion {n = n} {G = G} x y z ballots c = helper x y z ballot
   helper x y z [] = []
   helper {n} x y z (v ∷ tail) = Alter-Voter-For-FieldExpansion x y z v G ∷ (helper x y z tail) 
 
-Altered-Similar : (c : Coalition all-ballots G) → 
-        Similar x y all-ballots (Altered-For-FieldExpansion x y z all-ballots c) ≡ true
-Altered-Similar {all-ballots = all-ballots} {x = x} {y = y} {z = z} c with (Altered-For-FieldExpansion x y z all-ballots c)
-... | f with Similar x y all-ballots f 
-... | g = {!   !}
+--- this is basically my base case -- maybe altered voted needs to be a seperate type?
+--- i don't know how to set up the contradiction
+Altered-Voter-Similar : (x y z : Fin n)
+                    → (v : Voter n)
+                    → (l : List (Voter n))
+                    → v x y ≡ (Alter-Voter-For-FieldExpansion x y z v l) x y
+Altered-Voter-Similar x y z v l with v x y | (Alter-Voter-For-FieldExpansion x y z v l) x y
+... | orig | alt = {!   !}
 
+Altered-List-Similar : (c : Coalition all-ballots G) → 
+        Similar m x y all-ballots (Altered-For-FieldExpansion x y z all-ballots c)
+Altered-List-Similar {m = m} {all-ballots = all-ballots} {x = x} {y = y} {z = z} c 
+    with (Altered-For-FieldExpansion x y z all-ballots c)
+... | altered = λ {zero → {!   !}
+           ; (suc i) → {!   !}}
+{-
 FieldExpansion : (e : Constitution m n n>1 all-ballots) 
                → (c : Coalition all-ballots G) 
                → LocallyDecisive n>1 c e x y 
@@ -118,3 +125,4 @@ FieldExpansion {all-ballots = all-ballots} {x = x} {y = y} {z = z}
 --- field expansion lemma
                
 --- group contraction lemma 
+-}
