@@ -16,6 +16,7 @@ open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Relation.Nullary.Decidable using (isYes)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import FinFun
+open import AlteredVoter
 
 private
     variable
@@ -73,15 +74,6 @@ postulate
       → (e  x y) ≡ b
       → (e' x y) ≡ b
 
-Alter-Voter-For-FieldExpansion : Fin n → Fin n → Fin n → Voter n → List (Voter n) → Voter n
-Alter-Voter-For-FieldExpansion x y z v G a b with Fin._≟_ a y | Fin._≟_ b z
-... | true because _ | true because _ = true
-... | _ | _ with ListAny.any? (λ v' → v ≟ v') G | Fin._≟_ a y | Fin._≟_ b z 
-... | false because _ | true because _ | true because _ = true
-... | false because _ | _ | _ = v a b
-... | true because _ | true because _ | true because _ = false
-... | true because _ | _ | _ = v a b
-
 Altered-For-FieldExpansion : Fin n → Fin n → Fin n 
                     → (ballots : Vec (Voter n) m) 
                     → Coalition {n} ballots G
@@ -93,21 +85,18 @@ Altered-For-FieldExpansion {n = n} {G = G} x y z ballots c = helper x y z ballot
   helper x y z [] = []
   helper {n} x y z (v ∷ tail) = Alter-Voter-For-FieldExpansion x y z v G ∷ (helper x y z tail) 
 
---- this is basically my base case -- maybe altered voted needs to be a seperate type?
---- i don't know how to set up the contradiction
-Altered-Voter-Similar : (x y z : Fin n)
-                    → (v : Voter n)
-                    → (l : List (Voter n))
-                    → v x y ≡ (Alter-Voter-For-FieldExpansion x y z v l) x y
-Altered-Voter-Similar x y z v l with v x y | (Alter-Voter-For-FieldExpansion x y z v l) x y
-... | orig | alt = {!   !}
-
-Altered-List-Similar : (c : Coalition all-ballots G) → 
-        Similar m x y all-ballots (Altered-For-FieldExpansion x y z all-ballots c)
-Altered-List-Similar {m = m} {all-ballots = all-ballots} {x = x} {y = y} {z = z} c 
-    with (Altered-For-FieldExpansion x y z all-ballots c)
-... | altered = λ {zero → {!   !}
-           ; (suc i) → {!   !}}
+Altered-List-Similar : (x y z : Fin n)
+                    → ¬ x ≡ y
+                    → ¬ y ≡ z
+                    → ¬ x ≡ z 
+                    → (c : Coalition all-ballots G) 
+                    → Similar m x y all-ballots 
+                        (Altered-For-FieldExpansion x y z all-ballots c)
+Altered-List-Similar {m = m} {all-ballots = all-ballots} {G = G} 
+    x y z x≠y y≠z x≠z c i with (Altered-For-FieldExpansion x y z all-ballots c) 
+... | altered-ballots with Vec.lookup all-ballots i 
+... | orig with Altered-Voter x y z orig G 
+... | d = {!   !}
 {-
 FieldExpansion : (e : Constitution m n n>1 all-ballots) 
                → (c : Coalition all-ballots G) 
@@ -125,4 +114,4 @@ FieldExpansion {all-ballots = all-ballots} {x = x} {y = y} {z = z}
 --- field expansion lemma
                
 --- group contraction lemma 
--}
+-} 
