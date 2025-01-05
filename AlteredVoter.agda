@@ -41,23 +41,16 @@ Alter-Voter-For-FieldExpansion x y z v G a b | a≟y | b≟z | true because ofʸ
 ... | true because ofʸ a≡y | true because ofʸ b≡x = true
 ... | a≟y | b≟x = v a b
 
-Altered-Voter-exy≡true : (x y z : Fin n)
+Altered-Voter-eyz≡true : (x y z : Fin n)
                       → ¬ x ≡ y
                       → ¬ y ≡ z
                       → ¬ x ≡ z
                       → (v : Voter n)
-                      → Alter-Voter-For-FieldExpansion x y z v G x y ≡ true
-Altered-Voter-exy≡true {G = G} x y z ¬x≡y ¬y≡z ¬x≡z v with x Fin.≟ y | y Fin.≟ z
-... | true because ofʸ x≡y | y≟z = ⊥-elim (¬x≡y x≡y)
-... | x≟y | true because ofʸ y≡z = ⊥-elim (¬y≡z y≡z)
-... | false because ofⁿ ¬x≡y | false because ofⁿ ¬y≡z with ListAny.any? (_≟_ v) G 
-... | false because ofⁿ ¬v∈G with x Fin.≟ x | y Fin.≟ y 
-... | false because ofⁿ ¬x≡x | y≟y = ⊥-elim (¬x≡x Eq.refl)
-... | true because ofʸ x≡x | false because ofⁿ ¬y≡y = ⊥-elim (¬y≡y Eq.refl)
-... | true because ofʸ x≡x | true because ofʸ y≡y = Eq.refl
-Altered-Voter-exy≡true {G = G} x y z _ _ ¬x≡z v | false because ofⁿ ¬x≡y | false because ofⁿ ¬y≡z | true because ofʸ v∈G with x Fin.≟ y | y Fin.≟ x 
-... | true because ofʸ x≡y | y≟x = ⊥-elim (¬x≡y x≡y)
-... | false because ofⁿ ¬x≡y | y≟x = {!   !}
+                      → Alter-Voter-For-FieldExpansion x y z v G y z ≡ true
+Altered-Voter-eyz≡true {G = G} x y z ¬x≡y ¬y≡z ¬x≡z v with y Fin.≟ y | z Fin.≟ z
+... | false because ofⁿ ¬y≡y | z≟z = ⊥-elim (¬y≡y Eq.refl)
+... | true because ofʸ y≡y | false because ofⁿ ¬z≡z = ⊥-elim (¬z≡z Eq.refl)
+... | true because ofʸ y≡y | true because ofʸ z≡z = Eq.refl
 
 Similar-Voter : (x y z : Fin n)
                 → ¬ x ≡ y

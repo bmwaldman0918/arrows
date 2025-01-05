@@ -92,6 +92,12 @@ Provably-Altered-Ballots : (x y z : Fin n)
                     → ∀ i → (Vec.lookup (Altered-Ballots x y z ballots c) i) ≡ Alter-Voter-For-FieldExpansion x y z (Vec.lookup ballots i) G
 Provably-Altered-Ballots {G = G} x y z ballots c 
   =  λ i → lookup-map i (λ v → Alter-Voter-For-FieldExpansion x y z v G ) ballots
+  
+Provably-Altered-Ballots-All : (x y z : Fin n)  
+                  → (ballots : Vec (Voter n) m) 
+                  → (c : Coalition {n} ballots G)
+                  → (Altered-Ballots x y z ballots c) ≡ (Vec.map (λ v → Alter-Voter-For-FieldExpansion x y z v G ) ballots)
+Provably-Altered-Ballots-All x y z ballots c = Eq.refl
 
 Altered-List-Similar : (x y z : Fin n)
                     → ¬ x ≡ y
@@ -111,26 +117,39 @@ Altered-Constitution : (m : ℕ) → (n ℕ.> 1)
                       → Set
 Altered-Constitution {n = n} m n>1 x y z ballots c = Constitution m n n>1 (Altered-Ballots x y z ballots c)
 
-Altered-exy≡true : (x y z : Fin n)
+Altered-eyz≡true-helper : (x y z : Fin n)
                   → ¬ x ≡ y
                   → ¬ y ≡ z
                   → ¬ x ≡ z 
                   → (ballots : Vec (Voter n) m)
                   → (c : Coalition {n} ballots G)
-                  → VecAll.All (λ v → v x y ≡ true) (Altered-Ballots x y z ballots c)
-Altered-exy≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots c with (Altered-Ballots x y z ballots c) 
-... | [] = []
-... | v ∷ alt-ballots with v = {!   !} ∷ {!  !}
+                  → (i : Fin m) 
+                  → Vec.lookup (Altered-Ballots x y z ballots c) i y z ≡ true
+Altered-eyz≡true-helper x y z ¬x≡y ¬y≡z ¬x≡z ballots c i 
+  rewrite Provably-Altered-Ballots x y z ballots c i = Altered-Voter-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z (Vec.lookup ballots i)
+
+Altered-eyz≡true : (x y z : Fin n)
+                  → ¬ x ≡ y
+                  → ¬ y ≡ z
+                  → ¬ x ≡ z 
+                  → (ballots : Vec (Voter n) m)
+                  → (c : Coalition {n} ballots G)
+                  → VecAll.All (λ v → v y z ≡ true) (Altered-Ballots x y z ballots c)
+Altered-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots c = VecAll.tabulate (λ i → Altered-eyz≡true-helper x y z ¬x≡y ¬y≡z ¬x≡z ballots c i)
+--- (Altered-Voter-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z head) ∷ Altered-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots {!   !}
 
 FieldExpansion : (e : Constitution m n n>1 all-ballots) 
-               → (c : Coalition all-ballots G) 
+               → (c : Coalition all-ballots G)
+               → ¬ x ≡ y
+               → ¬ y ≡ z
+               → ¬ x ≡ z 
                → LocallyDecisive n>1 c e x y 
                → LocallyDecisive n>1 c e x z
-FieldExpansion {all-ballots = ballots} {x = x} {y = y} {z = z} e c with Altered-Ballots x y z ballots c 
+FieldExpansion {all-ballots = ballots} {x = x} {y = y} {z = z} e c ¬x≡y ¬y≡z ¬x≡z with Altered-Ballots x y z ballots c 
 ... | alt = λ ld → λ {false → λ all-xz≡f → {!   !}
                     ; true → λ all-xz≡t → Transitivity e 
-                          (IIA e {!   !} true
-                              (Altered-List-Similar x y z {!   !} {!   !} {!   !} c) {!   !}) {!   !}}
+                          (IIA e (λ _ _ → e x y) true
+                              (Altered-List-Similar x y z ¬x≡y ¬y≡z ¬x≡z c) (ld true {!   !})) (ParetoEfficiency e true (Altered-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots c))}
 {-
 --- decisive over pair
 --- decisive
