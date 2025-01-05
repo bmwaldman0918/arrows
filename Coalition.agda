@@ -6,14 +6,18 @@ open import Data.Bool as Bool hiding (_≟_)
 open import Data.List as List
 open import Data.Vec as Vec
 open import Data.Vec.Relation.Unary.Any as VecAny
+open import Data.Vec.Properties as VecProp
 open import Data.List.Relation.Unary.Any as ListAny
 open import Data.List.Relation.Unary.All as ListAll
 open import Data.Vec.Relation.Unary.All as VecAll
+open import Data.Product using (Σ; _,_; ∃; Σ-syntax; ∃-syntax)
 open import Relation.Unary as U using (Pred; ∁; _⊆_; _∈_)
 open import Relation.Binary as B 
 open import Data.Fin as Fin hiding (splitAt; _≟_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
+open import Data.Empty
 open import Relation.Nullary.Decidable using (isYes)
+open import Relation.Binary
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import FinFun
 open import AlteredVoter
@@ -74,37 +78,60 @@ postulate
       → (e  x y) ≡ b
       → (e' x y) ≡ b
 
-Altered-For-FieldExpansion : Fin n → Fin n → Fin n 
+Altered-Ballots : (x y z : Fin n)  
+                  → (ballots : Vec (Voter n) m) 
+                  → Coalition {n} ballots G
+                  → Vec (Voter n) m
+Altered-Ballots {n = n} {m = m} {G = G} x y z ballots c 
+  = (Vec.map (λ v → Alter-Voter-For-FieldExpansion x y z v G ) ballots)
+    --- Σ (Vec (Voter n) m) λ alt → ∀ i → (Vec.lookup alt i) ≡ Alter-Voter-For-FieldExpansion x y z (Vec.lookup ballots i) G
+
+Provably-Altered-Ballots : (x y z : Fin n)  
                     → (ballots : Vec (Voter n) m) 
-                    → Coalition {n} ballots G
-                    → Vec (Voter n) m
-Altered-For-FieldExpansion {n = n} {G = G} x y z ballots c = helper x y z ballots where
-  helper : Fin n → Fin n → Fin n 
-         → (ballots : Vec (Voter n) m) 
-         → Vec (Voter n) m
-  helper x y z [] = []
-  helper {n} x y z (v ∷ tail) = Alter-Voter-For-FieldExpansion x y z v G ∷ (helper x y z tail) 
+                    → (c : Coalition {n} ballots G)
+                    → ∀ i → (Vec.lookup (Altered-Ballots x y z ballots c) i) ≡ Alter-Voter-For-FieldExpansion x y z (Vec.lookup ballots i) G
+Provably-Altered-Ballots {G = G} x y z ballots c 
+  =  λ i → lookup-map i (λ v → Alter-Voter-For-FieldExpansion x y z v G ) ballots
 
 Altered-List-Similar : (x y z : Fin n)
                     → ¬ x ≡ y
                     → ¬ y ≡ z
                     → ¬ x ≡ z 
-                    → (c : Coalition all-ballots G) 
-                    → Similar m x y all-ballots 
-                        (Altered-For-FieldExpansion x y z all-ballots c)
-Altered-List-Similar {m = m} {all-ballots = all-ballots} {G = G} 
-    x y z x≠y y≠z x≠z c i with (Altered-For-FieldExpansion x y z all-ballots c) 
-... | altered-ballots with Vec.lookup all-ballots i 
-... | orig with Altered-Voter x y z orig G 
-... | d = {!   !}
-{-
+                    → (c : Coalition all-ballots G)
+                    → Similar m x z all-ballots (Altered-Ballots x y z all-ballots c)
+Altered-List-Similar {m = m} {all-ballots = all-ballots} {G = G} x y z x≠y y≠z x≠z c i
+  rewrite (Provably-Altered-Ballots x y z all-ballots c i) 
+  with Vec.lookup all-ballots i 
+... | v = Similar-Voter x y z x≠y y≠z x≠z v
+
+Altered-Constitution : (m : ℕ) → (n ℕ.> 1)
+                      → (x y z : Fin n)
+                      → (ballots : Vec (Voter n) m)
+                      → Coalition {n} ballots G 
+                      → Set
+Altered-Constitution {n = n} m n>1 x y z ballots c = Constitution m n n>1 (Altered-Ballots x y z ballots c)
+
+Altered-exy≡true : (x y z : Fin n)
+                  → ¬ x ≡ y
+                  → ¬ y ≡ z
+                  → ¬ x ≡ z 
+                  → (ballots : Vec (Voter n) m)
+                  → (c : Coalition {n} ballots G)
+                  → VecAll.All (λ v → v x y ≡ true) (Altered-Ballots x y z ballots c)
+Altered-exy≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots c with (Altered-Ballots x y z ballots c) 
+... | [] = []
+... | v ∷ alt-ballots with v = {!   !} ∷ {!  !}
+
 FieldExpansion : (e : Constitution m n n>1 all-ballots) 
                → (c : Coalition all-ballots G) 
                → LocallyDecisive n>1 c e x y 
                → LocallyDecisive n>1 c e x z
-FieldExpansion {all-ballots = all-ballots} {x = x} {y = y} {z = z}
-    e c ld b c-xz≡b with Altered-For-FieldExpansion x y z all-ballots c 
-... | f = {!   !}
+FieldExpansion {all-ballots = ballots} {x = x} {y = y} {z = z} e c with Altered-Ballots x y z ballots c 
+... | alt = λ ld → λ {false → λ all-xz≡f → {!   !}
+                    ; true → λ all-xz≡t → Transitivity e 
+                          (IIA e {!   !} true
+                              (Altered-List-Similar x y z {!   !} {!   !} {!   !} c) {!   !}) {!   !}}
+{-
 --- decisive over pair
 --- decisive
 --- weakly decisive
@@ -114,4 +141,4 @@ FieldExpansion {all-ballots = all-ballots} {x = x} {y = y} {z = z}
 --- field expansion lemma
                
 --- group contraction lemma 
--} 
+-}  
