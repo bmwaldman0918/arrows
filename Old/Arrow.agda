@@ -118,13 +118,10 @@ Altered-Voter a b record { r = orig-r ; prefs = orig-prefs }
 Profile : Fin n → Fin n → Vec (Voter n n>1) m → Vec (Voter n n>1) m → Fin m → Set₁
 Profile {m = m} a b orig alt idx = Altered-Voter a b (lookup orig idx) (lookup alt idx)
 
-{-
-ProfileIII=ProfileIV : (a b c : Fin n) → (e : SocialPreference m n) → VoterPreferences {n>1 = n>1} e a c ≡ VoterPreferences {n>1 = n>1} (ProfileIII-election {m>0 = m>0} {n>1 = n>1} a b e) a c
-ProfileIII=ProfileIV {n = n} {m = m} {n>1 = n>1} {m>0 = m>0} a b c e with e .Ballots | (ProfileIII-election {m>0 = m>0} {n>1 = n>1} a b e) .Ballots
-... | x | new-head ∷ new-tail =  {!   !}
-... | false because ofⁿ aPc = ⊥-elim (p (normal c a b≠c b≠a (⊥-elim (cRa aPc))))
-... | true because ofʸ cRa = ⊥-elim (p (normal c a b≠c b≠a cRa))
 
+ProfileIII=ProfileIV : (a b c : Fin n) → (e : SocialPreference m n n>1) → VoterPreferences {n>1 = n>1} e a c ≡ VoterPreferences {n>1 = n>1} (ProfileIII-election {m>0 = m>0} {n>1 = n>1} a b e) a c
+ProfileIII=ProfileIV {n = n} {m = m} {n>1 = n>1} {m>0 = m>0} a b c e = ?
+{-
 arrows-theorem : (election : SocialPreference {n}) → Any (Dictator {n} {m} election) (SocialPreference.Ballots election)
 arrows-theorem e = {!   !}
 -}

@@ -26,3 +26,6 @@ strong/weak unanimity
 Voter stuff
 altered type doesn't work with voter type, would need whole new type system for altered-voters
 then that doesn't play nice with IIA
+
+me complaining that the proofs are bad:
+1 -- sen: extremely imprecise definition of decisive 

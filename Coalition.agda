@@ -10,7 +10,7 @@ open import Data.Vec.Properties as VecProp
 open import Data.List.Relation.Unary.Any as ListAny
 open import Data.List.Relation.Unary.All as ListAll
 open import Data.Vec.Relation.Unary.All as VecAll
-open import Data.Product using (Σ; _,_; ∃; Σ-syntax; ∃-syntax)
+open import Data.Product using (Σ; _,_; ∃; Σ-syntax; ∃-syntax; _×_; proj₁)
 open import Relation.Unary as U using (Pred; ∁; _⊆_; _∈_)
 open import Relation.Binary as B 
 open import Data.Fin as Fin hiding (splitAt; _≟_)
@@ -21,6 +21,7 @@ open import Relation.Binary
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import FinFun
 open import AlteredVoter
+open import Data.List.NonEmpty.Base as List⁺
 
 private
     variable
@@ -46,9 +47,8 @@ LocallyDecisive : (n>1 : n ℕ.> 1) → Coalition all-ballots G
                 → Fin n → Fin n 
                 → Set
 LocallyDecisive {G = G} n>1 coalition Result x y 
-                = (b : Bool) 
-                → ListAll.All (λ v → v x y ≡ b) G 
-                → Result x y ≡ b
+                = ListAll.All (λ v → v x y ≡ true) G 
+                → Result x y ≡ true
 
 Similar : (m : ℕ) → Fin n → Fin n → Vec (Voter n) m → Vec (Voter n) m → Set
 Similar m x y orig alt = ∀ (i : Fin m) → (Vec.lookup orig i) x y ≡ (Vec.lookup alt i) x y
@@ -62,21 +62,6 @@ Similar? x y (h-orig ∷ orig) (h-alt ∷ alt) with (h-orig x y) Bool.≟ (h-alt
 ... | true because ofʸ p' = true because ofʸ λ {zero → p
                                               ; (suc i) → p' i}
 
-postulate
-  Transitivity : (e : Constitution m n n>1 all-ballots) 
-               → (e x y) ≡ true
-               → (e y z) ≡ true
-               → (e x z) ≡ true
-  ParetoEfficiency : (e : Constitution m n n>1 all-ballots)
-                   → (b : Bool)
-                   → VecAll.All (λ v → (v x y) ≡ b) all-ballots 
-                   → (e x y) ≡ b
-  IIA : (e : Constitution m n n>1 all-ballots)
-      → (e' : Constitution m n n>1 altered-ballots)
-      → (b : Bool)
-      → (Similar m x y all-ballots altered-ballots)
-      → (e  x y) ≡ b
-      → (e' x y) ≡ b
 
 Altered-Ballots : (x y z : Fin n)  
                   → (ballots : Vec (Voter n) m) 
@@ -138,26 +123,65 @@ Altered-eyz≡true : (x y z : Fin n)
 Altered-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots c = VecAll.tabulate (λ i → Altered-eyz≡true-helper x y z ¬x≡y ¬y≡z ¬x≡z ballots c i)
 --- (Altered-Voter-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z head) ∷ Altered-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots {!   !}
 
+postulate
+  Transitivity : (ballots alt-ballots : Vec (Voter n) m)
+               → (e : Constitution m n n>1 ballots)
+               → (Similar m x z ballots alt-ballots)
+               → (e x y) ≡ true ⊎ (∀ (e' : Constitution m n n>1 alt-ballots) → e' x y ≡ true) 
+               → (e y z) ≡ true ⊎ (∀ (e' : Constitution m n n>1 alt-ballots) → e' y z ≡ true) 
+               → (e x z) ≡ true
+  ParetoEfficiency : VecAll.All (λ v → (v x y) ≡ true) all-ballots 
+                   → ∀ (e : Constitution m n n>1 all-ballots) → e x y ≡ true
+  IIA : (ballots alt-ballots : Vec (Voter n) m)
+      → (e : Constitution m n n>1 ballots)
+      → (Similar m x y ballots alt-ballots)
+      → (∀ (e' : Constitution m n n>1 alt-ballots) → e' x y ≡ true) 
+      → (e x y) ≡ true
+
 FieldExpansion : (e : Constitution m n n>1 all-ballots) 
                → (c : Coalition all-ballots G)
                → ¬ x ≡ y
                → ¬ y ≡ z
-               → ¬ x ≡ z 
+               → ¬ x ≡ z
+               → (ListAll.All (λ v → v x y ≡ true) G)
                → LocallyDecisive n>1 c e x y 
                → LocallyDecisive n>1 c e x z
-FieldExpansion {all-ballots = ballots} {x = x} {y = y} {z = z} e c ¬x≡y ¬y≡z ¬x≡z with Altered-Ballots x y z ballots c 
-... | alt = λ ld → λ {false → λ all-xz≡f → {!   !}
-                    ; true → λ all-xz≡t → Transitivity e 
-                          (IIA e (λ _ _ → e x y) true
-                              (Altered-List-Similar x y z ¬x≡y ¬y≡z ¬x≡z c) (ld true {!   !})) (ParetoEfficiency e true (Altered-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots c))}
-{-
---- decisive over pair
---- decisive
---- weakly decisive
---- proof statement will be: exists decisive coalition of one voter
+FieldExpansion {m = m} {n = n} {n>1 = n>1} {all-ballots = ballots} {x = x} {y = y} {z = z} 
+  e c ¬x≡y ¬y≡z ¬x≡z G-xy
+  = λ ld → λ G-xz → Transitivity {m = m} {n>1 = n>1} {y = y}
+                      ballots (Altered-Ballots x y z ballots c) e 
+                      (Altered-List-Similar x y z ¬x≡y ¬y≡z ¬x≡z c) 
+                      (inj₁ (ld G-xy)) 
+                      (inj₂ (λ e' → ParetoEfficiency {n>1 = n>1} (Altered-eyz≡true x y z ¬x≡y ¬y≡z ¬x≡z ballots c) e'))
 
-  
---- field expansion lemma
                
---- group contraction lemma 
--}  
+SubCoalition : (m n : ℕ) 
+             → (n>1 : n ℕ.> 1) 
+             → (ballots : Vec (Voter n) m)
+             → (G : List (Voter n))
+             → (List.length G ℕ.> 1)
+             → Coalition ballots G 
+             → Set
+SubCoalition m n n>1 ballots G _ c = Σ (List (Voter n)) λ sub → (ListAll.All (λ v → ListAny.Any (λ v' → v ≡ v') G) sub) × List.length sub ℕ.< List.length G
+
+SubCoalitionIsCoalition : (m n : ℕ) 
+             → (n>1 : n ℕ.> 1) 
+             → (ballots : Vec (Voter n) m)
+             → (G : List (Voter n))
+             → (Glen>1 : List.length G ℕ.> 1)
+             → (c : Coalition ballots G)
+             → (s : SubCoalition m n n>1 ballots G Glen>1 c)
+             → Coalition ballots (proj₁ s)
+SubCoalitionIsCoalition m n n>1 ballots G _ c (sublist , issublist , _) 
+    = ListAll.map {!   !} issublist  --- ask about this
+
+GroupContraction : (G : List (Voter n))
+               → (Glen>1 : List.length G ℕ.> 1) 
+               → (e : Constitution m n n>1 all-ballots) 
+               → (c : Coalition all-ballots G)
+               → ¬ x ≡ y
+               → ¬ y ≡ z
+               → ¬ x ≡ z
+               → Σ (SubCoalition m n n>1 all-ballots G Glen>1 c) λ sub 
+               → LocallyDecisive n>1 {!   !} e x y
+GroupContraction = {!   !}
