@@ -159,7 +159,7 @@ SubCoalition : (m n : ℕ)
              → (n>1 : n ℕ.> 1) 
              → (ballots : Vec (Voter n) m)
              → (G : List (Voter n))
-             → (List.length G ℕ.> 1)
+             → (List.length G ℕ.> 2)
              → Coalition ballots G 
              → Set
 SubCoalition m n n>1 ballots G _ c = Σ (List (Voter n)) λ sub → (ListAll.All (λ v → ListAny.Any (λ v' → v ≡ v') G) sub) × List.length sub ℕ.< List.length G
@@ -168,20 +168,23 @@ SubCoalitionIsCoalition : (m n : ℕ)
              → (n>1 : n ℕ.> 1) 
              → (ballots : Vec (Voter n) m)
              → (G : List (Voter n))
-             → (Glen>1 : List.length G ℕ.> 1)
+             → (G-len>2 : List.length G ℕ.> 2)
              → (c : Coalition ballots G)
-             → (s : SubCoalition m n n>1 ballots G Glen>1 c)
+             → (s : SubCoalition m n n>1 ballots G G-len>2 c)
              → Coalition ballots (proj₁ s)
 SubCoalitionIsCoalition m n n>1 ballots G _ c (sublist , issublist , _) 
     = ListAll.map {!   !} issublist  --- ask about this
 
 GroupContraction : (G : List (Voter n))
-               → (Glen>1 : List.length G ℕ.> 1) 
+               → (G-len>2 : List.length G ℕ.> 2) 
                → (e : Constitution m n n>1 all-ballots) 
                → (c : Coalition all-ballots G)
                → ¬ x ≡ y
                → ¬ y ≡ z
                → ¬ x ≡ z
-               → Σ (SubCoalition m n n>1 all-ballots G Glen>1 c) λ sub 
-               → LocallyDecisive n>1 {!   !} e x y
-GroupContraction = {!   !}
+               → Σ (SubCoalition m n n>1 all-ballots G G-len>2 c) 
+                λ sub → LocallyDecisive n>1 (SubCoalitionIsCoalition m n n>1 all-ballots G G-len>2 c sub) e x y
+GroupContraction (_ ∷ []) (s≤s ()) e c ¬x≡y ¬y≡z ¬x≡z
+GroupContraction (_ ∷ _ ∷ []) (s≤s (s≤s ())) e c ¬x≡y ¬y≡z ¬x≡z 
+GroupContraction (v1 ∷ v2 ∷ v3 ∷ []) G-len>2 e c ¬x≡y ¬y≡z ¬x≡z = {!   !} 
+GroupContraction (v1 ∷ v2 ∷ v3 ∷ v4 ∷ G) G-len>2 e c ¬x≡y ¬y≡z ¬x≡z = {!   !} 
