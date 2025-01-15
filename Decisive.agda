@@ -12,6 +12,10 @@ open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Data.Empty
 
+postulate
+  -- BinaryIIA : lets zip the two votes together and get proofs that r→bool is equal for the whole zip
+  -- WeakPareto : for all votes, x P y implies x P y for the constitution
+
 Decisive : (n : ℕ) 
           → (n>1 : n ℕ.> 1)
           → (votes : Votes n n>1)
