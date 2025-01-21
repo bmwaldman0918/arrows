@@ -38,8 +38,11 @@ Length : {n m : ℕ} → {n>1 : n ℕ.> 1} → Votes n n>1 m → ℕ
 Length {m = m} _ = m
 
 -- for BinaryIIA, lets zip the two votes together and get proofs that r→bool is equal for the whole zip
--- define zip here
-
+{- each entry in a zip is a record with 3 parts: 
+  2 candidates, 
+  2 voters and 
+  a proof that the r->bool for the two voters as defined over both candidates is equal 
+-}
 -- a coalition is a dependent type but its a list of strictly numbers less than m
 
 {-
