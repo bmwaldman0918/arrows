@@ -12,6 +12,7 @@ open import Data.Empty
 open import Data.Bool
 open import Data.Unit.Base using (⊤)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
+open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 
 data Votes (n : ℕ) (n>1 : n ℕ.> 1) : ℕ → Set₁ where
   []  : Votes n n>1 0
@@ -59,24 +60,17 @@ Agrees : (m n : ℕ) → (n>1 : n ℕ.> 1) → (a b : Fin n) → Votes n n>1 m �
 Agrees .0 n n>1 a b [] = ⊤
 Agrees (suc m) n n>1 a b (x ∷ v) = P x a b × Agrees m n n>1 a b v
 
-{- each entry in a zip is a record with 3 parts: 
-  2 candidates, 
-  2 voters and 
-  a proof that the r->bool for the two voters as defined over both candidates is equal 
--}
--- a coalition is a dependent type but its a list of strictly numbers less than m
+data Coalition (m : ℕ) : Set where
+  c-single : (idx : ℕ) → (m ℕ.≥ idx) → Coalition m
+  c-cons : (idx : ℕ) → (m ℕ.≥ idx) → Coalition m → Coalition m
 
-{-
-Coalition : (n m : ℕ) → (n>1 : n ℕ.> 1) → (Votes n n>1 m) → Set₁
-Coalition n n>1 votes = Σ (Votes n n>1) (λ coalition → coalition ⊆ votes)
+Get-helper : (m n idx : ℕ) → (n>1 : n ℕ.> 1) → (m ℕ.> idx) → Votes n n>1 m → (Fin n → Fin n → Set)
+Get-helper (suc m') n idx n>1 m>idx (x ∷ v) with m' ℕ.≟ idx 
+Get-helper (suc m') n idx n>1 m>idx (_∷_ {_R_} x v) | true because _ = _R_ 
+... | false because ofⁿ ¬p = Get-helper m' n idx n>1 {!   !} v 
 
-Coalition-x>y : (n : ℕ) 
-              → (n>1 : n ℕ.> 1) 
-              → (votes : Votes n n>1)
-              → Coalition n n>1 votes
-              → (x y : Fin n)
-              → Set
-Coalition-x>y n n>1 votes ([] , _) x y = ⊤ 
-Coalition-x>y n n>1 votes ((v ∷ rem) , v∈votes , rem⊆votes) x y 
-            = P→Bool v x y ≡ true × (Coalition-x>y n n>1 votes (rem , rem⊆votes) x y) 
-            -}
+-- Get -- first gets the type of the function from gethelper and returns a proof that it is a preference
+-- from get, we construct a list of voters that we can then perform operations on
+-- questions for stu:
+  -- thoughts on constructors as functions
+  -- thoughts on the use of bot/top types

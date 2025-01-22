@@ -9,7 +9,8 @@ open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Data.Empty
 
-  -- WeakPareto : for all votes, x P y implies x P y for the constitution
+
+
 {-
 Decisive : (n : ℕ) 
           → (n>1 : n ℕ.> 1)
