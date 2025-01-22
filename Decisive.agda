@@ -1,8 +1,5 @@
 module Decisive where
 
-open import Election
-open Constitution
-
 open import Voter
 open import Votes
 
@@ -12,10 +9,8 @@ open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Data.Empty
 
-postulate
-  -- BinaryIIA : lets zip the two votes together and get proofs that r→bool is equal for the whole zip
   -- WeakPareto : for all votes, x P y implies x P y for the constitution
-
+{-
 Decisive : (n : ℕ) 
           → (n>1 : n ℕ.> 1)
           → (votes : Votes n n>1)
@@ -44,3 +39,4 @@ FieldExpansion n n>1 votes coalition _ x y ¬x≡y election decisive a b
 ... | _ | _ | yes b≡x | yes b≡y = ⊥-elim (¬x≡y (Eq.trans (Eq.sym b≡x) b≡y))
 ... | yes a≡x | _ | _ | yes b≡y rewrite b≡y | a≡x = decisive
 ... | a≟x | a≟y | b≟x | b≟y = {!   !}
+-}
