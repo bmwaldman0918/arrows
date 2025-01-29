@@ -68,14 +68,29 @@ Agrees : (m n : ℕ) → (n>1 : n ℕ.> 1) → (a b : Fin n) → Votes n n>1 m �
 Agrees .0 n n>1 a b [] = ⊤
 Agrees (suc m) n n>1 a b (x ∷ v) = P x a b × Agrees m n n>1 a b v
 
-data Coalition (m : ℕ) : Set where
-  empty : Coalition m
-  c-cons : (idx : ℕ) → (m ℕ.> idx) → Coalition m → Coalition m
+data ProtoCoalition (m : ℕ) : Set where
+  empty : ProtoCoalition m
+  c-cons : (idx : ℕ) → (m ℕ.> idx) → ProtoCoalition m → ProtoCoalition m
 -- i think ill want to package a contains proof in get-helper too
+-- maybe should be increasing and duplication free
 
-In-Coalition : (m i : ℕ) → (m ℕ.> i) → Coalition m → Set
+In-Coalition : (m i : ℕ) → (m ℕ.> i) → ProtoCoalition m → Set
 In-Coalition m i _ empty = ⊥
 In-Coalition m i m>i (c-cons idx x coal) = i ≡ idx ⊎ In-Coalition m i m>i coal
+
+Increasing : (m : ℕ) → ProtoCoalition m → Set
+Increasing m empty = ⊤
+Increasing m (c-cons idx x empty) = ⊤
+Increasing m (c-cons i _ (c-cons i' m>i' pc)) = i ℕ.< i' × Increasing m (c-cons i' m>i' pc)
+
+UniqueEntries : (m : ℕ) → ProtoCoalition m → Set
+UniqueEntries m empty = ⊤
+UniqueEntries m (c-cons idx m>idx pc) = ¬ In-Coalition m idx m>idx pc × UniqueEntries m pc
+
+record Coalition (m : ℕ) (p : ProtoCoalition m) : Set where
+  field
+    inc : Increasing m p
+    uq-entries : UniqueEntries m p
 
 Get-helper : (m n idx : ℕ) → (n>1 : n ℕ.> 1) → (m ℕ.> idx) → Votes n n>1 m → VoterProd n n>1
 Get-helper (suc m') n idx n>1 m>idx (x ∷ v) with m' ℕ.≟ idx 
@@ -86,13 +101,13 @@ Get : (m n idx : ℕ) → (n>1 : n ℕ.> 1) → (m>idx : m ℕ.> idx) → (v : V
 Get (suc m') n idx n>1 m>idx v with Get-helper (suc m') n idx n>1 m>idx v
 ... | record { VPR = VPR₁ ; VPP = VPP₁ } = VPP₁
 
-Coalition-Agrees : (m n : ℕ) → (n>1 : n ℕ.> 1) → Coalition m → Votes n n>1 m → (a b : Fin n) → Set
+Coalition-Agrees : (m n : ℕ) → (n>1 : n ℕ.> 1) → ProtoCoalition m → Votes n n>1 m → (a b : Fin n) → Set
 Coalition-Agrees m n n>1 empty _ _ _ = ⊤
 Coalition-Agrees m n n>1 (c-cons idx m>idx coalition) votes a b = (P (Get m n idx n>1 m>idx votes) a b) × (Coalition-Agrees m n n>1 coalition votes a b)
 
-Disjoint∧Complete : (m : ℕ) → (c1 c2 : Coalition m) → Set
+Disjoint∧Complete : (m : ℕ) → (c1 c2 : ProtoCoalition m) → Set
 Disjoint∧Complete m c1 c2 = ∀ n → (m>n : m ℕ.> n) → ((In-Coalition m n m>n c1) × ¬ (In-Coalition m n m>n c2)) 
                                          ⊎ ((In-Coalition m n m>n c2) × ¬ (In-Coalition m n m>n c1))
 
-Anti-coalition : (m : ℕ) → (c : Coalition m) → Set
-Anti-coalition m c = Σ (Coalition m) (λ c' → Disjoint∧Complete m c c')
+Anti-coalition : (m : ℕ) → (c : ProtoCoalition m) → Set
+Anti-coalition m c = Σ (ProtoCoalition m) (λ c' → Disjoint∧Complete m c c')
