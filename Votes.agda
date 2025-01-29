@@ -5,6 +5,7 @@ open WeakPreference using (Preference; R→Bool)
 open StrictPreference using (P; P→Bool)
 open PreferenceEquality
 open import Data.Nat as ℕ
+import Data.Nat.Properties as ℕProp using (≤∧≢⇒<)
 open import Data.Fin as Fin hiding (_+_)
 open import Data.Product using (Σ; _×_; _,_)
 open import Data.Sum using (_⊎_)
@@ -13,10 +14,17 @@ open import Data.Bool
 open import Data.Unit.Base using (⊤)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
+open import Relation.Nullary.Decidable using (isYes)
 
 data Votes (n : ℕ) (n>1 : n ℕ.> 1) : ℕ → Set₁ where
   []  : Votes n n>1 0
   _∷_ : {_R_ : Fin n → Fin n → Set} → {m : ℕ} → Preference n n>1 _R_ → Votes n n>1 m → Votes n n>1 (suc m)
+
+record VoterProd (n : ℕ) (n>1 : n ℕ.> 1) : Set₁ where
+  field
+    VPR : (Fin n → Fin n → Set)
+    VPP : Preference n n>1 VPR
+open VoterProd
 
 Contains : {n m : ℕ} 
          → {n>1 : n ℕ.> 1} 
@@ -61,16 +69,30 @@ Agrees .0 n n>1 a b [] = ⊤
 Agrees (suc m) n n>1 a b (x ∷ v) = P x a b × Agrees m n n>1 a b v
 
 data Coalition (m : ℕ) : Set where
-  c-single : (idx : ℕ) → (m ℕ.≥ idx) → Coalition m
-  c-cons : (idx : ℕ) → (m ℕ.≥ idx) → Coalition m → Coalition m
+  empty : Coalition m
+  c-cons : (idx : ℕ) → (m ℕ.> idx) → Coalition m → Coalition m
+-- i think ill want to package a contains proof in get-helper too
 
-Get-helper : (m n idx : ℕ) → (n>1 : n ℕ.> 1) → (m ℕ.> idx) → Votes n n>1 m → (Fin n → Fin n → Set)
+In-Coalition : (m i : ℕ) → (m ℕ.> i) → Coalition m → Set
+In-Coalition m i _ empty = ⊥
+In-Coalition m i m>i (c-cons idx x coal) = i ≡ idx ⊎ In-Coalition m i m>i coal
+
+Get-helper : (m n idx : ℕ) → (n>1 : n ℕ.> 1) → (m ℕ.> idx) → Votes n n>1 m → VoterProd n n>1
 Get-helper (suc m') n idx n>1 m>idx (x ∷ v) with m' ℕ.≟ idx 
-Get-helper (suc m') n idx n>1 m>idx (_∷_ {_R_} x v) | true because _ = _R_ 
-... | false because ofⁿ ¬p = Get-helper m' n idx n>1 {!   !} v 
+Get-helper (suc m') n idx n>1 m>idx (_∷_ {_R_} x v) | true because _ = record { VPR = _R_ ; VPP = x }
+Get-helper (suc m') n idx n>1 (s≤s m>idx) (x ∷ v) | false because ofⁿ ¬p = Get-helper m' n idx n>1 (ℕProp.≤∧≢⇒< m>idx λ idx≡m' → ¬p (Eq.sym idx≡m')) v 
 
--- Get -- first gets the type of the function from gethelper and returns a proof that it is a preference
--- from get, we construct a list of voters that we can then perform operations on
--- questions for stu:
-  -- thoughts on constructors as functions
-  -- thoughts on the use of bot/top types
+Get : (m n idx : ℕ) → (n>1 : n ℕ.> 1) → (m>idx : m ℕ.> idx) → (v : Votes n n>1 m) → Preference n n>1 (VPR (Get-helper m n idx n>1 m>idx v))
+Get (suc m') n idx n>1 m>idx v with Get-helper (suc m') n idx n>1 m>idx v
+... | record { VPR = VPR₁ ; VPP = VPP₁ } = VPP₁
+
+Coalition-Agrees : (m n : ℕ) → (n>1 : n ℕ.> 1) → Coalition m → Votes n n>1 m → (a b : Fin n) → Set
+Coalition-Agrees m n n>1 empty _ _ _ = ⊤
+Coalition-Agrees m n n>1 (c-cons idx m>idx coalition) votes a b = (P (Get m n idx n>1 m>idx votes) a b) × (Coalition-Agrees m n n>1 coalition votes a b)
+
+Disjoint∧Complete : (m : ℕ) → (c1 c2 : Coalition m) → Set
+Disjoint∧Complete m c1 c2 = ∀ n → (m>n : m ℕ.> n) → ((In-Coalition m n m>n c1) × ¬ (In-Coalition m n m>n c2)) 
+                                         ⊎ ((In-Coalition m n m>n c2) × ¬ (In-Coalition m n m>n c1))
+
+Anti-coalition : (m : ℕ) → (c : Coalition m) → Set
+Anti-coalition m c = Σ (Coalition m) (λ c' → Disjoint∧Complete m c c')
