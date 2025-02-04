@@ -17,16 +17,16 @@ private
         a b c : Fin n
         _R_ : Fin n → Fin n → Set
 
-data SWF (m n : ℕ) (n>1 : n ℕ.> 1) (v : Votes n n>1 m) : Fin n → Fin n → Set₁ where
+data SWF {m n : ℕ} {n>1 : n ℕ.> 1} (v : Votes n n>1 m) : Fin n → Fin n → Set₁ where
   Transitivity : (a b c : Fin n) 
-               → SWF m n n>1 v a b 
-               → SWF m n n>1 v b c 
-               → SWF m n n>1 v a c
+               → SWF v a b 
+               → SWF v b c 
+               → SWF v a c
   BinaryIIA : (a b : Fin n)
             → (v1 : Votes n n>1 m)
             → Similar m n n>1 a b (Zipped m n n>1 a b v v1)
-            → SWF m n n>1 v1 a b
-            → SWF m n n>1 v a b
+            → SWF v1 a b
+            → SWF v a b
   Pareto : (a b : Fin n)
-         → Agrees m n n>1 a b v
-         → SWF m n n>1 v a b 
+         → ElectionAgrees n n>1 a b v
+         → SWF v a b 
