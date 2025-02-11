@@ -5,9 +5,9 @@ open WeakPreference using (Preference; R→Bool)
 open StrictPreference using (P; P→Bool)
 open PreferenceEquality
 open import Data.Nat as ℕ
-import Data.Nat.Properties as ℕProp using (≤∧≢⇒<; <⇒≤; ≤-reflexive)
+import Data.Nat.Properties as ℕProp using (≤∧≢⇒<; <⇒≤; ≤-reflexive; n<1+n)
 open import Data.Fin as Fin hiding (_+_)
-open import Data.Product using (Σ; _×_; _,_; proj₁)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
 open import Data.Sum using (_⊎_)
 open import Data.Empty
 open import Data.Bool
@@ -69,4 +69,5 @@ Get (suc m') zero (s≤s m>idx) votes = HeadVotes m' votes
 Get (suc m') (suc idx) (s≤s m>idx) (x ∷ votes) = Get m' idx m>idx votes
 
 ElectionAgrees : {m n : ℕ} → {n>1 : n ℕ.> 1} → (v : Votes n n>1 m) → (a b : Fin n) → Set
-ElectionAgrees {m = m} v a b = ∀ (idx : ℕ) → (idx<m : idx ℕ.< m) → (proj₁ (Get m idx idx<m v)) a b
+ElectionAgrees [] a b = ⊤ 
+ElectionAgrees {m = suc m'} (x ∷ v) a b = P (proj₂ (Get (suc m') m' (ℕProp.n<1+n m') (x ∷ v))) a b × (ElectionAgrees v a b) 
