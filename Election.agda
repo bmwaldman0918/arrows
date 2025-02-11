@@ -28,5 +28,5 @@ data SWF {m n : ℕ} {n>1 : n ℕ.> 1} (v : Votes n n>1 m) : Fin n → Fin n →
             → SWF v1 a b
             → SWF v a b
   Pareto : (a b : Fin n)
-         → ElectionAgrees n n>1 a b v
+         → ElectionAgrees v a b
          → SWF v a b 

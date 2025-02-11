@@ -1,6 +1,6 @@
 module Coalition where
 
-open import Votes using (Votes; VoterProd; Get)
+open import Votes using (Votes; Get)
 open import Voter
 open WeakPreference using (Preference; R→Bool)
 open StrictPreference using (P; P→Bool)
@@ -8,7 +8,7 @@ open PreferenceEquality
 open import Data.Nat as ℕ
 import Data.Nat.Properties as ℕProp using (≤∧≢⇒<; <⇒≤; ≤-reflexive; ≤⇒≯ ; n<1+n; >⇒≢ )
 open import Data.Fin as Fin hiding (_+_)
-open import Data.Product using (Σ; _×_; _,_)
+open import Data.Product using (Σ; _×_; _,_; proj₂)
 open import Data.Sum using (_⊎_)
 open import Data.Empty
 open import Data.Bool
@@ -114,7 +114,7 @@ data CoalitionAgrees {m n : ℕ} {n>1 : n ℕ.> 1} (votes : Votes n n>1 m) (a b 
   cons-coalition-agrees  : (p : ProtoCoalition m) 
                → (idx : ℕ) 
                → (m>idx : m ℕ.> idx) 
-               → P (Get m n idx n>1 m>idx votes) a b 
+               → P (proj₂ (Get m idx m>idx votes)) a b 
                → CoalitionAgrees votes a b p
                --------------------------------------------------------
                → CoalitionAgrees votes a b (c-cons idx m>idx p)
@@ -225,4 +225,4 @@ CoalitionOfWhole : (m : ℕ) → Σ (ProtoCoalition m) λ p → Split-Coalitions
 CoalitionOfWhole zero = empty , (record
    { coalition-1 = EmptyCoalition ℕ.zero ; coalition-2 = EmptyCoalition ℕ.zero ; disj = l-empty-disjoint empty ; comp = empty-complete }) 
 CoalitionOfWhole (suc m) with CoalitionOfWhole m   
-... | fst , snd = c-cons m (ℕProp.n<1+n m) (Lift fst) , ExpandCoalition m fst empty snd 
+... | fst , snd = c-cons m (ℕProp.n<1+n m) (Lift fst) , ExpandCoalition m fst empty snd  

@@ -7,7 +7,7 @@ open PreferenceEquality
 open import Data.Nat as ℕ
 import Data.Nat.Properties as ℕProp using (≤∧≢⇒<; <⇒≤; ≤-reflexive)
 open import Data.Fin as Fin hiding (_+_)
-open import Data.Product using (Σ; _×_; _,_)
+open import Data.Product using (Σ; _×_; _,_; proj₁)
 open import Data.Sum using (_⊎_)
 open import Data.Empty
 open import Data.Bool
@@ -21,11 +21,11 @@ data Votes (n : ℕ) (n>1 : n ℕ.> 1) : ℕ → Set₁ where
   _∷_ : {_R_ : Fin n → Fin n → Set} → {m : ℕ} → Preference n n>1 _R_ → Votes n n>1 m → Votes n n>1 (suc m)
 open Votes
 
-record VoterProd (n : ℕ) (n>1 : n ℕ.> 1) : Set₁ where
-  field
-    VPR : (Fin n → Fin n → Set)
-    VPP : Preference n n>1 VPR
-open VoterProd
+PredVotes : {n : ℕ} → {n>1 : n ℕ.> 1} → (m : ℕ) → Votes n n>1 (suc m) → Votes n n>1 m 
+PredVotes m (x ∷ v) = v
+
+HeadVotes : {n : ℕ} → {n>1 : n ℕ.> 1} → (m : ℕ) → Votes n n>1 (suc m) → Σ (Fin n → Fin n → Set) λ _R_ → Preference n n>1 _R_
+HeadVotes m (_∷_ {_R_ = _R_} x v) = _R_ , x
 
 Contains : {n m : ℕ} 
          → {n>1 : n ℕ.> 1} 
@@ -64,23 +64,9 @@ Similar : (m n : ℕ) → (n>1 : n ℕ.> 1) → (a b : Fin n) → Zip n n>1 a b 
 Similar .0 n n>1 a b z-nil = ⊤
 Similar (suc m) n n>1 a b (z-cons p1 p2 zip) = (R→Bool p1 a b ≡ R→Bool p2 a b) × (Similar m n n>1 a b zip)
 
-data ElectionAgrees (n : ℕ) (n>1 : n ℕ.> 1) (a b : Fin n) : {m : ℕ} → Votes n n>1 m → Set₁ where
-  empty-election-agrees : ElectionAgrees n n>1 a b []
+Get : {n : ℕ} → {n>1 : n ℕ.> 1} → (m idx : ℕ) → (m ℕ.> idx) → Votes n n>1 m → Σ (Fin n → Fin n → Set) λ _R_ → Preference n n>1 _R_
+Get (suc m') zero (s≤s m>idx) votes = HeadVotes m' votes
+Get (suc m') (suc idx) (s≤s m>idx) (x ∷ votes) = Get m' idx m>idx votes
 
-  cons-election-agrees  : {_R_ : Fin n → Fin n → Set}
-                        → {m : ℕ}
-                        → (v : Preference n n>1 _R_)
-                        → (P v a b)
-                        → (rem : Votes n n>1 m)
-                        → ElectionAgrees n n>1 a b rem
-                        ------------------------------------
-                        → ElectionAgrees n n>1 a b (v ∷ rem)
-
-Get-helper : (m n idx : ℕ) → (n>1 : n ℕ.> 1) → (m ℕ.> idx) → Votes n n>1 m → VoterProd n n>1
-Get-helper (suc m') n idx n>1 m>idx (x ∷ v) with m' ℕ.≟ idx 
-Get-helper (suc m') n idx n>1 m>idx (_∷_ {_R_} x v) | true because _ = record { VPR = _R_ ; VPP = x }
-Get-helper (suc m') n idx n>1 (s≤s m>idx) (x ∷ v) | false because ofⁿ ¬p = Get-helper m' n idx n>1 (ℕProp.≤∧≢⇒< m>idx λ idx≡m' → ¬p (Eq.sym idx≡m')) v 
-
-Get : (m n idx : ℕ) → (n>1 : n ℕ.> 1) → (m>idx : m ℕ.> idx) → (v : Votes n n>1 m) → Preference n n>1 (VPR (Get-helper m n idx n>1 m>idx v))
-Get (suc m') n idx n>1 m>idx v with Get-helper (suc m') n idx n>1 m>idx v
-... | record { VPR = VPR₁ ; VPP = VPP₁ } = VPP₁
+ElectionAgrees : {m n : ℕ} → {n>1 : n ℕ.> 1} → (v : Votes n n>1 m) → (a b : Fin n) → Set
+ElectionAgrees {m = m} v a b = ∀ (idx : ℕ) → (idx<m : idx ℕ.< m) → (proj₁ (Get m idx idx<m v)) a b
