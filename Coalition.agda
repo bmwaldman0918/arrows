@@ -206,16 +206,22 @@ ExpandCoalition zero empty empty split =
   record { coalition-1 = record { inc = singleton-inc 0 (s≤s z≤n)
                                 ; uq-entries = cons-uq-entries 0 (s≤s z≤n) (Lift empty) (λ ()) empty-uq-entries} 
            ; coalition-2 = EmptyCoalition 1
-           ; disj = l-cons-disjoint {!   !} {!   !} {!   !} {!   !} {!   !} {!   !} 
-           ; comp = l-cons-complete {!   !} {!   !} {!   !} {!   !} } 
-ExpandCoalition (suc m) p1 p2 split = 
-  record { coalition-1 = {!   !} 
+           ; disj = l-cons-disjoint empty empty 0 (s≤s z≤n) (λ ()) (l-empty-disjoint empty) 
+           ; comp = l-cons-complete 0 empty empty empty-complete } 
+ExpandCoalition (suc m) empty p2 split = 
+  record { coalition-1 = record { inc = singleton-inc (suc m) (s≤s (ℕProp.≤-reflexive Eq.refl)); uq-entries = cons-uq-entries (suc m) (s≤s (ℕProp.≤-reflexive Eq.refl)) empty (λ ()) empty-uq-entries }
+         ; coalition-2 = LiftCoalition p2 (Split-Coalitions.coalition-2 split) 
+         ; disj = l-cons-disjoint (Lift empty) (Lift p2) (suc m) (s≤s (ℕProp.≤-reflexive Eq.refl)) (λ x → {!   !}) (LiftDisjoint empty p2 (Split-Coalitions.disj split)) 
+         ; comp = l-cons-complete (suc m) empty p2 (Split-Coalitions.comp split) } 
+ExpandCoalition (suc m) (c-cons idx x p1) p2 split = 
+  record { coalition-1 = record { inc = cons-inc idx (suc m) {!   !} (s≤s {!   !}) x (Lift p1) {!   !}
+                                  ; uq-entries = cons-uq-entries (suc m) {!   !} (Lift (c-cons idx x p1)) (λ in-tail → {!   !}) (cons-uq-entries idx {!   !} (Lift p1) {!   !} {!   !}) }
          ; coalition-2 = LiftCoalition p2 (Split-Coalitions.coalition-2 split)
-         ; disj = l-cons-disjoint (Lift p1) (Lift p2) (suc m) {!   !} {!   !} (LiftDisjoint p1 p2 (Split-Coalitions.disj split))
-         ; comp = l-cons-complete (suc m) p1 p2 (Split-Coalitions.comp split) } 
-
+         ; disj = l-cons-disjoint (Lift (c-cons idx x p1)) (Lift p2) (suc m) (s≤s (ℕProp.≤-reflexive Eq.refl)) (λ x → {!    !}) (LiftDisjoint (c-cons idx x p1) p2 (Split-Coalitions.disj split))
+         ; comp = l-cons-complete (suc m) (c-cons idx x p1) p2 (Split-Coalitions.comp split) } 
+         
 CoalitionOfWhole : (m : ℕ) → Σ (ProtoCoalition m) λ p → Split-Coalitions p empty
 CoalitionOfWhole zero = empty , (record
    { coalition-1 = EmptyCoalition ℕ.zero ; coalition-2 = EmptyCoalition ℕ.zero ; disj = l-empty-disjoint empty ; comp = empty-complete }) 
-CoalitionOfWhole (suc m) with CoalitionOfWhole m  
+CoalitionOfWhole (suc m) with CoalitionOfWhole m   
 ... | fst , snd = c-cons m {!   !} (Lift fst) , ExpandCoalition m fst empty snd 
