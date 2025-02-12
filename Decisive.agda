@@ -13,30 +13,21 @@ open import Data.Empty
 open import Data.Product using (Σ; _×_; _,_)
 
 Decisive-a>b : {m n : ℕ} → {n>1 : n ℕ.> 1}
-             → {p1 p2 : ProtoCoalition m}
-             → (split : Split-Coalitions p1 p2)
+             → Coalition m
              → Votes n n>1 m 
              → (a b : Fin n)
              → Set₁
-Decisive-a>b {p1 = p1} {p2 = p2} record { coalition-1 = coalition-1 
-  ; coalition-2 = coalition-2 
-  ; disj = disj 
-  ; comp = comp } votes a b = (CoalitionAgrees votes a b p1) × (CoalitionAgrees votes b a p2) → SWF votes a b
+Decisive-a>b c votes a b = (CoalitionAgrees a b c votes) × (CoalitionAgrees b a (InverseCoalition c) votes) → SWF votes a b
 
 StrictlyDecisive-a>b : {m n : ℕ} → {n>1 : n ℕ.> 1}
-                     → {p1 p2 : ProtoCoalition m}
-                     → (split : Split-Coalitions p1 p2)
-                     → Votes n n>1 m 
-                     → (a b : Fin n)
-                     → Set₁
-StrictlyDecisive-a>b {p1 = p1} record { coalition-1 = coalition-1 
-  ; coalition-2 = coalition-2 
-  ; disj = disj 
-  ; comp = comp } votes a b = (CoalitionAgrees votes a b p1) → SWF votes a b
+             → Coalition m
+             → Votes n n>1 m 
+             → (a b : Fin n)
+             → Set₁
+StrictlyDecisive-a>b c votes a b = (CoalitionAgrees a b c votes) → SWF votes a b
 
 Decisive : {m n : ℕ} → {n>1 : n ℕ.> 1}
-         → {p1 p2 : ProtoCoalition m}
-         → (split : Split-Coalitions p1 p2)
+         → Coalition m
          → Votes n n>1 m
          → Set₁
-Decisive split v = ∀ a b → StrictlyDecisive-a>b split v a b
+Decisive c v = ∀ a b → StrictlyDecisive-a>b c v a b

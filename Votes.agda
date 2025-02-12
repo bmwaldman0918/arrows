@@ -70,4 +70,4 @@ Get (suc m') (suc idx) (s≤s m>idx) (x ∷ votes) = Get m' idx m>idx votes
 
 ElectionAgrees : {m n : ℕ} → {n>1 : n ℕ.> 1} → (v : Votes n n>1 m) → (a b : Fin n) → Set
 ElectionAgrees [] a b = ⊤ 
-ElectionAgrees {m = suc m'} (x ∷ v) a b = P (proj₂ (Get (suc m') m' (ℕProp.n<1+n m') (x ∷ v))) a b × (ElectionAgrees v a b) 
+ElectionAgrees {m = suc m'} (x ∷ v) a b = P x a b × (ElectionAgrees v a b) 
