@@ -47,22 +47,22 @@ _⊆_ (p ∷ inner) outer = (Contains outer p) × (inner ⊆ outer)
 Length : {n m : ℕ} → {n>1 : n ℕ.> 1} → Votes n n>1 m → ℕ
 Length {m = m} _ = m
 
-data Zip (n : ℕ) (n>1 : n ℕ.> 1) (a b : Fin n) : ℕ → Set₁ where
-  z-nil : Zip n n>1 a b 0
+data Zip {n : ℕ} (n>1 : n ℕ.> 1) (a b : Fin n) : ℕ → Set₁ where
+  z-nil : Zip n>1 a b 0
   z-cons : {r1 r2 : Fin n → Fin n → Set} 
          → {m : ℕ} 
          → (p1 : Preference n n>1 r1) 
          → (p2 : Preference n n>1 r2)
-         → Zip n n>1 a b m
+         → Zip n>1 a b m
          -----------
-         → Zip n n>1 a b (suc m)
-Zipped : (m n : ℕ) → (n>1 : n ℕ.> 1) → (a b : Fin n) → (v1 v2 : Votes n n>1 m) → Zip n n>1 a b m
-Zipped zero n n>1 a b [] [] = z-nil
-Zipped (suc m) n n>1 a b (x ∷ v1) (y ∷ v2) = z-cons x y (Zipped m n n>1 a b v1 v2)
+         → Zip n>1 a b (suc m)
+Zipped : {m n : ℕ} → (n>1 : n ℕ.> 1) → (a b : Fin n) → (v1 v2 : Votes n n>1 m) → Zip n>1 a b m
+Zipped n>1 a b [] [] = z-nil
+Zipped n>1 a b (x ∷ v1) (y ∷ v2) = z-cons x y (Zipped n>1 a b v1 v2)
 
-Similar : (m n : ℕ) → (n>1 : n ℕ.> 1) → (a b : Fin n) → Zip n n>1 a b m → Set
-Similar .0 n n>1 a b z-nil = ⊤
-Similar (suc m) n n>1 a b (z-cons p1 p2 zip) = (R→Bool p1 a b ≡ R→Bool p2 a b) × (Similar m n n>1 a b zip)
+Similar : {n : ℕ} → {n>1 : n ℕ.> 1} → (m : ℕ) → (a b : Fin n) → Zip n>1 a b m → Set
+Similar .0 a b z-nil = ⊤
+Similar (suc m) a b (z-cons p1 p2 zip) = (R→Bool p1 a b ≡ R→Bool p2 a b) × (Similar m a b zip)
 
 Get : {n : ℕ} → {n>1 : n ℕ.> 1} → (m idx : ℕ) → (m ℕ.> idx) → Votes n n>1 m → Σ (Fin n → Fin n → Set) λ _R_ → Preference n n>1 _R_
 Get (suc m') zero (s≤s m>idx) votes = HeadVotes m' votes

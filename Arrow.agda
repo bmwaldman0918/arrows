@@ -30,5 +30,42 @@ LemmaOne m v a b c = Pareto a b (helper m v a b c) where
   helper .0 [] a b c = tt
   helper (suc m) (x ∷ v) a b (true-agrees .(Whole m) .v c .x agrees) = agrees , (helper m v a b c)
 
+LemmaTwoSimilar : (m : ℕ) 
+                → (c : Coalition m) 
+                → (v : Votes n n>1 m) 
+                → (x y z : Fin n) 
+                → ¬ (x ≡ z) 
+                → ¬ (y ≡ z) 
+                → (CoalitionAgrees x y c v) 
+                → (CoalitionAgrees y x (InverseCoalition c) v)
+                → (CoalitionAgrees x z c v)
+                → Σ (Votes n n>1 m) λ v' 
+                                    → (Similar m x z (Zipped n>1 x z v v') 
+                                    × ElectionAgrees v' x z)
+LemmaTwoSimilar zero [] [] x y z ¬x≡z ¬y≡z _ _ _ = [] , (tt , tt)
+LemmaTwoSimilar (suc m) (false ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z 
+                (false-agrees .c .rem ca-x>y .head) 
+                (true-agrees .(InverseCoalition c) .rem in-ca-y>x .head x₁)
+                (false-agrees .c .rem ca-x>z .head) 
+    with LemmaTwoSimilar m c rem x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z
+... | sim-coal , is-sim , sim-x>z = (P' ∷ sim-coal) , ({!   !} , is-sim) , ({!   !} , sim-x>z)
+    where 
+    _R'_ : Fin n → Fin n → Set
+    _R'_ a b = {!   !}
+    P' : Preference n n>1 _R'_
+    P' = {!   !}
+LemmaTwoSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z 
+                (true-agrees .c .rem ca-x>y .head x₁) 
+                (false-agrees .(InverseCoalition c) .rem in-ca-y>x .head)
+                (true-agrees .c .rem ca-x>z .head x₂)
+    with LemmaTwoSimilar m c rem x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z
+... | sim-coal , is-sim , sim-x>z = (P' ∷ sim-coal) , ({!   !} , is-sim) , ({!   !} , sim-x>z)
+    where 
+    _R'_ : Fin n → Fin n → Set
+    _R'_ a b = {!   !}
+    P' : Preference n n>1 _R'_
+    P' = {!   !}
+
 LemmaTwo : (m : ℕ) → (c : Coalition m) → (v : Votes n n>1 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v x z 
-LemmaTwo m c v x y z ¬x≡z ¬y≡z dec x>z = Transitivity x y z (dec {!   !}) {!   !}
+LemmaTwo m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x _) ca-x>z with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z
+... | sim-coal , is-sim , sim-x>z = BinaryIIA x z sim-coal is-sim (Pareto x z sim-x>z)
