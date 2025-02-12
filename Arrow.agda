@@ -11,6 +11,8 @@ open import Data.Fin
 open import Data.Vec
 open import Data.Bool
 open import Data.Unit
+open import Data.Empty
+open import Data.Sum using (_⊎_)
 open import Data.Product using (Σ; _,_; _×_)
 open import Relation.Nullary using (¬_)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)

@@ -23,7 +23,7 @@ InverseCoalition : {m : ℕ} → Coalition m → Coalition m
 InverseCoalition [] = []
 InverseCoalition (h ∷ c) = not h ∷ (InverseCoalition c)
 
-data CoalitionAgrees {n : ℕ} {n>1 : n ℕ.> 1} (a b : Fin n) : {m : ℕ} → (c : Coalition m) → (v1 : Votes n n>1 m) → Set where
+data CoalitionAgrees {n : ℕ} {n>1 : n ℕ.> 1} (a b : Fin n) : {m : ℕ} → (c : Coalition m) → (v1 : Votes n n>1 m) → Set₁ where
     empty-coalition-agrees : CoalitionAgrees a b [] []
     
     false-agrees : {m : ℕ} 
