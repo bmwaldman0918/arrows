@@ -40,8 +40,8 @@ LemmaTwoSimilar : (m : ℕ)
                 → (CoalitionAgrees y x (InverseCoalition c) v)
                 → (CoalitionAgrees x z c v)
                 → Σ (Votes n n>1 m) λ v' 
-                                    → (Similar m x z (Zipped n>1 x z v v') 
-                                    × ElectionAgrees v' x z)
+                                    → (Similar m x z (Zipped n>1 y z v v') 
+                                    × ElectionAgrees v' y z)
 LemmaTwoSimilar zero [] [] x y z ¬x≡z ¬y≡z _ _ _ = [] , (tt , tt)
 LemmaTwoSimilar (suc m) (false ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z 
                 (false-agrees .c .rem ca-x>y .head) 
@@ -67,5 +67,5 @@ LemmaTwoSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
     P' = {!   !}
 
 LemmaTwo : (m : ℕ) → (c : Coalition m) → (v : Votes n n>1 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v x z 
-LemmaTwo m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x _) ca-x>z with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z
-... | sim-coal , is-sim , sim-x>z = BinaryIIA x z sim-coal is-sim (Pareto x z sim-x>z)
+LemmaTwo m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-x>z with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z
+... | sim-coal , is-sim , sim-y>z = Transitivity x y z swfx>y (BinaryIIA y z sim-coal is-sim (Pareto y z sim-y>z))
