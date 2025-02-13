@@ -2,6 +2,7 @@ module Arrow where
 
 open import Voter
 open WeakPreference
+open Preference
 open StrictPreference
 open import Votes 
 open import Election
@@ -13,7 +14,7 @@ open import Data.Vec
 open import Data.Bool
 open import Data.Unit
 open import Data.Empty
-open import Data.Sum using (_⊎_)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ; _,_; _×_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
@@ -37,23 +38,21 @@ LemmaTwoAlter : {_R_ : Fin n → Fin n → Set}
               → ¬ (x ≡ z) 
               → ¬ (y ≡ z)
               → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>1 _R'_) λ P' → R→Bool head x z ≡ R→Bool P' x z × R→Bool P' x y ≡ R→Bool head x y × P P' y z
-LemmaTwoAlter head x y z ¬x≡z ¬y≡z = R' head x y z , P' head x y z , {!   !} , {!   !} , {!   !}
+LemmaTwoAlter {_R_ = _R_} head x y z ¬x≡z ¬y≡z with R-dec head z y
+... | inj₁ yRz = R' head x y z , P' head x y z , {!   !} , {!   !} , λ {(y>z .z .y z≡y y≡z) → ¬y≡z y≡z 
+                                                                        ; (original .z .y ¬z≡z ¬y≡y zRy) → ¬z≡z Eq.refl}
   where
-  R' : {_R_ : Fin n → Fin n → Set} 
-     → (head : Preference n n>1 _R_)
-     → (x y z : Fin n) 
-     → (Fin n → Fin n → Set)
-  R' {_R_ = _R_} head x y z a b with a Fin.≟ z | b Fin.≟ y
-  ... | true because ofʸ a≡z | true because ofʸ b≡y = ⊥
-  ... | _ | _ with a Fin.≟ y | b Fin.≟ z
-  ... | true because ofʸ a≡y | true because ofʸ b≡z = ⊤
-  ... | _ | _ = a R b
+    data R' {_R_ : Fin n → Fin n → Set} (head : Preference n n>1 _R_) (x y z : Fin n) : Fin n → Fin n → Set where
+        y>z      : (a b : Fin n) →   (a ≡ y) →   (b ≡ z)         → R' head x y z a b 
+        original : (a b : Fin n) → ¬ (a ≡ z) → ¬ (b ≡ y) → a R b → R' head x y z a b
 
-  P' : {_R_ : Fin n → Fin n → Set} 
-     → (head : Preference n n>1 _R_)
-     → (x y z : Fin n) 
-     → Preference n n>1 (R' head x y z)
-  P' head x y z = {!   !}
+    P' : {_R_ : Fin n → Fin n → Set} 
+       → (head : Preference n n>1 _R_)
+       → (x y z : Fin n)
+       → Preference n n>1 (R' head x y z)
+    P' = {!   !}
+    
+... | inj₂ yPz = _R_ , head , Eq.refl , Eq.refl , yPz
 
 LemmaTwoSimilar : (m : ℕ) 
                 → (c : Coalition m) 
@@ -88,5 +87,5 @@ LemmaTwoSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
 
 LemmaTwo : (m : ℕ) → (c : Coalition m) → (v : Votes n n>1 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v x z 
 LemmaTwo m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-x>z 
-  with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z 
+  with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z    
 ... | v' , v'-sim-xz , v-sim-xy , v'-y>z = BinaryIIA x z v' v'-sim-xz (Transitivity x y z (BinaryIIA x y v v-sim-xy swfx>y) (Pareto y z v'-y>z))
