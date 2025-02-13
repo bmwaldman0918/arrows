@@ -46,7 +46,7 @@ LemmaTwoAlter head x y z ¬x≡z ¬y≡z = R' head x y z , P' head x y z , {!   
   R' {_R_ = _R_} head x y z a b with a Fin.≟ z | b Fin.≟ y
   ... | true because ofʸ a≡z | true because ofʸ b≡y = ⊥
   ... | _ | _ with a Fin.≟ y | b Fin.≟ z
-  ... | true because ofʸ a≡z | true because ofʸ b≡y = ⊤
+  ... | true because ofʸ a≡y | true because ofʸ b≡z = ⊤
   ... | _ | _ = a R b
 
   P' : {_R_ : Fin n → Fin n → Set} 
