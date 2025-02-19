@@ -39,37 +39,33 @@ LemmaTwoAlter : {_R_ : Fin n → Fin n → Set}
               → ¬ (y ≡ z)
               → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>1 _R'_) λ P' → R→Bool head x z ≡ R→Bool P' x z × R→Bool P' x y ≡ R→Bool head x y × P P' y z
 LemmaTwoAlter {_R_ = _R_} head x y z ¬x≡z ¬y≡z with R-dec head z y
-... | inj₁ yRz = R' head x y z , P' head x y z , {!   !} , {!   !} , λ {arb → {!   !} }
+... | inj₁ zRy = R' head x y z , P' head x y z , {!   !} , {!   !} , λ {arb → {!   !} }
   where
     data R' {_R_ : Fin n → Fin n → Set} (head : Preference n n>1 _R_) (x y z : Fin n) : Fin n → Fin n → Set where
         y>z       : (a b : Fin n) 
                   → (a ≡ y)
                   → (b ≡ z)
                   → R' head x y z a b
-                  
         original  : (a b : Fin n) 
                   → ¬ (a ≡ z)
-                  →    a R b
+                  → ¬ (b ≡ z)
+                  → a R b
                   → R' head x y z a b
-        
-        zRb       : (a b : Fin n) 
-                  →  (a ≡ z)
-                  →   a R b
-                  →   y R b
-                  → R' head x y z a b
-
-        zRb→yRb   : (a b : Fin n)
+        zRb→yRb : (a b : Fin n) 
                   → (a ≡ y)
-                  →  z R b
+                  → (z R b)
                   → R' head x y z a b
-
+        yRb→zRb : (a b : Fin n) 
+                  → (a ≡ z)
+                  → (y R b)
+                  → R' head x y z a b
     R'-trans : {_R_ : Fin n → Fin n → Set} 
            → (head : Preference n n>1 _R_)
            → (x y z a b c : Fin n)
            → R' head x y z a b 
            → R' head x y z b c 
            → R' head x y z a c
-    R'-trans head x y z a b c = {!   !}
+    R'-trans head x y z a b c aRb bRc = {!   !}
     
     R'-complete : {_R_ : Fin n → Fin n → Set} 
                 → (head : Preference n n>1 _R_)
@@ -106,7 +102,7 @@ LemmaTwoAlter {_R_ = _R_} head x y z ¬x≡z ¬y≡z with R-dec head z y
        → (head : Preference n n>1 _R_)
        → (x y z : Fin n)
        → Preference n n>1 (R' head x y z)
-    P' head x y z = record { R-trans = {!   !} 
+    P' head x y z = record { R-trans = R'-trans head x y z 
                            ; R-complete = R'-complete head x y z 
                            ; R-dec = R'-dec head x y z }
     
