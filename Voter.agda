@@ -33,12 +33,13 @@ module WeakPreference where
 
     --- Weak preferences are reflexive
     R-refl : (v : Preference n n>1 _R_) 
-        → (a : Fin n) 
+        → (a b : Fin n)
+        → (a ≡ b) 
         ----------------------
-        → a R a
-    R-refl v a with R-complete v a a
-    ... | inj₁ aRa = aRa
-    ... | inj₂ aRa = aRa
+        → a R b
+    R-refl v a b a≡b with R-complete v a b
+    ... | inj₁ aRb = aRb
+    ... | inj₂ bRa rewrite a≡b = bRa
 
     ¬R-dec→⊥ : {p : Preference n n>1 _R_} → {a b : Fin n} → ¬ (a R b) → ¬ (b R a) → ⊥
     ¬R-dec→⊥ {p = p} {a = a} {b = b} ¬aRb ¬bRa with R-complete p a b 
@@ -76,7 +77,7 @@ module StrictPreference where
         → (P v a b) 
         --------------------------
         → ¬ (a ≡ b)
-    P↛≡ {b = b} {v = v} ¬bRb a≡b rewrite a≡b = ¬bRb (R-refl v b)
+    P↛≡ {a = a} {b = b} {v = v} ¬bRb a≡b = ¬bRb (R-refl v b a (Eq.sym a≡b))
 
     --- Strict preference is transitive
     P-trans : {v : Preference n n>1 _R_} 
