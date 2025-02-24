@@ -4,6 +4,8 @@ open import Voter
 open import Votes
 open import Election
 open import Coalition
+open WeakPreference
+open StrictPreference
 
 open import Data.Fin as Fin using (_≟_; Fin)
 open import Data.Nat as ℕ
@@ -11,6 +13,8 @@ open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Data.Empty
 open import Data.Product using (Σ; _×_; _,_)
+open import Data.Unit
+open import Data.Bool as Bool
 
 data Decisive-a>b {m n : ℕ} {n>1 : n ℕ.> 1} (c : Coalition m) (v : Votes n n>1 m) (a b : Fin n) : Set₁ where
   dec-a>b : (CoalitionAgrees a b c v) 
