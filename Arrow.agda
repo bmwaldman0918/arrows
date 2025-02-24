@@ -302,6 +302,15 @@ CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with x Fin.≟ 
 ... | true because ofʸ y≡w = {!   !} -- we can generate a fresh var lemma
 CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) | true because ofʸ x≡w = StrictlyDecisive-x>x c v x w x≡w
 
+LemmaThreeAlter : {_R_ : Fin n → Fin n → Set} 
+              → (head : Preference n n>1 _R_)
+              → (x y z : Fin n) 
+              → (P head y x) ⊎ (P head z y)
+              → ¬ (x ≡ z) 
+              → ¬ (y ≡ z)
+              → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>1 _R'_) λ P' → R→Bool head z y ≡ R→Bool P' z y × R→Bool P' x y ≡ R→Bool head x y × P P' z x
+LemmaThreeAlter {_R_ = _R_} head x y z yPx⊎zPy ¬x≡z ¬y≡z = {!   !}
+
 LemmaThreeSimilar : (m : ℕ) 
                 → (c : Coalition m) 
                 → (v : Votes n n>1 m) 
@@ -321,13 +330,18 @@ LemmaThreeSimilar (suc m) (false ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
                 (true-agrees .(InverseCoalition c) .rem in-ca-y>x .head yPx)
                 (false-agrees .c .rem ca-z>y .head) 
     with LemmaThreeSimilar m c rem x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-z>y
-... | sim-coal , is-sim-zy , is-sim-xy , sim-z>x = {!   !}
+... | sim-coal , is-sim-zy , is-sim-xy , sim-z>x 
+    with LemmaThreeAlter head x y z (inj₁ yPx) ¬x≡z ¬y≡z 
+... | _ , p' , p'-sim-zy , p'-sim-xy , ¬xR'z = (p' ∷ sim-coal) , (p'-sim-zy , is-sim-zy) , (p'-sim-xy , is-sim-xy) , (¬xR'z , sim-z>x)
 LemmaThreeSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z 
-                (true-agrees .c .rem ca-x>y .head xPz) 
+                (true-agrees .c .rem ca-x>y .head xPy) 
                 (false-agrees .(InverseCoalition c) .rem in-ca-y>x .head)
-                (true-agrees .c .rem ca-z>y .head xPy)
+                (true-agrees .c .rem ca-z>y .head zPy)
     with LemmaThreeSimilar m c rem x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-z>y
-... | sim-coal , is-sim-zy , is-sim-xy , sim-z>x = {!   !}
+... | sim-coal , is-sim-zy , is-sim-xy , sim-z>x     
+    with LemmaThreeAlter head x y z (inj₂ zPy) ¬x≡z ¬y≡z 
+... | _ , p' , p'-sim-zy , p'-sim-xy , ¬xR'z = (p' ∷ sim-coal) , (p'-sim-zy , is-sim-zy) , (p'-sim-xy , is-sim-xy) , (¬xR'z , sim-z>x)
+
 
 LemmaThree : (m : ℕ) → (c : Coalition m) → (v : Votes n n>1 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v z y 
 LemmaThree m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-z>y
