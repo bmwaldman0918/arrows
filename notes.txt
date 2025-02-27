@@ -31,3 +31,7 @@ me complaining that the proofs are bad:
 1 -- sen: extremely imprecise definition of decisive 
 
 check popl for references
+
+try wo lemma 6?
+
+prove for two candidates

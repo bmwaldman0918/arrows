@@ -22,23 +22,23 @@ open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 private
   variable
     n : ℕ
-    n>1 : n ℕ.> 1
+    n>2 : n ℕ.> 2
 
 -- the coalition of the whole is decisive
 
-LemmaOne : (m : ℕ) → (v : Votes n n>1 m) → (a b : Fin n) → CoalitionAgrees a b (Whole m) v → SWF v a b
+LemmaOne : (m : ℕ) → (v : Votes n n>2 m) → (a b : Fin n) → CoalitionAgrees a b (Whole m) v → SWF v a b
 LemmaOne m v a b c = Pareto a b (helper m v a b c) where
-  helper : (m : ℕ) → (v : Votes n n>1 m) → (a b : Fin n) → CoalitionAgrees a b (Whole m) v → ElectionAgrees v a b
+  helper : (m : ℕ) → (v : Votes n n>2 m) → (a b : Fin n) → CoalitionAgrees a b (Whole m) v → ElectionAgrees v a b
   helper .0 [] a b c = tt
   helper (suc m) (x ∷ v) a b (true-agrees .(Whole m) .v c .x agrees) = agrees , (helper m v a b c)
 
 LemmaTwoAlter : {_R_ : Fin n → Fin n → Set} 
-              → (head : Preference n n>1 _R_)
+              → (head : Preference n n>2 _R_)
               → (x y z : Fin n) 
               → (P head y x) ⊎ (P head x z)
               → ¬ (x ≡ z) 
               → ¬ (y ≡ z)
-              → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>1 _R'_) λ P' → R→Bool head x z ≡ R→Bool P' x z × R→Bool P' x y ≡ R→Bool head x y × P P' y z
+              → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>2 _R'_) λ P' → R→Bool head x z ≡ R→Bool P' x z × R→Bool P' x y ≡ R→Bool head x y × P P' y z
 LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z y
 ... | inj₁ zRy = R' head y z ¬y≡z zRy , P' head y z zRy ¬y≡z 
                                       , agrees-x-z head x y z yPx⊎xPz ¬x≡z ¬y≡z zRy 
@@ -50,7 +50,7 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
                                         ; (yRz .z .y _ y≡z) → ¬y≡z y≡z}
   where
     data R' {_R_ : Fin n → Fin n → Set} 
-            (head : Preference n n>1 _R_) 
+            (head : Preference n n>2 _R_) 
             (y z : Fin n)
             (¬y≡z : ¬ y ≡ z) 
             (zRy : z R y) : Fin n → Fin n → Set where
@@ -83,7 +83,7 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
                      → R' head y z ¬y≡z zRy a b
 
     R'-trans : {_R_ : Fin n → Fin n → Set} 
-           → (head : Preference n n>1 _R_)
+           → (head : Preference n n>2 _R_)
            → (y z : Fin n)
            → (zRy : z R y)
            → (¬y≡z : ¬ y ≡ z)
@@ -122,7 +122,7 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
     R'-trans head y z zRy ¬y≡z a b c (yRz .a .b aRy b≡z) (yRz .b .c bRy c≡z) = yRz a c aRy c≡z
 
     R'-complete : {_R_ : Fin n → Fin n → Set} 
-                → (head : Preference n n>1 _R_)
+                → (head : Preference n n>2 _R_)
                 → (y z : Fin n)
                 → (zRy : z R y)
                 → (¬y≡z : ¬ y ≡ z)
@@ -145,7 +145,7 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
     ... | inj₂ yPb = inj₁ (zRx∧yRx→zR'x a b a≡z yPb (R-trans head z y b zRy (P→R {v = head} yPb)))
     
     R'-dec : {_R_ : Fin n → Fin n → Set} 
-           → (head : Preference n n>1 _R_)
+           → (head : Preference n n>2 _R_)
            → (y z : Fin n)
            → (zRy : z R y)
            → (¬y≡z : ¬ y ≡ z)
@@ -192,17 +192,17 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
     ... | inj₂ yPb = inj₁ (zRx∧yRx→zR'x a b a≡z yPb zRb)
 
     P' : {_R_ : Fin n → Fin n → Set} 
-       → (head : Preference n n>1 _R_)
+       → (head : Preference n n>2 _R_)
        → (y z : Fin n) 
        → (zRy : z R y)
        → (¬y≡z : ¬ y ≡ z)
-       → Preference n n>1 (R' head y z ¬y≡z zRy)
+       → Preference n n>2 (R' head y z ¬y≡z zRy)
     P' head y z zRy ¬y≡z = record { R-trans    = R'-trans    head y z zRy ¬y≡z 
                                   ; R-complete = R'-complete head y z zRy ¬y≡z 
                                   ; R-dec      = R'-dec      head y z zRy ¬y≡z }
 
     agrees-x-z : {_R_ : Fin n → Fin n → Set} 
-              → (head : Preference n n>1 _R_)
+              → (head : Preference n n>2 _R_)
               → (x y z : Fin n) 
               → (P head y x) ⊎ (P head x z)
               → ¬ (x ≡ z) 
@@ -221,7 +221,7 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
     agrees-x-z head x y z (inj₂ xPz) ¬x≡z ¬y≡z zRy | inj₂ zPx | inj₁ (yRz .x .z xRy _) = ⊥-elim (xPz (P→R {v = head} zPx))
     
     agrees-x-y : {_R_ : Fin n → Fin n → Set} 
-              → (head : Preference n n>1 _R_)
+              → (head : Preference n n>2 _R_)
               → (x y z : Fin n)
               → ¬ (x ≡ z) 
               → (¬y≡z : ¬ (y ≡ z))
@@ -241,16 +241,16 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
 
 LemmaTwoSimilar : (m : ℕ) 
                 → (c : Coalition m) 
-                → (v : Votes n n>1 m) 
+                → (v : Votes n n>2 m) 
                 → (x y z : Fin n) 
                 → ¬ (x ≡ z) 
                 → ¬ (y ≡ z) 
                 → (CoalitionAgrees x y c v) 
                 → (CoalitionAgrees y x (InverseCoalition c) v)
                 → (CoalitionAgrees x z c v)
-                → Σ (Votes n n>1 m) λ v' 
-                                    → (Similar m x z (Zipped n>1 x z v v')  
-                                    × Similar m x y (Zipped n>1 x y v' v)
+                → Σ (Votes n n>2 m) λ v' 
+                                    → (Similar m x z (Zipped n>2 x z v v')  
+                                    × Similar m x y (Zipped n>2 x y v' v)
                                     × ElectionAgrees v' y z)
 LemmaTwoSimilar zero [] [] x y z ¬x≡z ¬y≡z _ _ _ = [] , (tt , (tt , tt))
 LemmaTwoSimilar (suc m) (false ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z 
@@ -270,59 +270,67 @@ LemmaTwoSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
     with LemmaTwoAlter head x y z (inj₂ xPy) ¬x≡z ¬y≡z
 ... | _ , p' , p'-sim-xz , p'-sim-xy , ¬zR'y = (p' ∷ sim-coal) , (p'-sim-xz , is-sim-xz) , (p'-sim-xy , is-sim-xy) , (¬zR'y , sim-y>z)
     
-LemmaTwo : (m : ℕ) → (c : Coalition m) → (v : Votes n n>1 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v x z 
+LemmaTwo : (m : ℕ) → (c : Coalition m) → (v : Votes n n>2 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v x z 
 LemmaTwo m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-x>z  
   with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z                                                       
 ... | v' , v'-sim-xz , v-sim-xy , v'-y>z = BinaryIIA x z v' v'-sim-xz (Transitivity x y z (BinaryIIA x y v v-sim-xy swfx>y) (Pareto y z v'-y>z))     
 
-StrictlyDecisive-x>x : {m n : ℕ} → {n>1 : n ℕ.> 1}
-             → (c : Coalition m)
-             → (v : Votes n n>1 m) 
+StrictlyDecisive-x>x : {m n : ℕ} → {n>2 : n ℕ.> 2}
+             → (c : NonEmptyCoalition m)
+             → (v : Votes n n>2 m) 
              → (a b : Fin n)
              → (a ≡ b)
-             → StrictlyDecisive-a>b c v a b 
-StrictlyDecisive-x>x c v a b a≡b = λ ca → helper v c a b a≡b ca
+             → StrictlyDecisive-a>b (Unwrap c) v a b 
+StrictlyDecisive-x>x c v a b a≡b = λ ca → ⊥-elim (helper v c a b a≡b ca)
   where
-    helper : {m n : ℕ} → {n>1 : n ℕ.> 1} 
-           → (v : Votes n n>1 m) 
-           → (c : Coalition m) 
+    helper : {m n : ℕ} → {n>2 : n ℕ.> 2} 
+           → (v : Votes n n>2 m) 
+           → (c : NonEmptyCoalition m) 
            → (a b : Fin n) 
            → (a ≡ b) 
-           → (CoalitionAgrees a b c v)
-           → SWF v a b 
-    helper v c a b a≡b empty-coalition-agrees = Pareto a b tt
-    helper v c a b a≡b (false-agrees coal rem ca p) = {!   !}
-    helper v c a b a≡b (true-agrees _ _ _ p aPb) = ⊥-elim (aPb (R-refl p b a (Eq.sym a≡b)))
+           → (CoalitionAgrees a b (Unwrap c) v)
+           → ⊥
+    helper (p ∷ v) (.true ∷ c , zero , _) a b a≡b (true-agrees .c .v ca .p aPb) = ⊥-elim (aPb (R-refl p b a (Eq.sym a≡b)))
+    helper (p ∷ v) (.(false ∷ c) , suc fst , snd) a b a≡b (false-agrees c .v ca .p) = helper v (c , (fst , snd)) a b a≡b ca
+    helper (p ∷ v) (.(true ∷ c) , suc fst , snd) a b a≡b (true-agrees c .v ca .p aPb) = ⊥-elim (aPb (R-refl p b a (Eq.sym a≡b)))
 
-CorollaryOne : (m : ℕ) → (c : Coalition m) → (v : Votes n n>1 m) → (x y w : Fin n) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v x w
+FreshCandidate : (n : ℕ) → (n>2 : n ℕ.> 2) (a b : Fin n) → Σ (Fin n) λ c → ¬ (a ≡ c) × ¬ (b ≡ c)
+FreshCandidate n n>2 a b = {!   !}
+
+CorollaryOne : (m : ℕ) 
+             → (c : NonEmptyCoalition m) 
+             → (v : Votes n n>2 m) 
+             → (x y w : Fin n) 
+             → Decisive-a>b (Unwrap c) v x y 
+             → StrictlyDecisive-a>b (Unwrap c) v x w
 CorollaryOne zero c [] x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) = λ _ → Pareto x w tt
 CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with x Fin.≟ w 
 ... | false because ofⁿ ¬x≡w with y Fin.≟ w
-... | false because ofⁿ ¬y≡w = LemmaTwo (suc m) c v x y w ¬x≡w ¬y≡w (dec-a>b ca-x>y in-ca-y>x swfx>y)
+... | false because ofⁿ ¬y≡w = LemmaTwo (suc m) (Unwrap c) v x y w ¬x≡w ¬y≡w (dec-a>b ca-x>y in-ca-y>x swfx>y)
 ... | true because ofʸ y≡w = {!   !} -- we can generate a fresh var lemma
 CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) | true because ofʸ x≡w = StrictlyDecisive-x>x c v x w x≡w
 
 LemmaThreeAlter : {_R_ : Fin n → Fin n → Set} 
-              → (head : Preference n n>1 _R_)
+              → (head : Preference n n>2 _R_)
               → (x y z : Fin n) 
               → (P head y x) ⊎ (P head z y)
               → ¬ (x ≡ z) 
               → ¬ (y ≡ z)
-              → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>1 _R'_) λ P' → R→Bool head z y ≡ R→Bool P' z y × R→Bool P' x y ≡ R→Bool head x y × P P' z x
+              → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>2 _R'_) λ P' → R→Bool head z y ≡ R→Bool P' z y × R→Bool P' x y ≡ R→Bool head x y × P P' z x
 LemmaThreeAlter {_R_ = _R_} head x y z yPx⊎zPy ¬x≡z ¬y≡z = {!   !}
 
 LemmaThreeSimilar : (m : ℕ) 
                 → (c : Coalition m) 
-                → (v : Votes n n>1 m) 
+                → (v : Votes n n>2 m) 
                 → (x y z : Fin n) 
                 → ¬ (x ≡ z) 
                 → ¬ (y ≡ z) 
                 → (CoalitionAgrees x y c v) 
                 → (CoalitionAgrees y x (InverseCoalition c) v)
                 → (CoalitionAgrees z y c v)
-                → Σ (Votes n n>1 m) λ v' 
-                                    → (Similar m z y (Zipped n>1 z y v v')  
-                                    × Similar m x y (Zipped n>1 x y v' v)
+                → Σ (Votes n n>2 m) λ v' 
+                                    → (Similar m z y (Zipped n>2 z y v v')  
+                                    × Similar m x y (Zipped n>2 x y v' v)
                                     × ElectionAgrees v' z x)
 LemmaThreeSimilar zero [] [] x y z ¬x≡z ¬y≡z _ _ _ = [] , (tt , (tt , tt))
 LemmaThreeSimilar (suc m) (false ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z 
@@ -343,7 +351,7 @@ LemmaThreeSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
 ... | _ , p' , p'-sim-zy , p'-sim-xy , ¬xR'z = (p' ∷ sim-coal) , (p'-sim-zy , is-sim-zy) , (p'-sim-xy , is-sim-xy) , (¬xR'z , sim-z>x)
 
 
-LemmaThree : (m : ℕ) → (c : Coalition m) → (v : Votes n n>1 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v z y 
+LemmaThree : (m : ℕ) → (c : Coalition m) → (v : Votes n n>2 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v z y 
 LemmaThree m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-z>y
   with LemmaThreeSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-z>y
 ... | v' , v'-sim-zy , v'-sim-xy , v'-z>x = BinaryIIA z y v' v'-sim-zy (Transitivity z x y (Pareto z x v'-z>x) (BinaryIIA x y v v'-sim-xy swfx>y))

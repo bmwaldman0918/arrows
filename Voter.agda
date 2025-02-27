@@ -17,14 +17,14 @@ open import Data.Fin.Properties using (_≟_)
 private
     variable
         n : ℕ
-        n>1 : n ℕ.> 1
+        n>2 : n ℕ.> 2
         a b c : Fin n
         _R_ : Fin n → Fin n → Set
 
 module WeakPreference where
     --- A weak preference is transitive, complete, and decidable relation
     --- A weak preference is not anti-symmetric, so voters can be indifferent between candidates
-    record Preference (n : ℕ) (n>1 : n ℕ.> 1) (_R_ : Fin n → Fin n → Set) : Set where
+    record Preference (n : ℕ) (n>2 : n ℕ.> 2) (_R_ : Fin n → Fin n → Set) : Set where
         field
             R-trans    : (a b c : Fin n) → a R b → b R c → a R c
             R-complete : (a b : Fin n)   → (a R b) ⊎   (b R a)
@@ -32,7 +32,7 @@ module WeakPreference where
     open Preference
 
     --- Weak preferences are reflexive
-    R-refl : (v : Preference n n>1 _R_) 
+    R-refl : (v : Preference n n>2 _R_) 
         → (a b : Fin n)
         → (a ≡ b) 
         ----------------------
@@ -41,12 +41,12 @@ module WeakPreference where
     ... | inj₁ aRb = aRb
     ... | inj₂ bRa rewrite a≡b = bRa
 
-    ¬R-dec→⊥ : {p : Preference n n>1 _R_} → {a b : Fin n} → ¬ (a R b) → ¬ (b R a) → ⊥
+    ¬R-dec→⊥ : {p : Preference n n>2 _R_} → {a b : Fin n} → ¬ (a R b) → ¬ (b R a) → ⊥
     ¬R-dec→⊥ {p = p} {a = a} {b = b} ¬aRb ¬bRa with R-complete p a b 
     ... | inj₁ aRb = ¬aRb aRb
     ... | inj₂ bRa = ¬bRa bRa
 
-    R→Bool : (p : Preference n n>1 _R_) → (a b : Fin n) → Bool
+    R→Bool : (p : Preference n n>2 _R_) → (a b : Fin n) → Bool
     R→Bool p a b with R-dec p a b 
     ... | inj₁ x = true
     ... | inj₂ y = false
@@ -56,7 +56,7 @@ open Preference
 
 module StrictPreference where
     --- Strict preferences are the absence of the inverted weak preference
-    P : (Preference n n>1 _R_) 
+    P : (Preference n n>2 _R_) 
         → (a b : Fin n) 
         ----------------------
         → Set
@@ -64,7 +64,7 @@ module StrictPreference where
 
     --- Strict preferences imply weak preferences
     P→R : {a b : Fin n} 
-        → {v : Preference n n>1 _R_} 
+        → {v : Preference n n>2 _R_} 
         → (P v a b) 
         --------------------------
         → a R b
@@ -73,14 +73,14 @@ module StrictPreference where
     ... | inj₂ bRa = ⊥-elim (¬bRa bRa)
 
     --- Strict preferences imply inequality
-    P↛≡ : {v : Preference n n>1 _R_} 
+    P↛≡ : {v : Preference n n>2 _R_} 
         → (P v a b) 
         --------------------------
         → ¬ (a ≡ b)
     P↛≡ {a = a} {b = b} {v = v} ¬bRb a≡b = ¬bRb (R-refl v b a (Eq.sym a≡b))
 
     --- Strict preference is transitive
-    P-trans : {v : Preference n n>1 _R_} 
+    P-trans : {v : Preference n n>2 _R_} 
             → P v a b 
             → P v b c 
             --------------------------
@@ -91,7 +91,7 @@ module StrictPreference where
     ...      | inj₂ ¬aRb   | inj₁ aRb          = λ ¬bRa ¬cRb cRa → ⊥-elim (¬aRb aRb)
     ...      | _           | inj₂ bRa          = λ ¬bRa ¬cRb cRa → ⊥-elim (¬bRa bRa)
 
-    P→Bool : (p : Preference n n>1 _R_) → (a b : Fin n) → Bool
+    P→Bool : (p : Preference n n>2 _R_) → (a b : Fin n) → Bool
     P→Bool p a b with R-dec p b a 
     ... | inj₁ x = false
     ... | inj₂ y = true
@@ -99,8 +99,8 @@ open StrictPreference
 
 module PreferenceEquality where
   ≡-Preference : {_R_ _R'_ : Fin n → Fin n → Set}
-               → Preference n n>1 _R_
-               → Preference n n>1 _R'_
+               → Preference n n>2 _R_
+               → Preference n n>2 _R'_
                → Set
   ≡-Preference p p' = ∀ x y → R→Bool p x y ≡ R→Bool p' x y
   
