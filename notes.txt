@@ -1,27 +1,8 @@
-arrows:
-https://www.rochester.edu/college/faculty/markfey/papers/ArrowProof3.pdf
-hyper-informal: https://users.ssc.wisc.edu/~dquint/econ698/lecture%202.pdf
-https://elischolar.library.yale.edu/cgi/viewcontent.cgi?article=2368&context=cowles-discussion-paper-series
-
 mays: positive version of arrows, only majority rule w two candidates can guarantee anonymous neutral and monotone
 https://pi.math.cornell.edu/~mec/Summer2008/anema/maystheorem.html
 gibbard satterwaite: rcv is either a) dictatorial, b) manipulable, or c) has only 2 candidates
 https://www.sciencedirect.com/science/article/pii/S0165176500003128
 sens theorem: cannot satisfy a) all individuals are treated equally b) pareto efficiency and c) free choice
-
-relations stuff
-https://math.libretexts.org/Bookshelves/Mathematical_Logic_and_Proof/Gentle_Introduction_to_the_Art_of_Mathematics_(Fields)/06%3A_Relations_and_Functions/6.04%3A_Ordering_Relations
-
-
-10.11
-data electionCases
-from an election we can build electionCases
-from electioncases we can build arrows theorem
-
-check who cites papers
-
-cleanup
-strong/weak unanimity
 
 Voter stuff
 altered type doesn't work with voter type, would need whole new type system for altered-voters
@@ -32,6 +13,7 @@ me complaining that the proofs are bad:
 
 check popl for references
 
-try wo lemma 6?
-
-prove for two candidates
+a coalition is strictly decisive if we can alter only the coalition and get a proof that the result prefers x to y
+formalize as a list of alterations
+strictly decisiveness is a product of a coalition, list of coalition agrees products (that are not actually real but can be used to prove swfa>b and then swfa>b)
+we put the products in the list if we can use them to get to swfa>b BUT THEY DO NOT NEED TO BE REAL

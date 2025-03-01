@@ -15,7 +15,7 @@ open import Data.Bool
 open import Data.Unit
 open import Data.Empty
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Product using (Σ; _,_; _×_)
+open import Data.Product using (Σ; _,_; _×_; proj₁)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 
@@ -295,7 +295,14 @@ StrictlyDecisive-x>x c v a b a≡b = λ ca → ⊥-elim (helper v c a b a≡b ca
     helper (p ∷ v) (.(true ∷ c) , suc fst , snd) a b a≡b (true-agrees c .v ca .p aPb) = ⊥-elim (aPb (R-refl p b a (Eq.sym a≡b)))
 
 FreshCandidate : (n : ℕ) → (n>2 : n ℕ.> 2) (a b : Fin n) → Σ (Fin n) λ c → ¬ (a ≡ c) × ¬ (b ≡ c)
-FreshCandidate n n>2 a b = {!   !}
+FreshCandidate (suc zero) (s≤s ()) a b
+FreshCandidate (suc (suc zero)) (s≤s (s≤s ())) a b
+FreshCandidate (suc (suc (suc n))) n>2 zero zero = (suc zero) , ((λ {()}) , (λ {()}))
+FreshCandidate (suc (suc (suc n))) n>2 zero (suc zero) = (suc (suc zero)) , ((λ {()}) , (λ {()}))
+FreshCandidate (suc (suc (suc n))) n>2 zero (suc (suc b)) =  (suc zero) , ((λ {()}) , (λ {()}))
+FreshCandidate (suc (suc (suc n))) n>2 (suc zero) zero = (suc (suc zero)) , ((λ {()}) , (λ {()}))
+FreshCandidate (suc (suc (suc n))) n>2 (suc a) (suc b) = zero , ((λ {()}) , (λ {()}))
+FreshCandidate (suc (suc (suc n))) n>2 (suc (suc a)) zero = (suc zero) , ((λ {()}) , (λ {()}))
 
 CorollaryOne : (m : ℕ) 
              → (c : NonEmptyCoalition m) 
@@ -303,11 +310,11 @@ CorollaryOne : (m : ℕ)
              → (x y w : Fin n) 
              → Decisive-a>b (Unwrap c) v x y 
              → StrictlyDecisive-a>b (Unwrap c) v x w
-CorollaryOne zero c [] x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) = λ _ → Pareto x w tt
-CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with x Fin.≟ w 
+CorollaryOne  zero c [] x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) = λ _ → Pareto x w tt
+CorollaryOne {n} {n>2} (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with x Fin.≟ w 
 ... | false because ofⁿ ¬x≡w with y Fin.≟ w
 ... | false because ofⁿ ¬y≡w = LemmaTwo (suc m) (Unwrap c) v x y w ¬x≡w ¬y≡w (dec-a>b ca-x>y in-ca-y>x swfx>y)
-... | true because ofʸ y≡w = {!   !} -- we can generate a fresh var lemma
+... | true because ofʸ y≡w rewrite y≡w = λ _ → swfx>y
 CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) | true because ofʸ x≡w = StrictlyDecisive-x>x c v x w x≡w
 
 LemmaThreeAlter : {_R_ : Fin n → Fin n → Set} 
@@ -355,3 +362,33 @@ LemmaThree : (m : ℕ) → (c : Coalition m) → (v : Votes n n>2 m) → (x y z 
 LemmaThree m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-z>y
   with LemmaThreeSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-z>y
 ... | v' , v'-sim-zy , v'-sim-xy , v'-z>x = BinaryIIA z y v' v'-sim-zy (Transitivity z x y (Pareto z x v'-z>x) (BinaryIIA x y v v'-sim-xy swfx>y))
+
+CorollaryTwo : (m : ℕ) 
+             → (c : NonEmptyCoalition m) 
+             → (v : Votes n n>2 m) 
+             → (x y w : Fin n) 
+             → Decisive-a>b (Unwrap c) v x y 
+             → StrictlyDecisive-a>b (Unwrap c) v w y
+CorollaryTwo zero c [] x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) = λ _ → Pareto w y tt
+CorollaryTwo {n} {n>2} (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with y Fin.≟ w 
+... | false because ofⁿ ¬y≡w with x Fin.≟ w
+... | false because ofⁿ ¬x≡w = LemmaThree (suc m) (Unwrap c) v x y w ¬x≡w ¬y≡w (dec-a>b ca-x>y in-ca-y>x swfx>y)
+... | true because ofʸ y≡w rewrite y≡w = λ _ → swfx>y
+CorollaryTwo (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) | true because ofʸ y≡w = StrictlyDecisive-x>x c v w y (Eq.sym y≡w)
+
+LemmaFour : (m : ℕ) 
+          → (c : NonEmptyCoalition m) 
+          → (ballots : Votes n n>2 m) 
+          → (x y : Fin n) 
+          → Decisive-a>b (Unwrap c) ballots x y
+          → Decisive (Unwrap c) ballots
+LemmaFour m c ballots x y dec-x>y v w with x Fin.≟ v
+... | true because ofʸ x≡v rewrite x≡v = CorollaryOne m c ballots v y w dec-x>y
+... | false because ofⁿ ¬x≡v with y Fin.≟ w 
+... | true because ofʸ y≡w rewrite y≡w = CorollaryTwo m c ballots x w v dec-x>y
+... | false because ofⁿ ¬y≡w with x Fin.≟ w | y Fin.≟ v
+... | true because ofʸ x≡w | true because ofʸ y≡v = {!   !}
+... | true because ofʸ x≡w | false because ofⁿ ¬y≡v = {!   !}
+... | false because ofⁿ ¬x≡w | true because ofʸ y≡v = {!   !}
+... | false because ofⁿ ¬x≡w | false because ofⁿ ¬y≡v with CorollaryOne m c ballots x y w dec-x>y 
+... | cor1 = CorollaryTwo m c ballots x w v {!   !} -- construct something similar on xw
