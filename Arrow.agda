@@ -376,19 +376,23 @@ CorollaryTwo {n} {n>2} (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with 
 ... | true because ofʸ y≡w rewrite y≡w = λ _ → swfx>y
 CorollaryTwo (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) | true because ofʸ y≡w = StrictlyDecisive-x>x c v w y (Eq.sym y≡w)
 
+-- LemmaFourAlter: a, x, y, b
+-- we know x P y, create pareto a x and pareto y b then
+-- trans (dec x y) 
+
 LemmaFour : (m : ℕ) 
           → (c : NonEmptyCoalition m) 
           → (ballots : Votes n n>2 m) 
           → (x y : Fin n) 
           → Decisive-a>b (Unwrap c) ballots x y
           → Decisive (Unwrap c) ballots
-LemmaFour m c ballots x y dec-x>y v w with x Fin.≟ v
-... | true because ofʸ x≡v rewrite x≡v = CorollaryOne m c ballots v y w dec-x>y
+LemmaFour m c ballots x y (dec-a>b c-x>y inv-y>x swf-x-y) v w with x Fin.≟ v
+... | true because ofʸ x≡v rewrite x≡v = CorollaryOne m c ballots v y w (dec-a>b c-x>y inv-y>x swf-x-y)
 ... | false because ofⁿ ¬x≡v with y Fin.≟ w 
-... | true because ofʸ y≡w rewrite y≡w = CorollaryTwo m c ballots x w v dec-x>y
+... | true because ofʸ y≡w rewrite y≡w = CorollaryTwo m c ballots x w v (dec-a>b c-x>y inv-y>x swf-x-y)
 ... | false because ofⁿ ¬y≡w with x Fin.≟ w | y Fin.≟ v
 ... | true because ofʸ x≡w | true because ofʸ y≡v = {!   !}
 ... | true because ofʸ x≡w | false because ofⁿ ¬y≡v = {!   !}
-... | false because ofⁿ ¬x≡w | true because ofʸ y≡v = {!   !}
-... | false because ofⁿ ¬x≡w | false because ofⁿ ¬y≡v with CorollaryOne m c ballots x y w dec-x>y 
-... | cor1 = CorollaryTwo m c ballots x w v {!   !} -- construct something similar on xw
+... | false because ofⁿ ¬x≡w | true because ofʸ y≡v = {!   !} -- contradiction, coalition can't prefer both
+... | false because ofⁿ ¬x≡w | false because ofⁿ ¬y≡v = λ _ → Transitivity v x w (BinaryIIA v x {!   !} {!   !} {!   !}) 
+           (Transitivity x y w swf-x-y (BinaryIIA y w {!   !} {!   !} {!   !})) -- arrow and the impossiblity theorem maskin/sen
