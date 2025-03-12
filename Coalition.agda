@@ -1,10 +1,10 @@
 module Coalition where
 
 open import Data.Vec as Vec
-open import Data.Bool
-open import Data.Nat as ℕ
+open import Data.Bool using (Bool; not; true; false; _∧_; _≟_)
+open import Data.Nat as ℕ hiding (_≟_)
 open import Votes
-open import Data.Fin as Fin
+open import Data.Fin as Fin hiding (_≟_)
 open import Data.Product using (Σ; _×_; _,_; proj₂; proj₁)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Voter
@@ -52,3 +52,10 @@ NonEmptyCoalition m = Σ (Coalition m) λ c → Σ (Fin m) λ i → lookup c i �
 
 Unwrap : {m : ℕ} → NonEmptyCoalition m → Coalition m
 Unwrap (fst , _) = fst
+
+Intersect : {m : ℕ} → Coalition m → Coalition m → Coalition m
+Intersect [] [] = [] 
+Intersect (x ∷ xs) (y ∷ ys) = x ∧ y ∷ (Intersect xs ys)
+
+SingletonCoalition : {m : ℕ} → Coalition m → Set
+SingletonCoalition c = count (λ x → x ≟ true) c ≡ 1

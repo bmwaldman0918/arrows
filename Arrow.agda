@@ -315,7 +315,8 @@ CorollaryOne {n} {n>2} (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with 
 ... | false because ofⁿ ¬x≡w with y Fin.≟ w
 ... | false because ofⁿ ¬y≡w = LemmaTwo (suc m) (Unwrap c) v x y w ¬x≡w ¬y≡w (dec-a>b ca-x>y in-ca-y>x swfx>y)
 ... | true because ofʸ y≡w rewrite y≡w = λ _ → swfx>y
-CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) | true because ofʸ x≡w = StrictlyDecisive-x>x c v x w x≡w
+CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) 
+  | true because ofʸ x≡w = StrictlyDecisive-x>x c v x w x≡w
 
 LemmaThreeAlter : {_R_ : Fin n → Fin n → Set} 
               → (head : Preference n n>2 _R_)
@@ -374,11 +375,60 @@ CorollaryTwo {n} {n>2} (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with 
 ... | false because ofⁿ ¬y≡w with x Fin.≟ w
 ... | false because ofⁿ ¬x≡w = LemmaThree (suc m) (Unwrap c) v x y w ¬x≡w ¬y≡w (dec-a>b ca-x>y in-ca-y>x swfx>y)
 ... | true because ofʸ y≡w rewrite y≡w = λ _ → swfx>y
-CorollaryTwo (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) | true because ofʸ y≡w = StrictlyDecisive-x>x c v w y (Eq.sym y≡w)
+CorollaryTwo (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) 
+  | true because ofʸ y≡w = StrictlyDecisive-x>x c v w y (Eq.sym y≡w) 
 
--- LemmaFourAlter: a, x, y, b
--- we know x P y, create pareto a x and pareto y b then
--- trans (dec x y) 
+LemmaFourAlter : {_R_ : Fin n → Fin n → Set} 
+              → (head : Preference n n>2 _R_)
+              → (x y v w : Fin n)  
+              → ¬ (x ≡ v) 
+              → ¬ (y ≡ w)
+              → Σ (Fin n → Fin n → Set) λ _R'_ 
+                → Σ (Preference n n>2 _R'_) λ P' 
+                  → R→Bool head v w ≡ R→Bool P' v w
+                  × R→Bool P' x y ≡ R→Bool head x y 
+                  × P P' v x
+                  × P P' y w
+LemmaFourAlter {_R_ = _R_} head x y v w = {!   !}
+
+LemmaFourSimilar : (m : ℕ) 
+                → (c : Coalition m) 
+                → (ballots : Votes n n>2 m) 
+                → (x y v w : Fin n) 
+                → ¬ (x ≡ v) 
+                → ¬ (y ≡ w)
+                → (CoalitionAgrees x y c ballots) 
+                → (CoalitionAgrees y x (InverseCoalition c) ballots)
+                → Σ (Votes n n>2 m) λ ballots' 
+                                    → (Similar m v w (Zipped n>2 v w ballots ballots')
+                                    ×  Similar m x y (Zipped n>2 x y ballots' ballots)
+                                    × ElectionAgrees ballots' v x
+                                    × ElectionAgrees ballots' y w)
+LemmaFourSimilar m c [] x y v w _ _ _ _ = [] , tt , tt , tt , tt
+LemmaFourSimilar (suc m') (false ∷ c) (p ∷ ballots) x y v w ¬x≡v ¬y≡w
+  (false-agrees .c .ballots ca-x>y .p) 
+  (true-agrees .(InverseCoalition c) .ballots ca-y>x .p x₁) with
+  LemmaFourSimilar m' c ballots x y v w ¬x≡v ¬y≡w ca-x>y ca-y>x 
+... | alt-ballots , sim-v>w , sim-x>y , v>x , y>w with
+  LemmaFourAlter p x y v w ¬x≡v ¬y≡w
+... | _ , P' , p'-same-vw , p'-same-xy , p'-v>x , p'-y>w = 
+      (P' ∷ alt-ballots) 
+    , (p'-same-vw , sim-v>w) 
+    , (p'-same-xy , sim-x>y) 
+    , (p'-v>x , v>x) 
+    , (p'-y>w , y>w)
+LemmaFourSimilar (suc m') (true ∷ c) (p ∷ ballots) x y v w ¬x≡v ¬y≡w
+  (true-agrees .c .ballots ca-x>y .p x₁) 
+  (false-agrees .(InverseCoalition c) .ballots ca-y>x .p) with
+  LemmaFourSimilar m' c ballots x y v w ¬x≡v ¬y≡w ca-x>y ca-y>x
+... | alt-ballots , sim-v>w , sim-x>y , v>x , y>w with
+  LemmaFourAlter p x y v w ¬x≡v ¬y≡w
+... | _ , P' , p'-same-vw , p'-same-xy , p'-v>x , p'-y>w = 
+      (P' ∷ alt-ballots) 
+    , (p'-same-vw , sim-v>w) 
+    , (p'-same-xy , sim-x>y) 
+    , (p'-v>x , v>x) 
+    , (p'-y>w , y>w)
 
 LemmaFour : (m : ℕ) 
           → (c : NonEmptyCoalition m) 
@@ -389,10 +439,30 @@ LemmaFour : (m : ℕ)
 LemmaFour m c ballots x y (dec-a>b c-x>y inv-y>x swf-x-y) v w with x Fin.≟ v
 ... | true because ofʸ x≡v rewrite x≡v = CorollaryOne m c ballots v y w (dec-a>b c-x>y inv-y>x swf-x-y)
 ... | false because ofⁿ ¬x≡v with y Fin.≟ w 
-... | true because ofʸ y≡w rewrite y≡w = CorollaryTwo m c ballots x w v (dec-a>b c-x>y inv-y>x swf-x-y)
-... | false because ofⁿ ¬y≡w with x Fin.≟ w | y Fin.≟ v
-... | true because ofʸ x≡w | true because ofʸ y≡v = {!   !}
-... | true because ofʸ x≡w | false because ofⁿ ¬y≡v = {!   !}
-... | false because ofⁿ ¬x≡w | true because ofʸ y≡v = {!   !} -- contradiction, coalition can't prefer both
-... | false because ofⁿ ¬x≡w | false because ofⁿ ¬y≡v = λ _ → Transitivity v x w (BinaryIIA v x {!   !} {!   !} {!   !}) 
-           (Transitivity x y w swf-x-y (BinaryIIA y w {!   !} {!   !} {!   !})) -- arrow and the impossiblity theorem maskin/sen
+...   | true because ofʸ y≡w rewrite y≡w = CorollaryTwo m c ballots x w v (dec-a>b c-x>y inv-y>x swf-x-y)
+...   | false because ofⁿ ¬y≡w with LemmaFourSimilar m (Unwrap c) ballots x y v w ¬x≡v ¬y≡w c-x>y inv-y>x 
+...   | ballots' , sim-v>w , sim-x>y , v>x , y>w = 
+      λ _ → BinaryIIA v w ballots' sim-v>w 
+            (Transitivity v x w (Pareto v x v>x) (Transitivity x y w 
+              (BinaryIIA x y ballots sim-x>y swf-x-y) (Pareto y w y>w)))
+
+LemmaFive : (m : ℕ) 
+          → (c1 c2 : Coalition m) 
+          → (ballots : Votes n n>2 m)
+          → Decisive c1 ballots
+          → Decisive c2 ballots
+          → Decisive (Intersect c1 c2) ballots
+LemmaFive m c1 c2 ballots c1-dec c2-dec = {!   !}
+
+LemmaSix : (m : ℕ) 
+         → (c : Coalition m) 
+         → (ballots : Votes n n>2 m)
+         → Decisive c ballots 
+         ⊎ Decisive (InverseCoalition c) ballots
+LemmaSix m c ballots = {!   !}
+
+ArrowsTheorem : (m : ℕ) 
+              → (ballots : Votes n n>2 m)
+              → Σ (Coalition m) λ c 
+                → SingletonCoalition c × Decisive c ballots
+ArrowsTheorem m ballots = {!   !}
