@@ -26,8 +26,8 @@ private
 
 -- the coalition of the whole is decisive
 
-LemmaOne : (m : ℕ) → (v : Votes n n>2 m) → (a b : Fin n) → CoalitionAgrees a b (Whole m) v → SWF v a b
-LemmaOne m v a b c = Pareto a b (helper m v a b c) where
+LemmaOne : (m : ℕ) → (v : Votes n n>2 m) → Decisive (Whole m) v
+LemmaOne m v a b ca = Pareto a b (helper m v a b ca) where
   helper : (m : ℕ) → (v : Votes n n>2 m) → (a b : Fin n) → CoalitionAgrees a b (Whole m) v → ElectionAgrees v a b
   helper .0 [] a b c = tt
   helper (suc m) (x ∷ v) a b (true-agrees .(Whole m) .v c .x agrees) = agrees , (helper m v a b c)
@@ -446,23 +446,34 @@ LemmaFour m c ballots x y (dec-a>b c-x>y inv-y>x swf-x-y) v w with x Fin.≟ v
             (Transitivity v x w (Pareto v x v>x) (Transitivity x y w 
               (BinaryIIA x y ballots sim-x>y swf-x-y) (Pareto y w y>w)))
 
+-- contraction of decisive sets
 LemmaFive : (m : ℕ) 
-          → (c1 c2 : Coalition m) 
-          → (ballots : Votes n n>2 m)
-          → Decisive c1 ballots
-          → Decisive c2 ballots
-          → Decisive (Intersect c1 c2) ballots
-LemmaFive m c1 c2 ballots c1-dec c2-dec = {!   !}
-
-LemmaSix : (m : ℕ) 
          → (c : Coalition m) 
          → (ballots : Votes n n>2 m)
-         → Decisive c ballots 
-         ⊎ Decisive (InverseCoalition c) ballots
-LemmaSix m c ballots = {!   !}
+         → Decisive c ballots
+         → Σ (Coalition m) 
+              λ c → SingletonCoalition c 
+                  × Decisive c ballots
+LemmaFive m c ballots dec = {!   !}
+
+-- we have decisive set G
+-- 2 cases:
+-- G is of length one -- done
+-- G is of length > 1
+--    split G into two subsets
+--    first subset is singleton coalition of the head
+--    second subset is the tail
+--    G1 has x > y > z
+--    G2 has z > x > y
+--    ∉ G has y > z > x
+--    case on the result of the election, either G1 or G2 must be decisive
+--    does this require elections to be preferences? i think that's probably fine
+
+-- could also just do the ultrafilter thing
 
 ArrowsTheorem : (m : ℕ) 
               → (ballots : Votes n n>2 m)
-              → Σ (Coalition m) λ c 
-                → SingletonCoalition c × Decisive c ballots
-ArrowsTheorem m ballots = {!   !}
+              → Σ (Coalition m) 
+                  λ c → SingletonCoalition c 
+                      × Decisive c ballots
+ArrowsTheorem m ballots = LemmaFive m (Whole m) ballots (LemmaOne m ballots)

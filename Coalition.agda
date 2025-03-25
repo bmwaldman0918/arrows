@@ -5,14 +5,18 @@ open import Data.Bool using (Bool; not; true; false; _∧_; _≟_)
 open import Data.Nat as ℕ hiding (_≟_)
 open import Votes
 open import Data.Fin as Fin hiding (_≟_)
-open import Data.Product using (Σ; _×_; _,_; proj₂; proj₁)
+open import Data.Product using (Σ; _×_; _,_; proj₂; proj₁; ∃)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
+open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Voter
 open WeakPreference
 open StrictPreference
 
 Coalition : ℕ → Set
 Coalition m = Vec Bool m
+
+MembersCount : {m : ℕ} → Vec Bool m → ℕ
+MembersCount c = count (λ x → x ≟ true) c
 
 FilteredVotes : {m n : ℕ} → {n>2 : n ℕ.> 2} → (c : Coalition m) → (v2 : Votes n n>2 m) → Σ ℕ λ m' → Votes n n>2 m'
 FilteredVotes [] [] = 0 , [] 
@@ -48,7 +52,7 @@ Whole zero = []
 Whole (suc m) = true ∷ (Whole m) 
 
 NonEmptyCoalition : (m : ℕ) → Set
-NonEmptyCoalition m = Σ (Coalition m) λ c → Σ (Fin m) λ i → lookup c i ≡ true
+NonEmptyCoalition m = Σ (Coalition m) λ c → Σ (Fin m) λ i → (lookup c i) ≡ true
 
 Unwrap : {m : ℕ} → NonEmptyCoalition m → Coalition m
 Unwrap (fst , _) = fst
@@ -58,4 +62,11 @@ Intersect [] [] = []
 Intersect (x ∷ xs) (y ∷ ys) = x ∧ y ∷ (Intersect xs ys)
 
 SingletonCoalition : {m : ℕ} → Coalition m → Set
-SingletonCoalition c = count (λ x → x ≟ true) c ≡ 1
+SingletonCoalition c = MembersCount c ≡ 1
+
+-- c is a subset of c'
+-- separate subset and proper subset
+record ProperSubset {m : ℕ} (c c' : Coalition m) : Set where
+  field 
+    Subset : ∀ n → lookup c n ≡ true → lookup c' n ≡ true
+    Proper : MembersCount c ℕ.< MembersCount c'
