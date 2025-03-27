@@ -282,7 +282,7 @@ LemmaTwo : (m : ℕ)
 LemmaTwo m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-x>z  
   with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z                                                       
 ... | v' , v'-sim-xz , v-sim-xy , v'-y>z = BinaryIIA x z v' v'-sim-xz 
-  (Transitivity x y z (BinaryIIA x y v v-sim-xy swfx>y) (Pareto y z v'-y>z))     
+  (SWF-trans v' x y z (BinaryIIA x y v v-sim-xy swfx>y) (Pareto y z v'-y>z))     
 
 StrictlyDecisive-x>x : {m n : ℕ} → {n>2 : n ℕ.> 2}
              → (c : NonEmptyCoalition m)
@@ -654,7 +654,8 @@ LemmaThreeSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
 LemmaThree : (m : ℕ) → (c : Coalition m) → (v : Votes n n>2 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v z y 
 LemmaThree m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-z>y
   with LemmaThreeSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-z>y
-... | v' , v'-sim-zy , v'-sim-xy , v'-z>x = BinaryIIA z y v' v'-sim-zy (Transitivity z x y (Pareto z x v'-z>x) (BinaryIIA x y v v'-sim-xy swfx>y))
+... | v' , v'-sim-zy , v'-sim-xy , v'-z>x = 
+  BinaryIIA z y v' v'-sim-zy (SWF-trans v' z x y (Pareto z x v'-z>x) (BinaryIIA x y v v'-sim-xy swfx>y))
 
 CorollaryTwo : (m : ℕ) 
              → (c : NonEmptyCoalition m) 
@@ -735,7 +736,7 @@ LemmaFour m c ballots x y (dec-a>b c-x>y inv-y>x swf-x-y) v w with x Fin.≟ v
 ...   | false because ofⁿ ¬y≡w with LemmaFourSimilar m (Unwrap c) ballots x y v w ¬x≡v ¬y≡w c-x>y inv-y>x 
 ...   | ballots' , sim-v>w , sim-x>y , v>x , y>w = 
       λ _ → BinaryIIA v w ballots' sim-v>w 
-            (Transitivity v x w (Pareto v x v>x) (Transitivity x y w 
+            (SWF-trans ballots' v x w (Pareto v x v>x) (SWF-trans ballots' x y w 
               (BinaryIIA x y ballots sim-x>y swf-x-y) (Pareto y w y>w)))
 
 -- contraction of decisive sets
@@ -768,4 +769,4 @@ ArrowsTheorem : (m : ℕ)
               → Σ (Coalition m)      
                   λ c → SingletonCoalition c   
                       × Decisive c ballots            
-ArrowsTheorem m ballots = LemmaFive m (Whole m) ballots (LemmaOne m ballots)
+ArrowsTheorem m ballots = LemmaFive m (Whole m) ballots (LemmaOne m ballots) 
