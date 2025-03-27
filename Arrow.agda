@@ -324,9 +324,114 @@ LemmaThreeAlter : {_R_ : Fin n → Fin n → Set}
               → (P head y x) ⊎ (P head z y)
               → ¬ (x ≡ z) 
               → ¬ (y ≡ z)
-              → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>2 _R'_) λ P' → R→Bool head z y ≡ R→Bool P' z y × R→Bool P' x y ≡ R→Bool head x y × P P' z x
-LemmaThreeAlter {_R_ = _R_} head x y z yPx⊎zPy ¬x≡z ¬y≡z = {!   !}
+              → Σ (Fin n → Fin n → Set) λ _R'_ 
+                → Σ (Preference n n>2 _R'_) 
+                  λ P' → R→Bool head z y ≡ R→Bool P' z y 
+                       × R→Bool P' x y ≡ R→Bool head x y 
+                       × P P' z x
+LemmaThreeAlter {_R_ = _R_} head x y z yPx⊎zPy ¬x≡z ¬y≡z with R-dec head x z
+LemmaThreeAlter {_R_ = _R_} head x y z (inj₁ yPx) ¬x≡z ¬y≡z | inj₁ xRz = {!   !}
+LemmaThreeAlter {_R_ = _R_} head x y z (inj₂ zPy) ¬x≡z ¬y≡z | inj₁ xRz = (R' head x y z ¬x≡z ¬y≡z) , (P' head x y z ¬x≡z ¬y≡z) , agrees-z-y head x y z ¬x≡z ¬y≡z zPy , agrees-x-y head x y z ¬x≡z ¬y≡z , λ {(original .x .z ¬z≡z _) → ¬z≡z Eq.refl
+                                                                                                                                                      ; (z-best _ .z x≡z) → ¬x≡z x≡z}
+  where 
+    data R' {_R_ : Fin n → Fin n → Set} 
+            (head : Preference n n>2 _R_) 
+            (x y z : Fin n)
+            (¬x≡z : ¬ x ≡ z)
+            (¬y≡z : ¬ y ≡ z) : Fin n → Fin n → Set where
 
+        original : (a b : Fin n) 
+                 → ¬ (b ≡ z)
+                 → a R b 
+                 → R' head x y z ¬x≡z ¬y≡z a b
+        z-best : (a b : Fin n)
+               → (a ≡ z)
+               → R' head x y z ¬x≡z ¬y≡z a b
+
+    R'-trans : {_R_ : Fin n → Fin n → Set} 
+             → (head : Preference n n>2 _R_)
+             → (x y z : Fin n) 
+             → (¬x≡z : ¬ x ≡ z)
+             → (¬y≡z : ¬ y ≡ z)
+             → (a b c : Fin n)
+             → R' head x y z ¬x≡z ¬y≡z a b 
+             → R' head x y z ¬x≡z ¬y≡z b c 
+             → R' head x y z ¬x≡z ¬y≡z a c
+    R'-trans head _ _ _ ¬x≡z ¬y≡z a b c (original .a .b ¬b≡z aRb) (original .b .c ¬c≡z bRc) = original a c ¬c≡z (R-trans head a b c aRb bRc)
+    R'-trans head _ _ _ ¬x≡z ¬y≡z a b c (original .a .b ¬b≡z aRb) (z-best .b .c b≡z) = ⊥-elim (¬b≡z b≡z)
+    R'-trans head _ _ _ ¬x≡z ¬y≡z a b c (z-best .a .b a≡z) _ = z-best a c a≡z
+
+    R'-complete : {_R_ : Fin n → Fin n → Set} 
+                → (head : Preference n n>2 _R_)
+                → (x y z : Fin n) 
+                → (¬x≡z : ¬ x ≡ z)
+                → (¬y≡z : ¬ y ≡ z)
+                → (a b : Fin n)
+                → R' head x y z ¬x≡z ¬y≡z a b ⊎ R' head x y z ¬x≡z ¬y≡z b a
+    R'-complete head x y z ¬x≡z ¬y≡z a b with a Fin.≟ z 
+    ... | true because ofʸ a≡z = inj₁ (z-best a b a≡z)
+    ... | false because ofⁿ ¬a≡z with R-complete head a b
+    ... | inj₂ bRa = inj₂ (original b a ¬a≡z bRa)
+    ... | inj₁ aRb with b Fin.≟ z 
+    ... | false because ofⁿ ¬b≡z = inj₁ (original a b ¬b≡z aRb)
+    ... | true because ofʸ b≡z = inj₂ (z-best b a b≡z)
+
+    R'-dec : {_R_ : Fin n → Fin n → Set} 
+           → (head : Preference n n>2 _R_)
+           → (x y z : Fin n) 
+           → (¬x≡z : ¬ x ≡ z)
+           → (¬y≡z : ¬ y ≡ z)
+           → (a b : Fin n)
+           → R' head x y z ¬x≡z ¬y≡z a b ⊎ ¬ R' head x y z ¬x≡z ¬y≡z a b
+    R'-dec head x y z ¬x≡z ¬y≡z a b with a Fin.≟ z 
+    ... | true because ofʸ a≡z = inj₁ (z-best a b a≡z)
+    ... | false because ofⁿ ¬a≡z with R-dec head a b 
+    ... | inj₂ bPa = inj₂ (λ {(original .a .b _ aRb) → bPa aRb
+                            ; (z-best .a .b a≡z) → ¬a≡z a≡z}) 
+    ... | inj₁ aRb with b Fin.≟ z
+    ... | false because ofⁿ ¬b≡z = inj₁ (original a b ¬b≡z aRb)
+    ... | true because ofʸ b≡z = inj₂ λ {(original .a .b ¬b≡z _) → ¬b≡z b≡z
+                                       ; (z-best .a .b a≡z) → ¬a≡z a≡z}
+
+    P' : {_R_ : Fin n → Fin n → Set} 
+       → (head : Preference n n>2 _R_)
+       → (x y z : Fin n) 
+       → (¬x≡z : ¬ x ≡ z)
+       → (¬y≡z : ¬ y ≡ z)
+       → Preference n n>2 (R' head x y z ¬x≡z ¬y≡z)
+    P' head x y z ¬x≡z ¬y≡z = record { R-trans    = R'-trans head x y z ¬x≡z ¬y≡z
+                                     ; R-complete = R'-complete head x y z ¬x≡z ¬y≡z
+                                     ; R-dec      = R'-dec head x y z ¬x≡z ¬y≡z }
+
+    agrees-x-y : {_R_ : Fin n → Fin n → Set} 
+              → (head : Preference n n>2 _R_)
+              → (x y z : Fin n)
+              → (¬x≡z : ¬ (x ≡ z))
+              → (¬y≡z : ¬ (y ≡ z))
+              → R→Bool (P' head x y z ¬x≡z ¬y≡z) x y ≡ R→Bool head x y
+    agrees-x-y head x y z ¬x≡z ¬y≡z with R-dec head x y | R-dec (P' head x y z ¬x≡z ¬y≡z) x y 
+    ... | inj₁ _   | inj₁ _ = Eq.refl
+    ... | inj₁ xRy | inj₂ yP'x = ⊥-elim (yP'x (original x y ¬y≡z xRy))
+    ... | inj₂ yPx | inj₁ (original .x .y _ xRy) = ⊥-elim (yPx xRy)
+    ... | inj₂ yPx | inj₁ (z-best .x .y x≡z) = ⊥-elim (¬x≡z x≡z)
+    ... | inj₂ _ | inj₂ _ = Eq.refl
+
+    agrees-z-y : {_R_ : Fin n → Fin n → Set} 
+              → (head : Preference n n>2 _R_)
+              → (x y z : Fin n)
+              → (¬x≡z : ¬ (x ≡ z))
+              → (¬y≡z : ¬ (y ≡ z))
+              → (zPy : P head z y)
+              → R→Bool head z y ≡ R→Bool (P' head x y z ¬x≡z ¬y≡z) z y
+    agrees-z-y head x y z ¬x≡z ¬y≡z zPy with R-dec head z y | R-dec (P' head x y z ¬x≡z ¬y≡z) z y 
+    ... | inj₁ _   | inj₁ _ = Eq.refl
+    ... | inj₁ zRy | inj₂ yP'z = ⊥-elim (yP'z (z-best z y Eq.refl))
+    ... | inj₂ yPz | _ with R-complete head z y 
+    ... | inj₁ zRy = ⊥-elim (yPz zRy)
+    ... | inj₂ yRz = ⊥-elim (zPy yRz)
+    
+... | inj₂ zPx = _R_ , head , Eq.refl , Eq.refl , zPx
+    
 LemmaThreeSimilar : (m : ℕ) 
                 → (c : Coalition m) 
                 → (v : Votes n n>2 m) 
@@ -463,17 +568,17 @@ LemmaFive m c ballots dec = {!   !}
 --    split G into two subsets
 --    first subset is singleton coalition of the head
 --    second subset is the tail
---    G1 has x > y > z
---    G2 has z > x > y
---    ∉ G has y > z > x
---    case on the result of the election, either G1 or G2 must be decisive
---    does this require elections to be preferences? i think that's probably fine
-
+--    G1 has xPy and xPz
+--    G2 has xPy and zPy
+--    if SWF x z then G1 is decisive
+--    else there exists part of G2 with zRx 
+--    ¬ SWF x z is approximately zRx
+--    zRx + xPy → zPy thus G2 is decisive
 -- could also just do the ultrafilter thing
 
 ArrowsTheorem : (m : ℕ) 
-              → (ballots : Votes n n>2 m)
-              → Σ (Coalition m) 
+              → (ballots : Votes n n>2 m) 
+              → Σ (Coalition m)     
                   λ c → SingletonCoalition c 
-                      × Decisive c ballots
+                      × Decisive c ballots            
 ArrowsTheorem m ballots = LemmaFive m (Whole m) ballots (LemmaOne m ballots)
