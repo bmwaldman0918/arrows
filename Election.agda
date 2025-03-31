@@ -20,22 +20,12 @@ private
         _R_ : Fin n → Fin n → Set
 
 -- SWF v a b represents a strict preference for a over b given a set of votes v
-data SWF {m n : ℕ} {n>2 : n ℕ.> 2} (v : Votes n n>2 m) : Fin n → Fin n → Set₁ where
-  Transitivity : (a b c : Fin n) 
-               → SWF v a b 
-               → SWF v b c 
-               → SWF v a c
-  BinaryIIA : (a b : Fin n)
-            → (v1 : Votes n n>2 m)
-            → Similar m a b (Zipped n>2 a b v v1)
-            → SWF v1 a b
-            → SWF v a b
-  Pareto : (a b : Fin n)
-         → ElectionAgrees v a b
-         → SWF v a b 
+-- SWF : {m n : ℕ} → {n>2 : n ℕ.> 2} → (v : Votes n n>2 m) → Set₁
+-- SWF {n = n} v = Fin n → Fin n → Set
 
 -- since an SWF (or social welfare function) represents a strict preference,
 -- we postulate that it is decidable and transitive but not complete
+{-
 postulate SWF-trans : (v : Votes n n>2 m)
                     → (a b c : Fin n) 
                     → SWF v a b 
@@ -46,3 +36,22 @@ postulate SWF-dec   : (v : Votes n n>2 m)
                     → (a b : Fin n) 
                     →   SWF v a b 
                     ⊎ ¬ SWF v a b
+-}
+
+record SWF {m n : ℕ} {n>2 : n ℕ.> 2} (v : Votes n n>2 m) (Result : Votes n n>2 m → Fin n → Fin n → Set) : Set₁ where
+  field
+    Pareto     : (a b : Fin n)   → ElectionAgrees v a b → Result v a b 
+
+    Transitive : (a b c : Fin n) → Result v a b → Result v b c → Result v a c
+
+    Complete   : (a b : Fin n)   → (Result v a b) ⊎ (Result v a b)
+
+    Decidable  : (a b : Fin n)   → (Result v a b) ⊎ ¬ (Result v a b)
+
+    BinaryIIA  : (a b : Fin n) 
+               → (v1 : Votes n n>2 m)
+               → Similar m a b (Zipped n>2 a b v v1)
+               → Result v1 a b
+               → Result v a b
+-- make sure this incorporates strict preference sensibly
+-- maybe postulate we can create an SWF for all results

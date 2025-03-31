@@ -16,11 +16,18 @@ open import Data.Product using (Σ; _×_; _,_)
 open import Data.Unit
 open import Data.Bool as Bool
 
-data Decisive-a>b {m n : ℕ} {n>2 : n ℕ.> 2} (c : Coalition m) (v : Votes n n>2 m) (a b : Fin n) : Set₁ where
-  dec-a>b : (CoalitionAgrees a b c v) -- this should be a product
-          → (CoalitionAgrees b a (InverseCoalition c) v) 
-          → SWF v a b
-          → Decisive-a>b c v a b 
+private
+    variable
+        m n : ℕ
+        n>2 : n ℕ.> 2
+
+Decisive-a>b : (c : Coalition m) 
+               (v : Votes n n>2 m) 
+               (Result : Votes n n>2 m → Fin n → Fin n → Set) 
+               (a b : Fin n)
+               → Set₁ 
+Decisive-a>b c v result a b = 
+  (CoalitionAgrees a b c v) × (CoalitionAgrees b a (InverseCoalition c) v) × result v a b
 {-
 -- can we provide the arguments necessary to make this an inductive datatype?
 -- maybe these should be defined wrt a similar coalition
@@ -31,15 +38,17 @@ data StrictlyDecisive-a>b {m n : ℕ} {n>2 : n ℕ.> 2} (c : Coalition m) (v : V
           -}
 StrictlyDecisive-a>b : {m n : ℕ} → {n>2 : n ℕ.> 2}
              → Coalition m
-             → Votes n n>2 m 
+             → Votes n n>2 m
+             → (Votes n n>2 m → Fin n → Fin n → Set) 
              → (a b : Fin n)
              → Set₁
 --- what if all of this is defined wrt similar coalition
 --- lemmas are actually producing this "similar coalition" instead of decisiveness
-StrictlyDecisive-a>b c votes a b = (CoalitionAgrees a b c votes) → SWF votes a b
+StrictlyDecisive-a>b c votes result a b = (CoalitionAgrees a b c votes) → result votes a b
 
 Decisive : {m n : ℕ} → {n>2 : n ℕ.> 2}
          → Coalition m
          → Votes n n>2 m
+         → (Votes n n>2 m → Fin n → Fin n → Set)
          → Set₁
-Decisive c v = ∀ a b → StrictlyDecisive-a>b c v a b
+Decisive c v result = ∀ a b → StrictlyDecisive-a>b c v result a b

@@ -4,6 +4,7 @@ open import Voter
 open WeakPreference
 open Preference
 open StrictPreference
+
 open import Votes 
 open import Election
 open import Coalition
@@ -23,11 +24,15 @@ private
   variable
     n : ℕ
     n>2 : n ℕ.> 2
+    Result : (m : ℕ) → Votes n n>2 m → Fin n → Fin n → Set
 
 -- the coalition of the whole is decisive
 
-LemmaOne : (m : ℕ) → (v : Votes n n>2 m) → Decisive (Whole m) v
-LemmaOne m v a b ca = Pareto a b (helper m v a b ca) where
+LemmaOne : (m : ℕ) 
+         → (v : Votes n n>2 m)
+         → SWF v (Result m)
+         → Decisive (Whole m) v (Result m)
+LemmaOne m v swf a b ca = SWF.Pareto swf a b (helper m v a b ca) where
   helper : (m : ℕ) → (v : Votes n n>2 m) → (a b : Fin n) → CoalitionAgrees a b (Whole m) v → ElectionAgrees v a b
   helper .0 [] a b c = tt
   helper (suc m) (x ∷ v) a b (true-agrees .(Whole m) .v c .x agrees) = agrees , (helper m v a b c)
@@ -273,17 +278,22 @@ LemmaTwoSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
 LemmaTwo : (m : ℕ) 
          → (c : Coalition m) 
          → (v : Votes n n>2 m) 
+         → (∀ v' → SWF v' (Result m))
          → (x y z : Fin n) 
          → ¬ (x ≡ z) 
          → ¬ (y ≡ z) 
-         → Decisive-a>b c v x y 
+         → Decisive-a>b c v (Result m) x y
          ------------------------------
-         → StrictlyDecisive-a>b c v x z 
-LemmaTwo m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-x>z  
+         → StrictlyDecisive-a>b c v (Result m) x z 
+LemmaTwo m c v swf x y z ¬x≡z ¬y≡z (ca-x>y , in-ca-y>x , swfx>y) ca-x>z 
   with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z                                                       
-... | v' , v'-sim-xz , v-sim-xy , v'-y>z = BinaryIIA x z v' v'-sim-xz 
-  (SWF-trans v' x y z (BinaryIIA x y v v-sim-xy swfx>y) (Pareto y z v'-y>z))     
-
+... | v' , v'-sim-xz , v-sim-xy , v'-y>z = 
+  SWF.BinaryIIA (swf v) x z v' v'-sim-xz 
+    (SWF.Transitive (swf v') x y z (SWF.BinaryIIA (swf v') x y v v-sim-xy swfx>y) 
+      (SWF.Pareto (swf v') y z v'-y>z))
+  -- BinaryIIA x z v' v'-sim-xz 
+  -- (SWF-trans v' x y z (BinaryIIA x y v v-sim-xy swfx>y) (Pareto y z v'-y>z))     
+{-
 StrictlyDecisive-x>x : {m n : ℕ} → {n>2 : n ℕ.> 2}
              → (c : NonEmptyCoalition m)
              → (v : Votes n n>2 m) 
@@ -770,3 +780,4 @@ ArrowsTheorem : (m : ℕ)
                   λ c → SingletonCoalition c   
                       × Decisive c ballots            
 ArrowsTheorem m ballots = LemmaFive m (Whole m) ballots (LemmaOne m ballots) 
+-}
