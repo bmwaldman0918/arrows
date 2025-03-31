@@ -11,6 +11,7 @@ open import Data.Bool as Bool
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ; _,_; _×_; proj₁)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
+open import Data.Unit
 
 private
     variable
@@ -55,3 +56,12 @@ record SWF {m n : ℕ} {n>2 : n ℕ.> 2} (v : Votes n n>2 m) (Result : Votes n n
                → Result v a b
 -- make sure this incorporates strict preference sensibly
 -- maybe postulate we can create an SWF for all results
+
+ExistsSWF : ∀ v → Σ (Votes n n>2 m → Fin n → Fin n → Set) λ R → SWF v R
+ExistsSWF v = (λ _ _ _ → ⊤) , record
+  { Pareto = λ a b x → tt
+  ; Transitive = λ a b c x x₁ → tt
+  ; Complete = λ a b → inj₁ tt
+  ; Decidable = λ a b → inj₁ tt
+  ; BinaryIIA = λ a b v1 x x₁ → tt
+  }
