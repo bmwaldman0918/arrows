@@ -45,8 +45,6 @@ record SWF {m n : ℕ} {n>2 : n ℕ.> 2} (v : Votes n n>2 m) (Result : Votes n n
 
     Transitive : (a b c : Fin n) → Result v a b → Result v b c → Result v a c
 
-    Complete   : (a b : Fin n)   → (Result v a b) ⊎ (Result v a b)
-
     Decidable  : (a b : Fin n)   → (Result v a b) ⊎ ¬ (Result v a b)
 
     BinaryIIA  : (a b : Fin n) 
@@ -56,12 +54,3 @@ record SWF {m n : ℕ} {n>2 : n ℕ.> 2} (v : Votes n n>2 m) (Result : Votes n n
                → Result v a b
 -- make sure this incorporates strict preference sensibly
 -- maybe postulate we can create an SWF for all results
-
-ExistsSWF : ∀ v → Σ (Votes n n>2 m → Fin n → Fin n → Set) λ R → SWF v R
-ExistsSWF v = (λ _ _ _ → ⊤) , record
-  { Pareto = λ a b x → tt
-  ; Transitive = λ a b c x x₁ → tt
-  ; Complete = λ a b → inj₁ tt
-  ; Decidable = λ a b → inj₁ tt
-  ; BinaryIIA = λ a b v1 x x₁ → tt
-  }
