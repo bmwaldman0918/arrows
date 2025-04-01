@@ -39,18 +39,25 @@ postulate SWF-dec   : (v : Votes n n>2 m)
                     ⊎ ¬ SWF v a b
 -}
 
-record SWF {m n : ℕ} {n>2 : n ℕ.> 2} (v : Votes n n>2 m) (Result : Votes n n>2 m → Fin n → Fin n → Set) : Set₁ where
+record SWF {m n : ℕ} {n>2 : n ℕ.> 2} (Result : Votes n n>2 m → Fin n → Fin n → Set) : Set₁ where
   field
-    Pareto     : (a b : Fin n)   → ElectionAgrees v a b → Result v a b 
+    Pareto     : (v : Votes n n>2 m) 
+               → (a b : Fin n)   
+               → ElectionAgrees v a b 
+               → Result v a b 
 
-    Transitive : (a b c : Fin n) → Result v a b → Result v b c → Result v a c
+    Transitive : (v : Votes n n>2 m) 
+               → (a b c : Fin n) 
+               → Result v a b 
+               → Result v b c 
+               → Result v a c
 
-    Decidable  : (a b : Fin n)   → (Result v a b) ⊎ ¬ (Result v a b)
+    Decidable  : (v : Votes n n>2 m) → (a b : Fin n)   
+               →   (Result v a b) 
+               ⊎ ¬ (Result v a b)
 
-    BinaryIIA  : (a b : Fin n) 
-               → (v1 : Votes n n>2 m)
-               → Similar m a b (Zipped n>2 a b v v1)
-               → Result v1 a b
+    BinaryIIA  : (v v' : Votes n n>2 m)
+               → (a b : Fin n)
+               → Similar m a b (Zipped n>2 a b v v')
+               → Result v' a b
                → Result v a b
--- make sure this incorporates strict preference sensibly
--- maybe postulate we can create an SWF for all results

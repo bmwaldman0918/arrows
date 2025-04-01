@@ -30,10 +30,14 @@ private
 
 LemmaOne : (m : ℕ) 
          → (v : Votes n n>2 m)
-         → SWF v (Result m)
+         → SWF (Result m)
          → Decisive (Whole m) v (Result m)
-LemmaOne m v swf a b ca = SWF.Pareto swf a b (helper m v a b ca) where
-  helper : (m : ℕ) → (v : Votes n n>2 m) → (a b : Fin n) → CoalitionAgrees a b (Whole m) v → ElectionAgrees v a b
+LemmaOne m v swf a b ca = SWF.Pareto swf v a b (helper m v a b ca) where
+  helper : (m : ℕ) 
+         → (v : Votes n n>2 m) 
+         → (a b : Fin n) 
+         → CoalitionAgrees a b (Whole m) v 
+         → ElectionAgrees v a b
   helper .0 [] a b c = tt
   helper (suc m) (x ∷ v) a b (true-agrees .(Whole m) .v c .x agrees) = agrees , (helper m v a b c)
 
@@ -278,7 +282,7 @@ LemmaTwoSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
 LemmaTwo : (m : ℕ) 
          → (c : Coalition m) 
          → (v : Votes n n>2 m) 
-         → (∀ v' → SWF v' (Result m))
+         → SWF (Result m)
          → (x y z : Fin n) 
          → ¬ (x ≡ z) 
          → ¬ (y ≡ z) 
@@ -288,19 +292,17 @@ LemmaTwo : (m : ℕ)
 LemmaTwo m c v swf x y z ¬x≡z ¬y≡z (ca-x>y , in-ca-y>x , swfx>y) ca-x>z 
   with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z                                                       
 ... | v' , v'-sim-xz , v-sim-xy , v'-y>z = 
-  SWF.BinaryIIA (swf v) x z v' v'-sim-xz 
-    (SWF.Transitive (swf v') x y z (SWF.BinaryIIA (swf v') x y v v-sim-xy swfx>y) 
-      (SWF.Pareto (swf v') y z v'-y>z))
-  -- BinaryIIA x z v' v'-sim-xz 
-  -- (SWF-trans v' x y z (BinaryIIA x y v v-sim-xy swfx>y) (Pareto y z v'-y>z))     
-{-
-StrictlyDecisive-x>x : {m n : ℕ} → {n>2 : n ℕ.> 2}
+  SWF.BinaryIIA swf v v' x z v'-sim-xz 
+    (SWF.Transitive swf v' x y z (SWF.BinaryIIA swf v' v x y v-sim-xy swfx>y) 
+      (SWF.Pareto swf v' y z v'-y>z))
+ 
+StrictlyDecisive-x>x : (m : ℕ)
              → (c : NonEmptyCoalition m)
              → (v : Votes n n>2 m) 
              → (a b : Fin n)
              → (a ≡ b)
-             → StrictlyDecisive-a>b (Unwrap c) v a b 
-StrictlyDecisive-x>x c v a b a≡b = λ ca → ⊥-elim (helper v c a b a≡b ca)
+             → StrictlyDecisive-a>b (Unwrap c) v (Result m) a b 
+StrictlyDecisive-x>x m c v a b a≡b = λ ca → ⊥-elim (helper v c a b a≡b ca)
   where
     helper : {m n : ℕ} → {n>2 : n ℕ.> 2} 
            → (v : Votes n n>2 m) 
@@ -337,19 +339,20 @@ FreshCandidate (suc (suc (suc n))) n>2 (suc (suc a)) zero
 
 CorollaryOne : (m : ℕ) 
              → (c : NonEmptyCoalition m) 
-             → (v : Votes n n>2 m) 
+             → (v : Votes n n>2 m)
+             → SWF (Result m) 
              → (x y w : Fin n) 
-             → Decisive-a>b (Unwrap c) v x y 
-             → StrictlyDecisive-a>b (Unwrap c) v x w
-CorollaryOne  zero c [] x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) = λ _ → Pareto x w tt
-CorollaryOne {n} {n>2} (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with x Fin.≟ w 
+             → Decisive-a>b (Unwrap c) v (Result m) x y 
+             → StrictlyDecisive-a>b (Unwrap c) v (Result m) x w
+CorollaryOne {n} {n>2} {Result = Result} m c v swf x y w (ca-x>y , in-ca-y>x , swfx>y) 
+  with x Fin.≟ w
+... | true  because ofʸ  x≡w = 
+  StrictlyDecisive-x>x {Result = Result} m c v x w x≡w 
 ... | false because ofⁿ ¬x≡w with y Fin.≟ w
 ... | false because ofⁿ ¬y≡w = 
-  LemmaTwo (suc m) (Unwrap c) v x y w ¬x≡w ¬y≡w 
-    (dec-a>b ca-x>y in-ca-y>x swfx>y)
-... | true because ofʸ y≡w rewrite y≡w = λ _ → swfx>y
-CorollaryOne (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) 
-  | true because ofʸ x≡w = StrictlyDecisive-x>x c v x w x≡w
+  LemmaTwo {Result = Result} m (Unwrap c) v swf x y w ¬x≡w ¬y≡w 
+    (ca-x>y , in-ca-y>x , swfx>y)  
+... | true  because ofʸ  y≡w rewrite y≡w = λ _ → swfx>y
 
 LemmaThreeAlter : {_R_ : Fin n → Fin n → Set} 
               → (head : Preference n n>2 _R_)
@@ -661,25 +664,36 @@ LemmaThreeSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
 ... | _ , p' , p'-sim-zy , p'-sim-xy , ¬xR'z = (p' ∷ sim-coal) , (p'-sim-zy , is-sim-zy) , (p'-sim-xy , is-sim-xy) , (¬xR'z , sim-z>x)
 
 
-LemmaThree : (m : ℕ) → (c : Coalition m) → (v : Votes n n>2 m) → (x y z : Fin n) → ¬ (x ≡ z) → ¬ (y ≡ z) → Decisive-a>b c v x y → StrictlyDecisive-a>b c v z y 
-LemmaThree m c v x y z ¬x≡z ¬y≡z (dec-a>b ca-x>y in-ca-y>x swfx>y) ca-z>y
+LemmaThree : (m : ℕ) 
+           → (c : Coalition m) 
+           → (v : Votes n n>2 m) 
+           → SWF (Result m)
+           → (x y z : Fin n) 
+           → ¬ (x ≡ z) 
+           → ¬ (y ≡ z) 
+           → Decisive-a>b c v (Result m) x y 
+           → StrictlyDecisive-a>b c v (Result m) z y 
+LemmaThree m c v swf x y z ¬x≡z ¬y≡z (ca-x>y , in-ca-y>x , swfx>y) ca-z>y
   with LemmaThreeSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-z>y
 ... | v' , v'-sim-zy , v'-sim-xy , v'-z>x = 
-  BinaryIIA z y v' v'-sim-zy (SWF-trans v' z x y (Pareto z x v'-z>x) (BinaryIIA x y v v'-sim-xy swfx>y))
+  SWF.BinaryIIA swf v v' z y v'-sim-zy 
+    (SWF.Transitive swf v' z x y (SWF.Pareto swf v' z x v'-z>x) (SWF.BinaryIIA swf v' v x y v'-sim-xy swfx>y))
 
 CorollaryTwo : (m : ℕ) 
              → (c : NonEmptyCoalition m) 
              → (v : Votes n n>2 m) 
+             → SWF (Result m) 
              → (x y w : Fin n) 
-             → Decisive-a>b (Unwrap c) v x y 
-             → StrictlyDecisive-a>b (Unwrap c) v w y
-CorollaryTwo zero c [] x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) = λ _ → Pareto w y tt
-CorollaryTwo {n} {n>2} (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) with y Fin.≟ w 
+             → Decisive-a>b (Unwrap c) v (Result m) x y 
+             → StrictlyDecisive-a>b (Unwrap c) v (Result m) w y
+CorollaryTwo {n} {n>2} {Result = Result} m c v swf x y w 
+  (ca-x>y , in-ca-y>x , swfx>y) with y Fin.≟ w 
+... | true because ofʸ y≡w = 
+  StrictlyDecisive-x>x {Result = Result} m c v w y (Eq.sym y≡w) 
 ... | false because ofⁿ ¬y≡w with x Fin.≟ w
-... | false because ofⁿ ¬x≡w = LemmaThree (suc m) (Unwrap c) v x y w ¬x≡w ¬y≡w (dec-a>b ca-x>y in-ca-y>x swfx>y)
+... | false because ofⁿ ¬x≡w = 
+  LemmaThree {Result = Result} m (Unwrap c) v swf x y w ¬x≡w ¬y≡w (ca-x>y , in-ca-y>x , swfx>y)
 ... | true because ofʸ y≡w rewrite y≡w = λ _ → swfx>y
-CorollaryTwo (suc m) c v x y w (dec-a>b ca-x>y in-ca-y>x swfx>y) 
-  | true because ofʸ y≡w = StrictlyDecisive-x>x c v w y (Eq.sym y≡w) 
 
 LemmaFourAlter : {_R_ : Fin n → Fin n → Set} 
               → (head : Preference n n>2 _R_)
@@ -735,29 +749,35 @@ LemmaFourSimilar (suc m') (true ∷ c) (p ∷ ballots) x y v w ¬x≡v ¬y≡w
 
 LemmaFour : (m : ℕ) 
           → (c : NonEmptyCoalition m) 
-          → (ballots : Votes n n>2 m) 
+          → (v : Votes n n>2 m) 
+          → SWF (Result m)
           → (x y : Fin n) 
-          → Decisive-a>b (Unwrap c) ballots x y
-          → Decisive (Unwrap c) ballots
-LemmaFour m c ballots x y (dec-a>b c-x>y inv-y>x swf-x-y) v w with x Fin.≟ v
-... | true because ofʸ x≡v rewrite x≡v = CorollaryOne m c ballots v y w (dec-a>b c-x>y inv-y>x swf-x-y)
+          → Decisive-a>b (Unwrap c) v (Result m) x y
+          → Decisive (Unwrap c) v (Result m)
+LemmaFour {Result = Result} m c ballots swf x y (c-x>y , inv-y>x , swf-x-y) v w with x Fin.≟ v
+... | true because ofʸ x≡v rewrite x≡v = 
+  CorollaryOne {Result = Result} m c ballots swf v y w (c-x>y , inv-y>x , swf-x-y)
 ... | false because ofⁿ ¬x≡v with y Fin.≟ w 
-...   | true because ofʸ y≡w rewrite y≡w = CorollaryTwo m c ballots x w v (dec-a>b c-x>y inv-y>x swf-x-y)
+...   | true because ofʸ y≡w rewrite y≡w = 
+  CorollaryTwo {Result = Result} m c ballots swf x w v (c-x>y , inv-y>x , swf-x-y)
 ...   | false because ofⁿ ¬y≡w with LemmaFourSimilar m (Unwrap c) ballots x y v w ¬x≡v ¬y≡w c-x>y inv-y>x 
 ...   | ballots' , sim-v>w , sim-x>y , v>x , y>w = 
-      λ _ → BinaryIIA v w ballots' sim-v>w 
-            (SWF-trans ballots' v x w (Pareto v x v>x) (SWF-trans ballots' x y w 
-              (BinaryIIA x y ballots sim-x>y swf-x-y) (Pareto y w y>w)))
+      λ _ → SWF.BinaryIIA swf ballots ballots' v w sim-v>w 
+            (SWF.Transitive swf ballots' v x w (SWF.Pareto swf ballots' v x v>x) 
+              (SWF.Transitive swf ballots' x y w 
+                (SWF.BinaryIIA swf ballots' ballots x y sim-x>y swf-x-y) 
+                  (SWF.Pareto swf ballots' y w y>w)))
 
 -- contraction of decisive sets
 LemmaFive : (m : ℕ) 
          → (c : Coalition m) 
          → (ballots : Votes n n>2 m)
-         → Decisive c ballots
+         → SWF (Result m)
+         → Decisive c ballots (Result m)
          → Σ (Coalition m) 
               λ c → SingletonCoalition c 
-                  × Decisive c ballots
-LemmaFive m c ballots dec = {!   !}
+                  × Decisive c ballots (Result m)
+LemmaFive m c ballots swf dec = {!   !}
 
 -- we have decisive set G
 -- 2 cases:
@@ -771,13 +791,14 @@ LemmaFive m c ballots dec = {!   !}
 --    if SWF x z then G1 is decisive
 --    else there exists part of G2 with zRx 
 --    ¬ SWF x z is approximately zRx
---    zRx + xPy → zPy thus G2 is decisive 
--- could also just do the ultrafilter thing
+--    zRx + xPy → zPy thus G2 is decisive
 
 ArrowsTheorem : (m : ℕ) 
-              → (ballots : Votes n n>2 m) 
+              → (ballots : Votes n n>2 m)
+              → SWF (Result m)
               → Σ (Coalition m)      
                   λ c → SingletonCoalition c   
-                      × Decisive c ballots            
-ArrowsTheorem m ballots = LemmaFive m (Whole m) ballots (LemmaOne m ballots) 
--}
+                      × Decisive c ballots (Result m)            
+ArrowsTheorem {Result = Result} m ballots swf = 
+  LemmaFive {Result = Result} m (Whole m) ballots swf 
+    (LemmaOne {Result = Result} m ballots swf) 
