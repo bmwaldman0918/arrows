@@ -1,6 +1,11 @@
+{-# OPTIONS --rewriting #-}
 module Coalition where
 
+open import Agda.Builtin.Equality
+open import Agda.Builtin.Equality.Rewrite
+open import Data.Nat.Properties using (+-suc)
 open import Data.Vec as Vec
+open import Data.Vec.Properties using (∷-injectiveʳ)
 open import Data.Bool using (Bool; not; true; false; _∧_; _≟_)
 open import Data.Nat as ℕ hiding (_≟_)
 open import Votes
@@ -64,9 +69,25 @@ Intersect (x ∷ xs) (y ∷ ys) = x ∧ y ∷ (Intersect xs ys)
 SingletonCoalition : {m : ℕ} → Coalition m → Set
 SingletonCoalition c = MembersCount c ≡ 1
 
--- c is a subset of c'
--- separate subset and proper subset
-record ProperSubset {m : ℕ} (c c' : Coalition m) : Set where
-  field 
-    Subset : ∀ n → lookup c n ≡ true → lookup c' n ≡ true
-    Proper : MembersCount c ℕ.< MembersCount c'
+FalseCoalition : (n : ℕ) → Coalition n
+FalseCoalition zero    = []
+FalseCoalition (suc n) = false ∷ FalseCoalition n
+
+PrependFalseAgrees : {m n : ℕ} 
+                   → {n>2 : n ℕ.> 2}
+                   → (v : Votes n n>2 (m ℕ.+ 0))
+                   → (a b : Fin n)
+                   → CoalitionAgrees a b ((FalseCoalition m) ++ []) v
+PrependFalseAgrees {zero} [] a b = empty-coalition-agrees
+PrependFalseAgrees {suc m} (x ∷ v) a b = 
+  false-agrees (FalseCoalition m ++ []) v (PrependFalseAgrees v a b) x
+
+
+{-# REWRITE +-suc #-}
+FalseCoalitionRearrange : {m m' : ℕ} 
+  → (c : Coalition m')
+  → FalseCoalition m ++ false ∷ c ≡ false ∷ FalseCoalition m ++ c 
+
+FalseCoalitionRearrange {zero} c = refl
+FalseCoalitionRearrange {suc m} c rewrite Eq.sym (FalseCoalitionRearrange {m} c) 
+  = refl

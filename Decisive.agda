@@ -1,3 +1,4 @@
+{-# OPTIONS --rewriting #-}
 module Decisive where
 
 open import Voter

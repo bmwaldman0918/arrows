@@ -1,3 +1,4 @@
+{-# OPTIONS --rewriting #-}
 module Arrow where
 
 open import Voter
@@ -5,6 +6,8 @@ open WeakPreference
 open Preference
 open StrictPreference
 
+open import Agda.Builtin.Equality
+open import Agda.Builtin.Equality.Rewrite
 open import Votes 
 open import Election
 open import Coalition
@@ -19,19 +22,20 @@ open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ; _,_; _×_; proj₁)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
+open import Data.Nat.Properties using (+-suc)
 
 private
   variable
     n : ℕ
     n>2 : n ℕ.> 2
-    Result : (m : ℕ) → Votes n n>2 m → Fin n → Fin n → Set
+    Result : {m : ℕ} → Votes n n>2 m → Fin n → Fin n → Set
 
 -- the coalition of the whole is decisive
 
 LemmaOne : (m : ℕ) 
          → (v : Votes n n>2 m)
-         → SWF (Result m)
-         → Decisive (Whole m) v (Result m)
+         → (SWF Result)
+         → Decisive (Whole m) v Result
 LemmaOne m v swf a b ca = SWF.Pareto swf v a b (helper m v a b ca) where
   helper : (m : ℕ) 
          → (v : Votes n n>2 m) 
@@ -282,13 +286,13 @@ LemmaTwoSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
 LemmaTwo : (m : ℕ) 
          → (c : Coalition m) 
          → (v : Votes n n>2 m) 
-         → SWF (Result m)
+         → SWF Result
          → (x y z : Fin n) 
          → ¬ (x ≡ z) 
          → ¬ (y ≡ z) 
-         → Decisive-a>b c v (Result m) x y
+         → Decisive-a>b c v Result x y
          ------------------------------
-         → StrictlyDecisive-a>b c v (Result m) x z 
+         → StrictlyDecisive-a>b c v Result x z 
 LemmaTwo m c v swf x y z ¬x≡z ¬y≡z (ca-x>y , in-ca-y>x , swfx>y) ca-x>z 
   with LemmaTwoSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-x>z                                                       
 ... | v' , v'-sim-xz , v-sim-xy , v'-y>z = 
@@ -301,7 +305,7 @@ StrictlyDecisive-x>x : (m : ℕ)
              → (v : Votes n n>2 m) 
              → (a b : Fin n)
              → (a ≡ b)
-             → StrictlyDecisive-a>b (Unwrap c) v (Result m) a b 
+             → StrictlyDecisive-a>b (Unwrap c) v Result a b 
 StrictlyDecisive-x>x m c v a b a≡b = λ ca → ⊥-elim (helper v c a b a≡b ca)
   where
     helper : {m n : ℕ} → {n>2 : n ℕ.> 2} 
@@ -340,10 +344,10 @@ FreshCandidate (suc (suc (suc n))) n>2 (suc (suc a)) zero
 CorollaryOne : (m : ℕ) 
              → (c : NonEmptyCoalition m) 
              → (v : Votes n n>2 m)
-             → SWF (Result m) 
+             → SWF Result
              → (x y w : Fin n) 
-             → Decisive-a>b (Unwrap c) v (Result m) x y 
-             → StrictlyDecisive-a>b (Unwrap c) v (Result m) x w
+             → Decisive-a>b (Unwrap c) v Result x y 
+             → StrictlyDecisive-a>b (Unwrap c) v Result x w
 CorollaryOne {n} {n>2} {Result = Result} m c v swf x y w (ca-x>y , in-ca-y>x , swfx>y) 
   with x Fin.≟ w
 ... | true  because ofʸ  x≡w = 
@@ -667,25 +671,26 @@ LemmaThreeSimilar (suc m) (true ∷ c) (head ∷ rem) x y z ¬x≡z ¬y≡z
 LemmaThree : (m : ℕ) 
            → (c : Coalition m) 
            → (v : Votes n n>2 m) 
-           → SWF (Result m)
+           → SWF Result
            → (x y z : Fin n) 
            → ¬ (x ≡ z) 
            → ¬ (y ≡ z) 
-           → Decisive-a>b c v (Result m) x y 
-           → StrictlyDecisive-a>b c v (Result m) z y 
+           → Decisive-a>b c v Result x y 
+           → StrictlyDecisive-a>b c v Result z y 
 LemmaThree m c v swf x y z ¬x≡z ¬y≡z (ca-x>y , in-ca-y>x , swfx>y) ca-z>y
   with LemmaThreeSimilar m c v x y z ¬x≡z ¬y≡z ca-x>y in-ca-y>x ca-z>y
 ... | v' , v'-sim-zy , v'-sim-xy , v'-z>x = 
   SWF.BinaryIIA swf v v' z y v'-sim-zy 
-    (SWF.Transitive swf v' z x y (SWF.Pareto swf v' z x v'-z>x) (SWF.BinaryIIA swf v' v x y v'-sim-xy swfx>y))
+    (SWF.Transitive swf v' z x y (SWF.Pareto swf v' z x v'-z>x) 
+      (SWF.BinaryIIA swf v' v x y v'-sim-xy swfx>y))
 
 CorollaryTwo : (m : ℕ) 
              → (c : NonEmptyCoalition m) 
              → (v : Votes n n>2 m) 
-             → SWF (Result m) 
+             → SWF Result
              → (x y w : Fin n) 
-             → Decisive-a>b (Unwrap c) v (Result m) x y 
-             → StrictlyDecisive-a>b (Unwrap c) v (Result m) w y
+             → Decisive-a>b (Unwrap c) v Result x y 
+             → StrictlyDecisive-a>b (Unwrap c) v Result w y
 CorollaryTwo {n} {n>2} {Result = Result} m c v swf x y w 
   (ca-x>y , in-ca-y>x , swfx>y) with y Fin.≟ w 
 ... | true because ofʸ y≡w = 
@@ -700,13 +705,172 @@ LemmaFourAlter : {_R_ : Fin n → Fin n → Set}
               → (x y v w : Fin n)  
               → ¬ (x ≡ v) 
               → ¬ (y ≡ w)
-              → Σ (Fin n → Fin n → Set) λ _R'_ 
-                → Σ (Preference n n>2 _R'_) λ P' 
-                  → R→Bool head v w ≡ R→Bool P' v w
-                  × R→Bool P' x y ≡ R→Bool head x y 
+              → Σ (Fin n → Fin n → Set) 
+                λ _R'_ → Σ (Preference n n>2 _R'_) 
+                  λ P' → R→Bool head v w ≡ R→Bool P' v w
                   × P P' v x
-                  × P P' y w
-LemmaFourAlter {_R_ = _R_} head x y v w = {!   !}
+                  × Σ (Fin n → Fin n → Set) 
+                    λ _R''_ → Σ (Preference n n>2 _R''_) 
+                      λ P'' → (R→Bool P' x w ≡ R→Bool P'' x w
+                      × R→Bool P'' x y ≡ R→Bool head x y
+                      × P P'' y w)
+LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w 
+  with R-dec head x v | R-dec head w y 
+LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w | inj₁ xRv | inj₁ wRy = {!   !}
+LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w | inj₁ xRv | inj₂ yPw = 
+  {!   !} , {!   !} , {!   !} , {!   !} , _R_ , head , {!   !} , refl , yPw
+  
+LemmaFourAlter {n = n} {n>2 = n>2} {_R_ = _R_} 
+  head x y v w ¬x≡v ¬y≡w | inj₂ vPx | inj₁ wRy 
+  with R-dec head x w | R-dec head x y
+... | inj₂ wPx | inj₂ yPx = 
+   _R_ , head , refl , vPx , _R'_ , P' , agrees-x-w , agrees-x-y 
+       , λ {(y-first .y) → ¬y≡w refl
+          ; (orig .w .y ¬y≡y _) → ¬y≡y refl}
+   where
+    data _R'_ : Fin n → Fin n → Set where
+      y-first : ∀ a → y R' a
+      orig    : ∀ a b
+              → ¬ (b ≡ y)
+              → a R  b
+              → a R' b
+    
+    R'-trans : (a b c : Fin n) → a R' b → b R' c → a R' c
+    R'-trans a b c (y-first .a) (y-first .c) = y-first c
+    R'-trans a b c (y-first .b) (orig .b .c ¬c≡y bRc) = y-first c
+    R'-trans a b c (orig .a .b ¬b≡b _) (y-first .c) = ⊥-elim (¬b≡b refl)
+    R'-trans a b c (orig .a .b ¬b≡y aRb) (orig .b .c ¬c≡y bRc) = 
+      orig a c ¬c≡y (R-trans head a b c aRb bRc)
+
+    R'-complete : (a b : Fin n) → (a R' b) ⊎ (b R' a)
+    R'-complete a b  with a Fin.≟ y | b Fin.≟ y 
+    ... | true because  ofʸ  a≡y | _ rewrite Eq.sym a≡y = inj₁ (y-first b)
+    ... | _ | true because ofʸ b≡y rewrite Eq.sym b≡y = inj₂ (y-first a)
+    ... | false because ofⁿ ¬a≡y | false because ofⁿ ¬b≡y 
+      with R-complete head a b 
+    ... | inj₁ aRb = inj₁ (orig a b ¬b≡y aRb)
+    ... | inj₂ bRa = inj₂ (orig b a ¬a≡y bRa)
+
+    R'-dec : (a b : Fin n) → (a R' b) ⊎ ¬ (a R' b)
+    R'-dec a b with a Fin.≟ y 
+    ... | true because ofʸ   a≡y rewrite Eq.sym a≡y = inj₁ (y-first b)
+    ... | false because ofⁿ ¬a≡y with b Fin.≟ y 
+    ... | true because ofʸ   b≡y = 
+      inj₂ (λ {(y-first .b) → ¬a≡y refl
+            ; (orig .a .b ¬b≡y _) → ¬b≡y b≡y})
+    ... | false because ofⁿ ¬b≡y with R-dec head a b 
+    ... | inj₁ aRb = inj₁ (orig a b ¬b≡y aRb)
+    ... | inj₂ bPa = 
+      inj₂ (λ {(y-first .b) → ¬a≡y refl
+            ; (orig .a .b _ aRb) → bPa aRb})
+
+    P' : Preference n n>2 _R'_
+    P' = record { R-trans = R'-trans 
+       ; R-complete = R'-complete 
+       ; R-dec = R'-dec }
+    
+    agrees-x-w : (R→Bool head x w) ≡ (R→Bool P' x w)
+    agrees-x-w with R-dec head x w | R-dec P' x w
+    ... | inj₁ xRw | _ = ⊥-elim (wPx xRw)
+    ... | inj₂ wPx | inj₁ (y-first x) = ⊥-elim (yPx (R-refl head y y refl))
+    ... | inj₂ wPx | inj₁ (orig .x .w _ xRw) = ⊥-elim (wPx xRw)
+    ... | inj₂ wPx | inj₂ wP'x = refl
+
+    agrees-x-y : (R→Bool P' x y) ≡ false
+    agrees-x-y with R-dec P' x y
+    ... | inj₁ (y-first .x) = ⊥-elim (yPx (R-refl head y y refl))
+    ... | inj₁ (orig .x .y ¬y≡y _) = ⊥-elim (¬y≡y refl)
+    ... | inj₂ _ = refl
+
+... | inj₁ xRw | f = 
+  _R_ , head , refl , vPx , {!   !} , {!   !} , {!   !} , {!   !} , {!   !}
+... | inj₂ wPx | inj₁ xRy with R-dec head v w 
+... | inj₁ vRw = -- R'' x > y | y > w
+  _R'_ , P' , agrees-v-w 
+  , (λ {(v-first .v) → ¬x≡v refl
+      ; (orig .x .v _ ¬v≡v _) → ¬v≡v refl
+      ; (w-last .x ¬v≡w) → ¬v≡w refl}) 
+  , {!   !} , {!   !} , {!   !} , {!   !} , {!   !}
+  where
+    data _R'_ : Fin n → Fin n → Set where
+      v-first : ∀ a → v R' a
+      orig    : ∀ a b
+              → ¬ (a ≡ w)
+              → ¬ (b ≡ v)
+              → a R  b
+              → a R' b
+      w-last : ∀ a 
+             → ¬ (v ≡ w) 
+             → a R' w
+    
+    R'-trans : (a b c : Fin n) → a R' b → b R' c → a R' c
+    R'-trans a b c (v-first .a) (v-first .c) = v-first c
+    R'-trans a b c (v-first .b) (orig .b .c ¬b≡w ¬c≡v bRc) = v-first c
+    R'-trans a b c (orig .a .b ¬a≡w ¬b≡b _) (v-first .c) = ⊥-elim (¬b≡b refl)
+    R'-trans a b c (orig .a .b ¬a≡w ¬b≡v aRb) (orig .b .c ¬b≡w ¬c≡v bRc) = 
+      orig a c ¬a≡w ¬c≡v (R-trans head a b c aRb bRc)
+    R'-trans a b c (v-first .b) (w-last .b ¬a≡c) = v-first c
+    R'-trans a b c (orig .a .b ¬a≡w ¬b≡v aRb) (w-last .b ¬a≡c) = w-last a ¬a≡c
+    R'-trans a b c (w-last .a ¬b≡b) (v-first .c) = ⊥-elim (¬b≡b refl)
+    R'-trans a b c (w-last .a ¬v≡b) (orig .b .c ¬b≡b _ _) = ⊥-elim (¬b≡b refl)
+    R'-trans a b c (w-last .a ¬v≡b) (w-last .b _) = w-last a ¬v≡b
+
+    R'-complete : (a b : Fin n) → (a R' b) ⊎ (b R' a)
+    R'-complete a b with a Fin.≟ v | b Fin.≟ v 
+    ... | true because  ofʸ  a≡v | _ rewrite Eq.sym a≡v = inj₁ (v-first b)
+    ... | _ | true because ofʸ b≡v rewrite Eq.sym b≡v = inj₂ (v-first a)
+    ... | false because ofⁿ ¬a≡v | false because ofⁿ ¬b≡v 
+      with a Fin.≟ w | b Fin.≟ w 
+    ... | true because ofʸ a≡w | _ rewrite Eq.sym a≡w = 
+      inj₂ (w-last b (λ v≡a → ¬a≡v (Eq.sym v≡a)))
+    ... | false because ofⁿ ¬a≡w | true because ofʸ b≡w 
+      rewrite Eq.sym b≡w = inj₁ (w-last a (λ v≡b → ¬b≡v (Eq.sym v≡b)))
+    ... | false because ofⁿ ¬a≡w | false because ofⁿ ¬b≡w 
+      with R-complete head a b 
+    ... | inj₁ aRb = inj₁ (orig a b ¬a≡w ¬b≡v aRb)
+    ... | inj₂ bRa = inj₂ (orig b a ¬b≡w ¬a≡v bRa)
+
+    R'-dec : (a b : Fin n) → (a R' b) ⊎ ¬ (a R' b)
+    R'-dec a b with a Fin.≟ v 
+    ... | true  because ofʸ  a≡v rewrite Eq.sym a≡v = inj₁ (v-first b)
+    ... | false because ofⁿ ¬a≡v with a Fin.≟ w | b Fin.≟ w | b Fin.≟ v 
+    ... | true because ofʸ a≡w | false because ofⁿ ¬b≡w | _ rewrite a≡w
+      = inj₂ (λ {(v-first .b) → ¬a≡v refl
+               ; (orig .w .b ¬w≡w _ _) → ¬w≡w refl
+               ; (w-last .w ¬v≡b) → ¬b≡w refl})
+    ... | true because ofʸ a≡w | true  because ofʸ  b≡w | _
+      rewrite a≡w | b≡w = inj₁ (w-last w (λ v≡w → ¬a≡v (Eq.sym v≡w)))
+    ... | false because ofⁿ ¬a≡w | false because ofⁿ ¬b≡w | true  because ofʸ  b≡v 
+      = inj₂ (λ {(v-first .b) → ¬a≡v refl
+               ; (orig .a .b _ ¬b≡v _) → ¬b≡v b≡v
+               ; (w-last .a ¬v≡b) → ¬v≡b (Eq.sym b≡v)})
+    ... | false because ofⁿ ¬a≡w | true because ofʸ b≡w | false because ofⁿ ¬b≡v 
+      rewrite b≡w = inj₁ (w-last a (λ v≡w → ¬b≡v (Eq.sym v≡w)))
+    ... | false because ofⁿ ¬a≡w | true because ofʸ b≡w | true  because ofʸ  b≡v 
+      = inj₂ λ {(v-first .b) → ¬a≡v refl
+              ; (orig .a .b _ ¬b≡v _) → ¬b≡v b≡v
+              ; (w-last .a ¬v≡b) → ¬v≡b (Eq.sym b≡v)}
+    ... | false because ofⁿ ¬a≡w | false because ofⁿ ¬b≡w | false because ofⁿ ¬b≡v with R-dec head a b 
+    ... | inj₁ aRb = inj₁ (orig a b ¬a≡w ¬b≡v aRb)
+    ... | inj₂ aPb = inj₂ (λ {(v-first .b) → ¬a≡v refl
+                            ; (orig .a .b _ _ aRb) → aPb aRb
+                            ; (w-last .a _) → ¬b≡w refl})
+
+    P' : Preference n n>2 _R'_
+    P' = record { R-trans = R'-trans 
+       ; R-complete = R'-complete 
+       ; R-dec = R'-dec }
+
+    agrees-v-w : true ≡ R→Bool P' v w
+    agrees-v-w with R-dec P' v w 
+    ... | inj₁ _ = refl
+    ... | inj₂ wP'v = ⊥-elim (wP'v (v-first w))
+    
+... | inj₂ wPv = 
+  {!   !} , {!   !} , {!   !} , {!   !} , {!   !} , {!   !} , {!   !} , {!   !} , {!   !}
+
+LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w | inj₂ vPx | inj₂ yPw = 
+  _R_ , head , refl , vPx , _R_ , head , refl , refl , yPw
 
 LemmaFourSimilar : (m : ℕ) 
                 → (c : Coalition m) 
@@ -716,72 +880,90 @@ LemmaFourSimilar : (m : ℕ)
                 → ¬ (y ≡ w)
                 → (CoalitionAgrees x y c ballots) 
                 → (CoalitionAgrees y x (InverseCoalition c) ballots)
-                → Σ (Votes n n>2 m) λ ballots' 
-                                    → (Similar m v w (Zipped n>2 v w ballots ballots')
-                                    ×  Similar m x y (Zipped n>2 x y ballots' ballots)
-                                    × ElectionAgrees ballots' v x
-                                    × ElectionAgrees ballots' y w)
-LemmaFourSimilar m c [] x y v w _ _ _ _ = [] , tt , tt , tt , tt
+                → Σ (Votes n n>2 m) λ ballots'
+                  → (Similar m v w (Zipped n>2 v w ballots ballots')
+                  × ElectionAgrees ballots' v x
+                  × Σ (Votes n n>2 m) λ ballots''
+                    → (Similar m x w (Zipped n>2 x w ballots' ballots''))
+                    × (Similar m x y (Zipped n>2 x y ballots'' ballots)
+                    × ElectionAgrees ballots'' y w))
+LemmaFourSimilar m c [] x y v w _ _ _ _ = [] , tt , tt , [] , tt , tt , tt 
 LemmaFourSimilar (suc m') (false ∷ c) (p ∷ ballots) x y v w ¬x≡v ¬y≡w
   (false-agrees .c .ballots ca-x>y .p) 
-  (true-agrees .(InverseCoalition c) .ballots ca-y>x .p x₁) with
-  LemmaFourSimilar m' c ballots x y v w ¬x≡v ¬y≡w ca-x>y ca-y>x 
-... | alt-ballots , sim-v>w , sim-x>y , v>x , y>w with
-  LemmaFourAlter p x y v w ¬x≡v ¬y≡w
-... | _ , P' , p'-same-vw , p'-same-xy , p'-v>x , p'-y>w = 
-      (P' ∷ alt-ballots) 
-    , (p'-same-vw , sim-v>w) 
-    , (p'-same-xy , sim-x>y) 
-    , (p'-v>x , v>x) 
-    , (p'-y>w , y>w)
+  (true-agrees .(InverseCoalition c) .ballots ca-y>x .p yPx) 
+  with LemmaFourSimilar m' c ballots x y v w ¬x≡v ¬y≡w ca-x>y ca-y>x 
+... | b' , sim-b'-v-w , b'-v>x , b'' , sim-b-'-b''-x-w , sim-b-''-b-x-y , b''-y>w
+  with LemmaFourAlter p x y v w ¬x≡v ¬y≡w
+... | _ , P' , sim-v-w , P'vx , _ , P'' , sim-x-w , sim-x-y , P''yw
+    = (P' ∷ b') 
+    , (sim-v-w , sim-b'-v-w) 
+    , ((P'vx , b'-v>x) 
+    , ((P'' ∷ b'') 
+      , ((sim-x-w , sim-b-'-b''-x-w) 
+      , ((sim-x-y , sim-b-''-b-x-y) 
+      ,  (P''yw , b''-y>w))))) 
 LemmaFourSimilar (suc m') (true ∷ c) (p ∷ ballots) x y v w ¬x≡v ¬y≡w
-  (true-agrees .c .ballots ca-x>y .p x₁) 
+  (true-agrees .c .ballots ca-x>y .p xPy) 
   (false-agrees .(InverseCoalition c) .ballots ca-y>x .p) with
-  LemmaFourSimilar m' c ballots x y v w ¬x≡v ¬y≡w ca-x>y ca-y>x
-... | alt-ballots , sim-v>w , sim-x>y , v>x , y>w with
-  LemmaFourAlter p x y v w ¬x≡v ¬y≡w
-... | _ , P' , p'-same-vw , p'-same-xy , p'-v>x , p'-y>w = 
-      (P' ∷ alt-ballots) 
-    , (p'-same-vw , sim-v>w) 
-    , (p'-same-xy , sim-x>y) 
-    , (p'-v>x , v>x) 
-    , (p'-y>w , y>w)
+  LemmaFourSimilar m' c ballots x y v w ¬x≡v ¬y≡w ca-x>y ca-y>x 
+... | b' , sim-b'-v-w , b'-v>x , b'' , sim-b-'-b''-x-w , sim-b-''-b-x-y , b''-y>w 
+    with LemmaFourAlter p x y v w ¬x≡v ¬y≡w
+... | _ , P' , sim-v-w , P'vx , _ , P'' , sim-x-w , sim-x-y , P''yw
+    = (P' ∷ b') 
+    , (sim-v-w , sim-b'-v-w) 
+    , ((P'vx , b'-v>x) 
+    , ((P'' ∷ b'') 
+      , ((sim-x-w , sim-b-'-b''-x-w) 
+      , ((sim-x-y , sim-b-''-b-x-y) 
+      ,  (P''yw , b''-y>w))))) 
 
 LemmaFour : (m : ℕ) 
           → (c : NonEmptyCoalition m) 
           → (v : Votes n n>2 m) 
-          → SWF (Result m)
+          → SWF Result
           → (x y : Fin n) 
-          → Decisive-a>b (Unwrap c) v (Result m) x y
-          → Decisive (Unwrap c) v (Result m)
+          → Decisive-a>b (Unwrap c) v Result x y
+          → Decisive (Unwrap c) v Result
 LemmaFour {Result = Result} m c ballots swf x y (c-x>y , inv-y>x , swf-x-y) v w with x Fin.≟ v
 ... | true because ofʸ x≡v rewrite x≡v = 
   CorollaryOne {Result = Result} m c ballots swf v y w (c-x>y , inv-y>x , swf-x-y)
 ... | false because ofⁿ ¬x≡v with y Fin.≟ w 
-...   | true because ofʸ y≡w rewrite y≡w = 
+... | true because ofʸ y≡w rewrite y≡w = 
   CorollaryTwo {Result = Result} m c ballots swf x w v (c-x>y , inv-y>x , swf-x-y)
-...   | false because ofⁿ ¬y≡w with LemmaFourSimilar m (Unwrap c) ballots x y v w ¬x≡v ¬y≡w c-x>y inv-y>x 
-...   | ballots' , sim-v>w , sim-x>y , v>x , y>w = 
-      λ _ → SWF.BinaryIIA swf ballots ballots' v w sim-v>w 
-            (SWF.Transitive swf ballots' v x w (SWF.Pareto swf ballots' v x v>x) 
-              (SWF.Transitive swf ballots' x y w 
-                (SWF.BinaryIIA swf ballots' ballots x y sim-x>y swf-x-y) 
-                  (SWF.Pareto swf ballots' y w y>w)))
+... | false because ofⁿ ¬y≡w 
+    with LemmaFourSimilar m (Unwrap c) ballots x y v w ¬x≡v ¬y≡w c-x>y inv-y>x 
+... | b' , sim-b'-v-w , b'-v>x , b'' , sim-b-'-b''-x-w , sim-b-''-b-x-y , b''-y>w = 
+    λ _ → SWF.BinaryIIA swf ballots b' v w sim-b'-v-w 
+      (SWF.Transitive swf b' v x w (SWF.Pareto swf b' v x b'-v>x) 
+        (SWF.BinaryIIA swf b' b'' x w sim-b-'-b''-x-w 
+          (SWF.Transitive swf b'' x y w 
+            (SWF.BinaryIIA swf b'' ballots x y sim-b-''-b-x-y swf-x-y) 
+            (SWF.Pareto swf b'' y w b''-y>w))))
 
--- contraction of decisive sets
-LemmaFive : (m : ℕ) 
-         → (c : Coalition m) 
-         → (ballots : Votes n n>2 m)
-         → SWF (Result m)
-         → Decisive c ballots (Result m)
-         → Σ (Coalition m) 
+{-# REWRITE FalseCoalitionRearrange #-}
+LemmaFive : (m m' : ℕ)
+          → (c : Coalition m') 
+          → (ballots : Votes n n>2 (m ℕ.+ m'))
+          → SWF Result
+          → Decisive (FalseCoalition m ++ c) ballots Result
+          → Σ (Coalition (m ℕ.+ m')) 
               λ c → SingletonCoalition c 
-                  × Decisive c ballots (Result m)
-LemmaFive m c ballots swf dec = {!   !}
+                  × Decisive c ballots Result
+LemmaFive {n} {s≤s (s≤s n>2)} zero zero c [] swf dec = 
+  ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
+    (SWF.Pareto swf [] zero (suc zero) tt) 
+    (SWF.Pareto swf [] (suc zero) zero tt))
+LemmaFive {n} {s≤s (s≤s n>2)} (suc m) zero [] votes swf dec = 
+  ⊥-elim (SWF.Asymmetric swf votes zero (suc zero) 
+    (dec zero (suc zero) (PrependFalseAgrees votes zero (suc zero))) 
+    (dec (suc zero) zero (PrependFalseAgrees votes (suc zero) zero)))
+LemmaFive {n} {s≤s (s≤s n>2)} m (suc m') (true ∷ c) votes swf dec 
+  with FilteredVotes (FalseCoalition m ++ (true ∷ c)) votes
+... | zero , [] = {!   !}
+... | n , (v ∷ rem) = {!   !}
+LemmaFive m (suc m') (false ∷ c) votes swf dec = 
+  LemmaFive (suc m)  m' c votes swf dec
 
--- we have decisive set G
--- 2 cases:
--- G is of length one -- done
 -- G is of length > 1
 --    split G into two subsets
 --    first subset is singleton coalition of the head
@@ -795,10 +977,10 @@ LemmaFive m c ballots swf dec = {!   !}
 
 ArrowsTheorem : (m : ℕ) 
               → (ballots : Votes n n>2 m)
-              → SWF (Result m)
+              → SWF Result
               → Σ (Coalition m)      
                   λ c → SingletonCoalition c   
-                      × Decisive c ballots (Result m)            
+                      × Decisive c ballots Result         
 ArrowsTheorem {Result = Result} m ballots swf = 
-  LemmaFive {Result = Result} m (Whole m) ballots swf 
-    (LemmaOne {Result = Result} m ballots swf) 
+  LemmaFive {Result = Result} 0 m (Whole m) ballots swf 
+    (LemmaOne {Result = Result} m ballots swf)      
