@@ -719,7 +719,7 @@ LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w
 LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w | inj₁ xRv | inj₁ wRy = {!   !}
 LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w | inj₁ xRv | inj₂ yPw = 
   {!   !} , {!   !} , {!   !} , {!   !} , _R_ , head , {!   !} , refl , yPw
-  
+
 LemmaFourAlter {n = n} {n>2 = n>2} {_R_ = _R_} 
   head x y v w ¬x≡v ¬y≡w | inj₂ vPx | inj₁ wRy 
   with R-dec head x w | R-dec head x y
@@ -957,10 +957,7 @@ LemmaFive {n} {s≤s (s≤s n>2)} (suc m) zero [] votes swf dec =
   ⊥-elim (SWF.Asymmetric swf votes zero (suc zero) 
     (dec zero (suc zero) (PrependFalseAgrees votes zero (suc zero))) 
     (dec (suc zero) zero (PrependFalseAgrees votes (suc zero) zero)))
-LemmaFive {n} {s≤s (s≤s n>2)} m (suc m') (true ∷ c) votes swf dec 
-  with FilteredVotes (FalseCoalition m ++ (true ∷ c)) votes
-... | zero , [] = {!   !}
-... | n , (v ∷ rem) = {!   !}
+LemmaFive {n} {s≤s (s≤s n>2)} m (suc m') (true ∷ c) votes swf dec = {!   !}
 LemmaFive m (suc m') (false ∷ c) votes swf dec = 
   LemmaFive (suc m)  m' c votes swf dec
 
