@@ -51,6 +51,12 @@ record SWF {n : ℕ} {n>2 : n ℕ.> 2}
                 → Result v b c 
                 → Result v a c
 
+    Complete    : {m : ℕ} 
+                → (v : Votes n n>2 m) 
+                → (a b : Fin n)   
+                → (Result v a b) 
+                ⊎ (Result v b a)
+
     Decidable   : {m : ℕ} 
                 → (v : Votes n n>2 m) 
                 → (a b : Fin n)   

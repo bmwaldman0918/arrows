@@ -940,26 +940,6 @@ LemmaFour {Result = Result} m c ballots swf x y (c-x>y , inv-y>x , swf-x-y) v w 
             (SWF.BinaryIIA swf b'' ballots x y sim-b-''-b-x-y swf-x-y) 
             (SWF.Pareto swf b'' y w b''-y>w))))
 
-{-# REWRITE FalseCoalitionRearrange #-}
-LemmaFive : (m m' : ℕ)
-          → (c : Coalition m') 
-          → (ballots : Votes n n>2 (m ℕ.+ m'))
-          → SWF Result
-          → Decisive (FalseCoalition m ++ c) ballots Result
-          → Σ (Coalition (m ℕ.+ m')) 
-              λ c → SingletonCoalition c 
-                  × Decisive c ballots Result
-LemmaFive {n} {s≤s (s≤s n>2)} zero zero c [] swf dec = 
-  ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
-    (SWF.Pareto swf [] zero (suc zero) tt) 
-    (SWF.Pareto swf [] (suc zero) zero tt))
-LemmaFive {n} {s≤s (s≤s n>2)} (suc m) zero [] votes swf dec = 
-  ⊥-elim (SWF.Asymmetric swf votes zero (suc zero) 
-    (dec zero (suc zero) (PrependFalseAgrees votes zero (suc zero))) 
-    (dec (suc zero) zero (PrependFalseAgrees votes (suc zero) zero)))
-LemmaFive {n} {s≤s (s≤s n>2)} m (suc m') (true ∷ c) votes swf dec = {!   !}
-LemmaFive m (suc m') (false ∷ c) votes swf dec = 
-  LemmaFive (suc m)  m' c votes swf dec
 
 -- G is of length > 1
 --    split G into two subsets
@@ -972,12 +952,51 @@ LemmaFive m (suc m') (false ∷ c) votes swf dec =
 --    ¬ SWF x z is approximately zRx
 --    zRx + xPy → zPy thus G2 is decisive
 
+LemmaFive : (m s : ℕ)
+          → (c : Coalition m)
+          → (MembersCount c ≡ (suc s))
+          → (ballots : Votes n n>2 m)
+          → SWF Result
+          → Decisive c ballots Result
+          → (Σ (Coalition m) 
+              λ c → SingletonCoalition c 
+                  × Decisive c ballots Result)
+          ⊎ (Σ (Coalition m) 
+              λ c → MembersCount c ≡ s
+                  × Decisive c ballots Result)
+LemmaFive m zero c mc ballots swf dec = inj₁ (c , (mc , dec))
+LemmaFive m (suc s) c mc ballots swf dec = {!   !}
+
+LemmaSix : (m s : ℕ)
+          → (c : Coalition m) 
+          → (MembersCount c ≡ (suc s))
+          → (ballots : Votes n n>2 m)
+          → SWF Result
+          → Decisive c ballots Result
+          → Σ (Coalition m) 
+              λ c → SingletonCoalition c 
+                  × Decisive c ballots Result
+LemmaSix {n} {s≤s (s≤s n>2)} zero s [] c [] swf dec = 
+  ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
+    (dec zero (suc zero) empty-coalition-agrees) 
+    (dec (suc zero) zero empty-coalition-agrees))
+LemmaSix {n} {s≤s (s≤s n>2)} (suc m) zero c mc ballots swf dec = 
+  c , mc , dec
+LemmaSix {n} {s≤s (s≤s n>2)} m (suc s) c mc ballots swf dec 
+  with LemmaFive m (suc s) c mc ballots swf dec
+... | inj₁ dictator = dictator
+... | inj₂ (s-c , s-mc , s-dec) = LemmaSix m s s-c s-mc ballots swf s-dec
+
 ArrowsTheorem : (m : ℕ) 
               → (ballots : Votes n n>2 m)
               → SWF Result
               → Σ (Coalition m)      
                   λ c → SingletonCoalition c   
                       × Decisive c ballots Result         
-ArrowsTheorem {Result = Result} m ballots swf = 
-  LemmaFive {Result = Result} 0 m (Whole m) ballots swf 
-    (LemmaOne {Result = Result} m ballots swf)      
+ArrowsTheorem {n} {s≤s (s≤s n>2)} zero [] swf 
+  = ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
+    (SWF.Pareto swf [] zero (suc zero) tt) 
+    (SWF.Pareto swf [] (suc zero) zero tt))
+ArrowsTheorem (suc m) ballots swf 
+  = LemmaSix (suc m) m (Whole (suc m)) {!   !} ballots swf 
+    (LemmaOne (suc m) ballots swf)
