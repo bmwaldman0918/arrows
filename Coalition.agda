@@ -10,7 +10,7 @@ open import Data.Bool using (Bool; not; true; false; _∧_; _≟_)
 open import Data.Nat as ℕ hiding (_≟_)
 open import Votes
 open import Data.Fin as Fin hiding (_≟_)
-open import Data.Product using (Σ; _×_; _,_; proj₂; proj₁; ∃)
+open import Data.Product using (Σ; _×_; _,_; proj₂; proj₁)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
 open import Voter
@@ -57,7 +57,7 @@ Whole zero = []
 Whole (suc m) = true ∷ (Whole m) 
 
 NonEmptyCoalition : (m : ℕ) → Set
-NonEmptyCoalition m = Σ (Coalition m) λ c → Σ (Fin m) λ i → (lookup c i) ≡ true
+NonEmptyCoalition m = Σ (Coalition m) λ c → MembersCount c ℕ.> 0
 
 Unwrap : {m : ℕ} → NonEmptyCoalition m → Coalition m
 Unwrap (fst , _) = fst
@@ -66,8 +66,13 @@ Intersect : {m : ℕ} → Coalition m → Coalition m → Coalition m
 Intersect [] [] = [] 
 Intersect (x ∷ xs) (y ∷ ys) = x ∧ y ∷ (Intersect xs ys)
 
-SingletonCoalition : {m : ℕ} → Coalition m → Set
-SingletonCoalition c = MembersCount c ≡ 1
+SingletonCoalition : (m : ℕ) → Set
+SingletonCoalition m = Σ (Coalition m) λ c → MembersCount c ≡ 1
+
+Singleton→NonEmpty : {m : ℕ} 
+                   → (c : SingletonCoalition m)
+                   → (MembersCount (c .proj₁)) ℕ.> 0
+Singleton→NonEmpty (fst , snd) rewrite snd = s≤s z≤n
 
 FalseCoalition : (n : ℕ) → Coalition n
 FalseCoalition zero    = []
