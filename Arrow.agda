@@ -914,90 +914,40 @@ LemmaFourSimilar (suc m') (true ∷ c) (p ∷ ballots) x y v w ¬x≡v ¬y≡w
       , ((sim-x-y , sim-b-''-b-x-y) 
       ,  (P''yw , b''-y>w))))) 
 
-LemmaFour : (m : ℕ) 
-          → (c : NonEmptyCoalition m) 
-          → (votes : Votes n n>2 m) 
+LemmaFour : (m : ℕ)
+          → (c : SingletonCoalition m)
+          → (ballots : Votes n n>2 m)
           → SWF Result
-          → (x y : Fin n) 
-          → Decisive-a>b (Unwrap c) votes Result x y
           → (v w : Fin n)
-          → (CoalitionAgrees v w (Unwrap c) votes) 
-          → Result votes v w
-LemmaFour {Result = Result} m c ballots swf x y (c-x>y , inv-y>x , swf-x-y) v w with x Fin.≟ v
-... | true because ofʸ x≡v rewrite x≡v = 
-  CorollaryOne {Result = Result} m c ballots swf v y w (c-x>y , inv-y>x , swf-x-y)
-... | false because ofⁿ ¬x≡v with y Fin.≟ w 
-... | true because ofʸ y≡w rewrite y≡w = 
-  CorollaryTwo {Result = Result} m c ballots swf x w v (c-x>y , inv-y>x , swf-x-y)
-... | false because ofⁿ ¬y≡w 
-    with LemmaFourSimilar m (Unwrap c) ballots x y v w ¬x≡v ¬y≡w c-x>y 
+          → (Σ (Fin n) λ x → Σ (Fin n) λ y → 
+              Result ballots x y × CoalitionAgrees x y (c .proj₁) ballots)
+          → CoalitionAgrees v w (c .proj₁) ballots
+          → Result ballots v w
+LemmaFour m (c , mc) ballots swf v w (x , y , swf-x>y , ca-x>y) ca-v>w
+  with x Fin.≟ v | y Fin.≟ w
+... | true  because ofʸ  x≡v | false because ofⁿ ¬y≡w rewrite x≡v = 
+  CorollaryOne m {!   !} ballots swf v y w {!   !} ca-v>w
+... | false because ofⁿ ¬x≡v | true  because ofʸ  y≡w rewrite y≡w = 
+  CorollaryTwo m {!   !} ballots swf x w v {!   !} ca-v>w
+... | true  because ofʸ  x≡v | true  because ofʸ  y≡w rewrite x≡v | y≡w = swf-x>y 
+... | false because ofⁿ ¬x≡v | false because ofⁿ ¬y≡w 
+  with LemmaFourSimilar m c ballots x y v w ¬x≡v ¬y≡w ca-x>y 
 ... | b' , sim-b'-v-w , b'-v>x , b'' , sim-b-'-b''-x-w , sim-b-''-b-x-y , b''-y>w = 
-    λ _ → SWF.BinaryIIA swf ballots b' v w sim-b'-v-w 
+    SWF.BinaryIIA swf ballots b' v w sim-b'-v-w 
       (SWF.Transitive swf b' v x w (SWF.Pareto swf b' v x b'-v>x) 
         (SWF.BinaryIIA swf b' b'' x w sim-b-'-b''-x-w 
           (SWF.Transitive swf b'' x y w 
-            (SWF.BinaryIIA swf b'' ballots x y sim-b-''-b-x-y swf-x-y) 
-            (SWF.Pareto swf b'' y w b''-y>w))))
+            (SWF.BinaryIIA swf b'' ballots x y sim-b-''-b-x-y swf-x>y) 
+            (SWF.Pareto swf b'' y w b''-y>w)))) 
 
--- G is of length > 1
---    split G into two subsets
---    first subset is singleton coalition of the head
---    second subset is the tail
---    G1 has xPy and xPz
---    G2 has xPy and zPy
---    if SWF x z then G1 is decisive
---    else there exists part of G2 with zRx 
---    ¬ SWF x z is approximately zRx
---    zRx + xPy → zPy thus G2 is decisive
+LemmaFive : {m : ℕ}
+         → (ballots : Votes n n>2 m)
+         → SWF Result
+         → Σ (SingletonCoalition m) λ c → 
+          (Σ (Fin n) λ x → Σ (Fin n) λ y → 
+            Result ballots x y × CoalitionAgrees x y (c .proj₁) ballots)
+LemmaFive ballots swf = {!   !}
 
--- partition based on some arbitrary aPb
-
-LemmaFive : (m s : ℕ)
-          → (c : Coalition m)
-          → (MembersCount c ≡ (suc s))
-          → (ballots : Votes n n>2 m)
-          → SWF Result
-          → (Σ (Fin n) λ x → Σ (Fin n) λ y → 
-              Decisive-a>b c ballots Result x y)
-          → (Σ (SingletonCoalition m)
-              λ c → Decisive (c .proj₁) ballots Result)
-          ⊎ (Σ (Coalition m) 
-              λ c → MembersCount c ≡ s
-                  × (Σ (Fin n) λ x → Σ (Fin n) λ y → 
-                    Decisive-a>b c ballots Result x y))
-LemmaFive m zero c mc ballots swf (x , y , dec-x>y)
-  with LemmaFour m (c , Singleton→NonEmpty (c , mc)) ballots swf x y dec-x>y
-... | dec = inj₁ ((c , mc) , dec)
-LemmaFive {n} {s≤s (s≤s n>2)} m (suc s) c mc ballots swf 
-  (x , y , dec-x>y)
-  with FreshCandidate n (s≤s (s≤s n>2)) x y 
-... | z with LemmaFour m (c , {!   !}) ballots swf x y dec-x>y
-... | dec = inj₁ ({!   !} 
-    , (λ a b ca → {!   !}))
-
-LemmaSix : (m s : ℕ)
-          → (c : Coalition m) 
-          → (MembersCount c ≡ (suc s))
-          → (ballots : Votes n n>2 m)
-          → SWF Result
-          → (Σ (Fin n) λ x → Σ (Fin n) λ y → 
-              Decisive-a>b c ballots Result x y)
-          → Σ (SingletonCoalition m)
-              λ c → Decisive (c .proj₁) ballots Result
-LemmaSix {n} {s≤s (s≤s n>2)} zero s [] c [] swf dec-x>y = 
-  ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
-    (SWF.Pareto swf [] zero (suc zero) tt) 
-    (SWF.Pareto swf [] (suc zero) zero tt) )
-LemmaSix {n} {s≤s (s≤s n>2)} (suc m) zero c mc ballots swf (x , y , dec-x>y) 
-  rewrite mc = (c , mc) 
-             , LemmaFour (suc m) 
-                  (c , Singleton→NonEmpty (c , mc)) 
-                  ballots swf x y dec-x>y
-LemmaSix {n} {s≤s (s≤s n>2)} m (suc s) c mc ballots swf dec-x>y
-  with LemmaFive m (suc s) c mc ballots swf dec-x>y
-... | inj₁ dictator = dictator
-... | inj₂ (s-c , s-mc , s-dec-x>y)
-    = LemmaSix m s s-c s-mc ballots swf s-dec-x>y
 
 ArrowsTheorem : (m : ℕ) 
               → (ballots : Votes n n>2 m)
@@ -1008,5 +958,6 @@ ArrowsTheorem {n} {s≤s (s≤s n>2)} zero [] swf
   = ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
     (SWF.Pareto swf [] zero (suc zero) tt) 
     (SWF.Pareto swf [] (suc zero) zero tt))
-ArrowsTheorem (suc m) ballots swf 
-  = LemmaSix (suc m) m {!   !} {!   !} ballots swf {!   !} 
+ArrowsTheorem (suc m) ballots swf with LemmaFive ballots swf
+... | pivot , dec-x>y
+  = pivot , (λ a b pivot-a>b → LemmaFour (suc m) pivot ballots swf a b dec-x>y pivot-a>b)
