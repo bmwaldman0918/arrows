@@ -53,7 +53,11 @@ LemmaTwoAlter : {_R_ : Fin n → Fin n → Set}
               → (P head y x) ⊎ (P head x z)
               → ¬ (x ≡ z) 
               → ¬ (y ≡ z)
-              → Σ (Fin n → Fin n → Set) λ _R'_ → Σ (Preference n n>2 _R'_) λ P' → R→Bool head x z ≡ R→Bool P' x z × R→Bool P' x y ≡ R→Bool head x y × P P' y z
+              → Σ (Fin n → Fin n → Set) λ _R'_ 
+                → Σ (Preference n n>2 _R'_) 
+                  λ P' 
+                    → P→Bool head x z ≡ P→Bool P' x z 
+                    × P→Bool P' x y ≡ P→Bool head x y × P P' y z
 LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z y
 ... | inj₁ zRy = R' head y z ¬y≡z zRy , P' head y z zRy ¬y≡z 
                                       , agrees-x-z head x y z yPx⊎xPz ¬x≡z ¬y≡z zRy 
@@ -223,9 +227,11 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
               → ¬ (x ≡ z) 
               → (¬y≡z : ¬ (y ≡ z))
               → (zRy : z R y)
-              → R→Bool head x z ≡ R→Bool (P' head y z zRy ¬y≡z) x z
-    agrees-x-z head x y z _ ¬x≡z ¬y≡z zRy with R-dec head x z | (R'-dec head y z zRy ¬y≡z) x z
-    ... | inj₁ _ | inj₁ _ = Eq.refl
+              → P→Bool head x z ≡ P→Bool (P' head y z zRy ¬y≡z) x z
+    agrees-x-z head x y z _ ¬x≡z ¬y≡z zRy with R-dec head z x | (R'-dec head y z zRy ¬y≡z) z x
+    ... | inj₁ zRx | xz' = {!   !}
+    ... | inj₂ xPz | xz' = {!   !}
+    {- ... | inj₁ _ | inj₁ _ = Eq.refl
     ... | inj₁ xRz | inj₂ ¬xR'z = ⊥-elim (¬xR'z (original x z ¬x≡z xRz))
     ... | inj₂ zPx | inj₁ (zRx∧yRx→zR'x .x .z x≡z _ _) = ⊥-elim (¬x≡z x≡z)
     ... | inj₂ zPx | inj₁ (original .x .z _ xRz) = ⊥-elim (zPx xRz)
@@ -234,15 +240,17 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
     ... | inj₂ _ | inj₂ _ = Eq.refl
     agrees-x-z head x y z (inj₁ yPx) ¬x≡z ¬y≡z zRy | inj₂ zPx | inj₁ (yRz .x .z xRy _) = ⊥-elim (yPx xRy)
     agrees-x-z head x y z (inj₂ xPz) ¬x≡z ¬y≡z zRy | inj₂ zPx | inj₁ (yRz .x .z xRy _) = ⊥-elim (xPz (P→R {v = head} zPx))
-    
+    -}
     agrees-x-y : {_R_ : Fin n → Fin n → Set} 
               → (head : Preference n n>2 _R_)
               → (x y z : Fin n)
               → ¬ (x ≡ z) 
               → (¬y≡z : ¬ (y ≡ z))
               → (zRy : z R y)
-              → R→Bool (P' head y z zRy ¬y≡z) x y ≡ R→Bool head x y
-    agrees-x-y head x y z ¬x≡z ¬y≡z zRy with R-dec head x y | (R'-dec head y z zRy ¬y≡z) x y
+              → P→Bool (P' head y z zRy ¬y≡z) x y ≡ P→Bool head x y
+    agrees-x-y head x y z ¬x≡z ¬y≡z zRy with R-dec head y x | (R'-dec head y z zRy ¬y≡z) y x 
+    ... | inj₁ yRx | yx' = {!   !}
+    ... | inj₂ xPy | yx' = {!   !} {-
     ... | inj₁ _ | inj₁ _ = Eq.refl
     ... | inj₂ _ | inj₂ _ = Eq.refl
     ... | inj₁ xRy | inj₂ yP'x = ⊥-elim (yP'x (original x y ¬x≡z xRy))
@@ -251,7 +259,7 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
     ... | inj₂ yPx | inj₁ (y>z .x .y ¬x≡z xRy zPy) = ⊥-elim (yPx xRy)
     ... | inj₂ yPx | inj₁ (zRz .x .y xRz y≡z) = ⊥-elim (¬y≡z y≡z)
     ... | inj₂ yPx | inj₁ (yRz .x .y xRy y≡z) = ⊥-elim (yPx xRy)
-
+    -}
 ... | inj₂ yPz = _R_ , head , Eq.refl , Eq.refl , yPz
 
 LemmaTwoSimilar : (m : ℕ) 
@@ -366,8 +374,8 @@ LemmaThreeAlter : {_R_ : Fin n → Fin n → Set}
               → ¬ (y ≡ z)
               → Σ (Fin n → Fin n → Set) λ _R'_ 
                 → Σ (Preference n n>2 _R'_) 
-                  λ P' → R→Bool head z y ≡ R→Bool P' z y 
-                       × R→Bool P' x y ≡ R→Bool head x y 
+                  λ P' → P→Bool head z y ≡ P→Bool P' z y 
+                       × P→Bool P' x y ≡ P→Bool head x y 
                        × P P' z x
 LemmaThreeAlter {_R_ = _R_} head x y z yPx⊎zPy ¬x≡z ¬y≡z with R-dec head x z
 LemmaThreeAlter {_R_ = _R_} head x y z (inj₁ yPx) ¬x≡z ¬y≡z 
@@ -498,16 +506,18 @@ LemmaThreeAlter {_R_ = _R_} head x y z (inj₁ yPx) ¬x≡z ¬y≡z
               → (¬x≡z : ¬ (x ≡ z))
               → (¬y≡z : ¬ (y ≡ z))
               → (P head y x)
-              → R→Bool (P' head x y z ¬x≡z ¬y≡z) x y ≡ R→Bool head x y
-    agrees-x-y head x y z ¬x≡z ¬y≡z yPx with R-dec head x y 
-      | R-dec (P' head x y z ¬x≡z ¬y≡z) x y 
+              → P→Bool (P' head x y z ¬x≡z ¬y≡z) x y ≡ P→Bool head x y
+    agrees-x-y head x y z ¬x≡z ¬y≡z yPx with R-dec head y x 
+      | R-dec (P' head x y z ¬x≡z ¬y≡z) y x
+    ... | inj₁ yRx | xy' = {!   !}
+    ... | inj₂ xPy | xy' = {!   !} {-
     ... | inj₁ _ | inj₁ _ = Eq.refl
     ... | inj₁ xRy | inj₂ yP'x = ⊥-elim (yPx xRy)
     ... | inj₂ yPx | inj₁ (original .x .y _ ¬y≡y _) = ⊥-elim (¬y≡y Eq.refl)
     ... | inj₂ yPx | inj₁ (y-best .x .y x≡y) = 
       ⊥-elim ((P↛≡ {v = head} yPx) (Eq.sym x≡y))
     ... | inj₂ yPx | inj₁ (z-second .x .y _ ¬y≡y) = ⊥-elim (¬y≡y Eq.refl)
-    ... | inj₂ _ | inj₂ _ = Eq.refl
+    ... | inj₂ _ | inj₂ _ = Eq.refl -}
 
     agrees-z-y : {_R_ : Fin n → Fin n → Set} 
               → (head : Preference n n>2 _R_)
@@ -516,15 +526,17 @@ LemmaThreeAlter {_R_ = _R_} head x y z (inj₁ yPx) ¬x≡z ¬y≡z
               → (¬y≡z : ¬ (y ≡ z))
               → (x R z)
               → (P head y x)
-              → R→Bool head z y ≡ R→Bool (P' head x y z ¬x≡z ¬y≡z) z y
-    agrees-z-y head x y z ¬x≡z ¬y≡z xRz yPx with R-dec head z y 
-      | R-dec (P' head x y z ¬x≡z ¬y≡z) z y 
+              → P→Bool head z y ≡ P→Bool (P' head x y z ¬x≡z ¬y≡z) z y
+    agrees-z-y head x y z ¬x≡z ¬y≡z xRz yPx with R-dec head y z
+      | R-dec (P' head x y z ¬x≡z ¬y≡z) y z 
+    ... | inj₁ yRz | yz' = {!   !}
+    ... | inj₂ zPy | yz' = {!   !} {-
     ... | inj₁ _ | inj₁ _ = Eq.refl
     ... | inj₁ zRy | inj₂ yP'z = ⊥-elim (yPx (R-trans head x z y xRz zRy))
     ... | inj₂ _ | inj₁ (original .z .y _ ¬y≡y _) = ⊥-elim (¬y≡y Eq.refl)
     ... | inj₂ _ | inj₁ (y-best .z .y z≡y) = ⊥-elim (¬y≡z (Eq.sym z≡y))
     ... | inj₂ _ | inj₁ (z-second .z .y x₁ ¬y≡y) = ⊥-elim (¬y≡y Eq.refl)
-    ... | inj₂ _ | inj₂ _ = Eq.refl
+    ... | inj₂ _ | inj₂ _ = Eq.refl -}
                                      
 LemmaThreeAlter {_R_ = _R_} head x y z (inj₂ zPy) ¬x≡z ¬y≡z 
   | inj₁ xRz = (R' head x y z ¬x≡z ¬y≡z) 
@@ -610,14 +622,14 @@ LemmaThreeAlter {_R_ = _R_} head x y z (inj₂ zPy) ¬x≡z ¬y≡z
               → (x y z : Fin n)
               → (¬x≡z : ¬ (x ≡ z))
               → (¬y≡z : ¬ (y ≡ z))
-              → R→Bool (P' head x y z ¬x≡z ¬y≡z) x y ≡ R→Bool head x y
-    agrees-x-y head x y z ¬x≡z ¬y≡z with R-dec head x y 
+              → P→Bool (P' head x y z ¬x≡z ¬y≡z) x y ≡ P→Bool head x y
+    agrees-x-y head x y z ¬x≡z ¬y≡z  = {!   !} {-with R-dec head x y 
       | R-dec (P' head x y z ¬x≡z ¬y≡z) x y 
     ... | inj₁ _   | inj₁ _ = Eq.refl
     ... | inj₁ xRy | inj₂ yP'x = ⊥-elim (yP'x (original x y ¬y≡z xRy))
     ... | inj₂ yPx | inj₁ (original .x .y _ xRy) = ⊥-elim (yPx xRy)
     ... | inj₂ yPx | inj₁ (z-best .x .y x≡z) = ⊥-elim (¬x≡z x≡z)
-    ... | inj₂ _ | inj₂ _ = Eq.refl
+    ... | inj₂ _ | inj₂ _ = Eq.refl -}
 
     agrees-z-y : {_R_ : Fin n → Fin n → Set} 
               → (head : Preference n n>2 _R_)
@@ -625,14 +637,14 @@ LemmaThreeAlter {_R_ = _R_} head x y z (inj₂ zPy) ¬x≡z ¬y≡z
               → (¬x≡z : ¬ (x ≡ z))
               → (¬y≡z : ¬ (y ≡ z))
               → (zPy : P head z y)
-              → R→Bool head z y ≡ R→Bool (P' head x y z ¬x≡z ¬y≡z) z y
-    agrees-z-y head x y z ¬x≡z ¬y≡z zPy with R-dec head z y 
+              → P→Bool head z y ≡ P→Bool (P' head x y z ¬x≡z ¬y≡z) z y
+    agrees-z-y head x y z ¬x≡z ¬y≡z zPy = {!   !} {-with R-dec head z y 
       | R-dec (P' head x y z ¬x≡z ¬y≡z) z y 
     ... | inj₁ _   | inj₁ _ = Eq.refl
     ... | inj₁ zRy | inj₂ yP'z = ⊥-elim (yP'z (z-best z y Eq.refl))
     ... | inj₂ yPz | _ with R-complete head z y 
     ... | inj₁ zRy = ⊥-elim (yPz zRy)
-    ... | inj₂ yRz = ⊥-elim (zPy yRz)
+    ... | inj₂ yRz = ⊥-elim (zPy yRz) -}
     
 ... | inj₂ zPx = _R_ , head , Eq.refl , Eq.refl , zPx
     
@@ -707,24 +719,23 @@ LemmaFourAlter : {_R_ : Fin n → Fin n → Set}
                → ¬ (y ≡ w)
                → Σ (Fin n → Fin n → Set) 
                 λ _R'_ → Σ (Preference n n>2 _R'_) 
-                  λ P' → R→Bool head v w ≡ R→Bool P' v w
+                  λ P' → P→Bool head v w ≡ P→Bool P' v w
                   × P P' v x
                   × Σ (Fin n → Fin n → Set) 
                     λ _R''_ → Σ (Preference n n>2 _R''_) 
-                      λ P'' → (R→Bool P' x w ≡ R→Bool P'' x w
-                      × R→Bool P'' x y ≡ R→Bool head x y
+                      λ P'' → (P→Bool P' x w ≡ P→Bool P'' x w
+                      × P→Bool P'' x y ≡ P→Bool head x y
                       × P P'' y w)
 LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w 
   with R-dec head x v | R-dec head w y 
 LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w | inj₁ xRv | inj₁ wRy = {!   !}
 LemmaFourAlter {_R_ = _R_} head x y v w ¬x≡v ¬y≡w | inj₁ xRv | inj₂ yPw = 
   {!   !} , {!   !} , {!   !} , {!   !} , _R_ , head , {!   !} , refl , yPw
-
 LemmaFourAlter {n = n} {n>2 = n>2} {_R_ = _R_} 
   head x y v w ¬x≡v ¬y≡w | inj₂ vPx | inj₁ wRy 
   with R-dec head x w | R-dec head x y
-... | inj₂ wPx | inj₂ yPx = 
-   _R_ , head , refl , vPx , _R'_ , P' , agrees-x-w , agrees-x-y 
+... | inj₂ wPx | inj₂ yPx =
+   _R_ , head , refl , vPx , _R'_ , P' , {!   !} , {!   !}
        , λ {(y-first .y) → ¬y≡w refl
           ; (orig .w .y ¬y≡y _) → ¬y≡y refl}
    where
@@ -768,57 +779,64 @@ LemmaFourAlter {n = n} {n>2 = n>2} {_R_ = _R_}
     P' = record { R-trans = R'-trans 
        ; R-complete = R'-complete 
        ; R-dec = R'-dec }
-    
-    agrees-x-w : (R→Bool head x w) ≡ (R→Bool P' x w)
+    {-
+    agrees-x-w : (P→Bool head x w) ≡ (P→Bool P' x w)
     agrees-x-w with R-dec head x w | R-dec P' x w
     ... | inj₁ xRw | _ = ⊥-elim (wPx xRw)
     ... | inj₂ wPx | inj₁ (y-first x) = ⊥-elim (yPx (R-refl head y y refl))
     ... | inj₂ wPx | inj₁ (orig .x .w _ xRw) = ⊥-elim (wPx xRw)
-    ... | inj₂ wPx | inj₂ wP'x = refl
+    ... | inj₂ wPx | inj₂ wP'x = refl 
 
-    agrees-x-y : (R→Bool P' x y) ≡ false
+    agrees-x-y : (P→Bool P' x y) ≡ false
     agrees-x-y with R-dec P' x y
     ... | inj₁ (y-first .x) = ⊥-elim (yPx (R-refl head y y refl))
     ... | inj₁ (orig .x .y ¬y≡y _) = ⊥-elim (¬y≡y refl)
-    ... | inj₂ _ = refl
+    ... | inj₂ _ = refl-}
 
 ... | inj₁ xRw | f = 
   _R_ , head , refl , vPx , {!   !} , {!   !} , {!   !} , {!   !} , {!   !}
 ... | inj₂ wPx | inj₁ xRy with R-dec head v w 
-... | inj₁ vRw = -- R'' x > y | y > w
+... | inj₁ vRw = {!   !} {- R'' x > y | y > w
   _R'_ , P' , agrees-v-w 
-  , (λ {(v-first .v) → ¬x≡v refl
+  , (λ {(v-first .v _) → ¬x≡v refl
       ; (orig .x .v _ ¬v≡v _) → ¬v≡v refl
       ; (w-last .x ¬v≡w) → ¬v≡w refl}) 
-  , {!   !} , {!   !} , {!   !} , {!   !} , {!   !}
+  , _R'_ , P' , refl , agrees-x-y 
+  , λ {(v-first .y ¬v≡w) → ¬v≡w refl
+     ; (orig .w .y ¬w≡w _ _) → ¬w≡w refl
+     ; (w-last .w _) → ¬y≡w refl}
   where
     data _R'_ : Fin n → Fin n → Set where
-      v-first : ∀ a → v R' a
+      v-first : ∀ a 
+              → ¬ (v ≡ w) 
+              → v R' a
+
       orig    : ∀ a b
               → ¬ (a ≡ w)
               → ¬ (b ≡ v)
               → a R  b
               → a R' b
+
       w-last : ∀ a 
              → ¬ (v ≡ w) 
              → a R' w
     
     R'-trans : (a b c : Fin n) → a R' b → b R' c → a R' c
-    R'-trans a b c (v-first .a) (v-first .c) = v-first c
-    R'-trans a b c (v-first .b) (orig .b .c ¬b≡w ¬c≡v bRc) = v-first c
-    R'-trans a b c (orig .a .b ¬a≡w ¬b≡b _) (v-first .c) = ⊥-elim (¬b≡b refl)
+    R'-trans a b c (v-first .a ¬v≡w) (v-first .c _) = v-first c ¬v≡w
+    R'-trans a b c (v-first .b ¬v≡w) (orig .b .c ¬b≡w ¬c≡v bRc) = v-first c ¬v≡w
+    R'-trans a b c (orig .a .b ¬a≡w ¬b≡b _) (v-first .c _) = ⊥-elim (¬b≡b refl)
     R'-trans a b c (orig .a .b ¬a≡w ¬b≡v aRb) (orig .b .c ¬b≡w ¬c≡v bRc) = 
       orig a c ¬a≡w ¬c≡v (R-trans head a b c aRb bRc)
-    R'-trans a b c (v-first .b) (w-last .b ¬a≡c) = v-first c
+    R'-trans a b c (v-first .b ¬v≡w) (w-last .b ¬a≡c) = v-first c ¬v≡w
     R'-trans a b c (orig .a .b ¬a≡w ¬b≡v aRb) (w-last .b ¬a≡c) = w-last a ¬a≡c
-    R'-trans a b c (w-last .a ¬b≡b) (v-first .c) = ⊥-elim (¬b≡b refl)
+    R'-trans a b c (w-last .a ¬b≡b) (v-first .c _) = ⊥-elim (¬b≡b refl)
     R'-trans a b c (w-last .a ¬v≡b) (orig .b .c ¬b≡b _ _) = ⊥-elim (¬b≡b refl)
     R'-trans a b c (w-last .a ¬v≡b) (w-last .b _) = w-last a ¬v≡b
 
     R'-complete : (a b : Fin n) → (a R' b) ⊎ (b R' a)
     R'-complete a b with a Fin.≟ v | b Fin.≟ v 
-    ... | true because  ofʸ  a≡v | _ rewrite Eq.sym a≡v = inj₁ (v-first b)
-    ... | _ | true because ofʸ b≡v rewrite Eq.sym b≡v = inj₂ (v-first a)
+    ... | true because  ofʸ  a≡v | _ rewrite Eq.sym a≡v = inj₁ (v-first b {!   !})
+    ... | _ | true because ofʸ b≡v rewrite Eq.sym b≡v = inj₂ (v-first a {!   !})
     ... | false because ofⁿ ¬a≡v | false because ofⁿ ¬b≡v 
       with a Fin.≟ w | b Fin.≟ w 
     ... | true because ofʸ a≡w | _ rewrite Eq.sym a≡w = 
@@ -832,27 +850,27 @@ LemmaFourAlter {n = n} {n>2 = n>2} {_R_ = _R_}
 
     R'-dec : (a b : Fin n) → (a R' b) ⊎ ¬ (a R' b)
     R'-dec a b with a Fin.≟ v 
-    ... | true  because ofʸ  a≡v rewrite Eq.sym a≡v = inj₁ (v-first b)
+    ... | true  because ofʸ  a≡v rewrite Eq.sym a≡v = inj₁ (v-first b {!   !})
     ... | false because ofⁿ ¬a≡v with a Fin.≟ w | b Fin.≟ w | b Fin.≟ v 
     ... | true because ofʸ a≡w | false because ofⁿ ¬b≡w | _ rewrite a≡w
-      = inj₂ (λ {(v-first .b) → ¬a≡v refl
+      = inj₂ (λ {(v-first .b _) → ¬a≡v refl
                ; (orig .w .b ¬w≡w _ _) → ¬w≡w refl
                ; (w-last .w ¬v≡b) → ¬b≡w refl})
     ... | true because ofʸ a≡w | true  because ofʸ  b≡w | _
       rewrite a≡w | b≡w = inj₁ (w-last w (λ v≡w → ¬a≡v (Eq.sym v≡w)))
     ... | false because ofⁿ ¬a≡w | false because ofⁿ ¬b≡w | true  because ofʸ  b≡v 
-      = inj₂ (λ {(v-first .b) → ¬a≡v refl
+      = inj₂ (λ {(v-first .b _) → ¬a≡v refl
                ; (orig .a .b _ ¬b≡v _) → ¬b≡v b≡v
                ; (w-last .a ¬v≡b) → ¬v≡b (Eq.sym b≡v)})
     ... | false because ofⁿ ¬a≡w | true because ofʸ b≡w | false because ofⁿ ¬b≡v 
       rewrite b≡w = inj₁ (w-last a (λ v≡w → ¬b≡v (Eq.sym v≡w)))
     ... | false because ofⁿ ¬a≡w | true because ofʸ b≡w | true  because ofʸ  b≡v 
-      = inj₂ λ {(v-first .b) → ¬a≡v refl
+      = inj₂ λ {(v-first .b _) → ¬a≡v refl
               ; (orig .a .b _ ¬b≡v _) → ¬b≡v b≡v
               ; (w-last .a ¬v≡b) → ¬v≡b (Eq.sym b≡v)}
     ... | false because ofⁿ ¬a≡w | false because ofⁿ ¬b≡w | false because ofⁿ ¬b≡v with R-dec head a b 
     ... | inj₁ aRb = inj₁ (orig a b ¬a≡w ¬b≡v aRb)
-    ... | inj₂ aPb = inj₂ (λ {(v-first .b) → ¬a≡v refl
+    ... | inj₂ aPb = inj₂ (λ {(v-first .b _) → ¬a≡v refl
                             ; (orig .a .b _ _ aRb) → aPb aRb
                             ; (w-last .a _) → ¬b≡w refl})
 
@@ -861,11 +879,12 @@ LemmaFourAlter {n = n} {n>2 = n>2} {_R_ = _R_}
        ; R-complete = R'-complete 
        ; R-dec = R'-dec }
 
-    agrees-v-w : true ≡ R→Bool P' v w
-    agrees-v-w with R-dec P' v w 
-    ... | inj₁ _ = refl
-    ... | inj₂ wP'v = ⊥-elim (wP'v (v-first w))
-    
+    agrees-v-w : true ≡ P→Bool P' v w
+    agrees-v-w = ?
+
+    agrees-x-y : P→Bool P' x y ≡ true
+    agrees-x-y = ?
+    -}
 ... | inj₂ wPv = 
   {!   !} , {!   !} , {!   !} , {!   !} , {!   !} , {!   !} , {!   !} , {!   !} , {!   !}
 
@@ -949,15 +968,15 @@ LemmaFive : {m : ℕ}
 LemmaFive ballots swf = {!   !}
 
 
+
 ArrowsTheorem : (m : ℕ) 
               → (ballots : Votes n n>2 m)
               → SWF Result
-              → Σ (SingletonCoalition m)
-                λ c → Decisive (c .proj₁) ballots Result        
+              → Dictator ballots Result        
 ArrowsTheorem {n} {s≤s (s≤s n>2)} zero [] swf 
   = ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
     (SWF.Pareto swf [] zero (suc zero) tt) 
     (SWF.Pareto swf [] (suc zero) zero tt))
 ArrowsTheorem (suc m) ballots swf with LemmaFive ballots swf
 ... | pivot , dec-x>y
-  = pivot , (λ a b pivot-a>b → LemmaFour (suc m) pivot ballots swf a b dec-x>y pivot-a>b)
+    = pivot , (λ a b pivot-a>b → LemmaFour (suc m) pivot ballots swf a b dec-x>y pivot-a>b) 

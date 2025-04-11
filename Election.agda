@@ -20,12 +20,8 @@ private
         a b c : Fin n
         Result : Fin n → Fin n → Set
 
--- SWF v a b represents a strict preference for a over b given a set of votes v
--- SWF : {m n : ℕ} → {n>2 : n ℕ.> 2} → (v : Votes n n>2 m) → Set₁
--- SWF {n = n} v = Fin n → Fin n → Set
-
--- since an SWF (or social welfare function) represents a strict preference,
--- we postulate that it is decidable and transitive but not complete
+-- since an SWF (or social welfare function) represents a final ranking of candidates,
+-- we postulate that it is decidable, transitive and complete
 
 record SWF {n : ℕ} {n>2 : n ℕ.> 2} 
   (Result : {m : ℕ} → Votes n n>2 m → Fin n → Fin n → Set) : Set₁ where
@@ -36,6 +32,7 @@ record SWF {n : ℕ} {n>2 : n ℕ.> 2}
                 → (a b : Fin n)   
                 → ElectionAgrees v a b 
                 → Result v a b 
+
     BinaryIIA   : {m : ℕ} 
                 → (v v' : Votes n n>2 m)
                 → (a b : Fin n)
