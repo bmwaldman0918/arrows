@@ -61,7 +61,7 @@ LemmaTwoAlter : {_R_ : Fin n → Fin n → Set}
 LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z y
 ... | inj₁ zRy = R' head y z ¬y≡z zRy , P' head y z zRy ¬y≡z 
                                       , agrees-x-z head x y z yPx⊎xPz ¬x≡z ¬y≡z zRy 
-                                      , agrees-x-y head x y z ¬x≡z ¬y≡z zRy 
+                                      , agrees-x-y head x y z yPx⊎xPz ¬x≡z ¬y≡z zRy 
                                       , λ {(zRx∧yRx→zR'x .z .y _ yPy zRy) → P↛≡ {v = head} yPy Eq.refl
                                         ; (original .z .y ¬z≡z zRy) → ¬z≡z Eq.refl
                                         ; (y>z .z .y ¬z≡z _ _) → ¬z≡z Eq.refl 
@@ -229,28 +229,39 @@ LemmaTwoAlter {_R_ = _R_} head x y z yPx⊎xPz ¬x≡z ¬y≡z with R-dec head z
               → (zRy : z R y)
               → P→Bool head x z ≡ P→Bool (P' head y z zRy ¬y≡z) x z
     agrees-x-z head x y z _ ¬x≡z ¬y≡z zRy with R-dec head z x | (R'-dec head y z zRy ¬y≡z) z x
-    ... | inj₁ zRx | xz' = {!   !}
-    ... | inj₂ xPz | xz' = {!   !}
-    {- ... | inj₁ _ | inj₁ _ = Eq.refl
-    ... | inj₁ xRz | inj₂ ¬xR'z = ⊥-elim (¬xR'z (original x z ¬x≡z xRz))
-    ... | inj₂ zPx | inj₁ (zRx∧yRx→zR'x .x .z x≡z _ _) = ⊥-elim (¬x≡z x≡z)
-    ... | inj₂ zPx | inj₁ (original .x .z _ xRz) = ⊥-elim (zPx xRz)
-    ... | inj₂ zPx | inj₁ (y>z .x .z _ _ zPz) = ⊥-elim (zPz (R-refl head z z Eq.refl))
-    ... | inj₂ zPx | inj₁ (zRz .x .z xRz _) = ⊥-elim (zPx xRz)
-    ... | inj₂ _ | inj₂ _ = Eq.refl
-    agrees-x-z head x y z (inj₁ yPx) ¬x≡z ¬y≡z zRy | inj₂ zPx | inj₁ (yRz .x .z xRy _) = ⊥-elim (yPx xRy)
-    agrees-x-z head x y z (inj₂ xPz) ¬x≡z ¬y≡z zRy | inj₂ zPx | inj₁ (yRz .x .z xRy _) = ⊥-elim (xPz (P→R {v = head} zPx))
-    -}
+    ... | inj₁ zRx | inj₁ zR'x = refl
+    ... | inj₂ xPz | inj₁ (zRx∧yRx→zR'x .z .x _ yPx zRx) = ⊥-elim (xPz zRx)
+    ... | inj₂ xPz | inj₁ (original .z .x ¬z≡z _) = ⊥-elim (¬z≡z refl)
+    ... | inj₂ xPz | inj₁ (y>z .z .x ¬z≡z _ _) = ⊥-elim (¬z≡z refl)
+    ... | inj₂ xPz | inj₁ (zRz .z .x _ x≡z) = ⊥-elim (¬x≡z x≡z)
+    ... | inj₂ xPz | inj₁ (yRz .z .x _ x≡z) = ⊥-elim (¬x≡z x≡z)
+    ... | inj₂ xPz | inj₂ xP'z = refl
+    agrees-x-z head x y z (inj₁ yPx) ¬x≡z ¬y≡z zRy | inj₁ zRx | inj₂ xP'z 
+      = ⊥-elim (xP'z (zRx∧yRx→zR'x z x refl yPx zRx))
+    agrees-x-z head x y z (inj₂ xPz) ¬x≡z ¬y≡z zRy | inj₁ zRx | inj₂ xP'z 
+      = ⊥-elim (xPz zRx)
+
     agrees-x-y : {_R_ : Fin n → Fin n → Set} 
               → (head : Preference n n>2 _R_)
               → (x y z : Fin n)
-              → ¬ (x ≡ z) 
+              → (P head y x) ⊎ (P head x z)
+              → ¬ (x ≡ z)
               → (¬y≡z : ¬ (y ≡ z))
               → (zRy : z R y)
               → P→Bool (P' head y z zRy ¬y≡z) x y ≡ P→Bool head x y
-    agrees-x-y head x y z ¬x≡z ¬y≡z zRy with R-dec head y x | (R'-dec head y z zRy ¬y≡z) y x 
-    ... | inj₁ yRx | yx' = {!   !}
-    ... | inj₂ xPy | yx' = {!   !} {-
+    agrees-x-y head x y z _ ¬x≡z ¬y≡z zRy with R-dec head y x | (R'-dec head y z zRy ¬y≡z) y x 
+    ... | inj₁ yRx | inj₁ yR'x = refl
+    ... | inj₁ yRx | inj₂ xP'y = ⊥-elim (xP'y (original y x ¬y≡z yRx))
+    ... | inj₂ xPy | inj₁ (zRx∧yRx→zR'x .y .x y≡z _ _) = ⊥-elim (¬y≡z y≡z)
+    ... | inj₂ xPy | inj₁ (original .y .x _ yRx) = ⊥-elim (xPy yRx)
+    ... | inj₂ xPy | inj₁ (zRz .y .x _ x≡z) = ⊥-elim (¬x≡z x≡z)
+    ... | inj₂ xPy | inj₁ (yRz .y .x _ x≡z) = ⊥-elim (¬x≡z x≡z)
+    ... | inj₂ xPy | inj₂ xP'y = refl
+    agrees-x-y head x y z (inj₁ yPx) ¬x≡z ¬y≡z zRy 
+      | inj₂ xPy | inj₁ (y>z .y .x _ _ zPx) = ⊥-elim (yPx (P→R {v = head} xPy))
+    agrees-x-y head x y z (inj₂ xPz) ¬x≡z ¬y≡z zRy 
+      | inj₂ xPy | inj₁ (y>z .y .x _ _ zPx) = ⊥-elim (zPx (P→R {v = head} xPz))
+     {-
     ... | inj₁ _ | inj₁ _ = Eq.refl
     ... | inj₂ _ | inj₂ _ = Eq.refl
     ... | inj₁ xRy | inj₂ yP'x = ⊥-elim (yP'x (original x y ¬x≡z xRy))
@@ -979,4 +990,4 @@ ArrowsTheorem {n} {s≤s (s≤s n>2)} zero [] swf
     (SWF.Pareto swf [] (suc zero) zero tt))
 ArrowsTheorem (suc m) ballots swf with LemmaFive ballots swf
 ... | pivot , dec-x>y
-    = pivot , (λ a b pivot-a>b → LemmaFour (suc m) pivot ballots swf a b dec-x>y pivot-a>b) 
+    = pivot , (λ a b pivot-a>b → LemmaFour (suc m) pivot ballots swf a b dec-x>y pivot-a>b)  
