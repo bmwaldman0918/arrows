@@ -104,3 +104,116 @@ module PreferenceEquality where
                → Set
   ≡-Preference p p' = ∀ x y → R→Bool p x y ≡ R→Bool p' x y
   
+Alter-Z-Last : {_R_ : Fin n → Fin n → Set}
+              → (p : Preference n n>2 _R_)
+              → (z : Fin n)
+              → Σ (Fin n → Fin n → Set) λ _R'_ 
+                → Σ (Preference n n>2 _R'_) 
+                  λ p' → (∀ a   → ¬ a ≡ z → P p' a z)
+                       × (∀ x y → ¬ x ≡ z → ¬ y ≡ z
+                                → (x R y → x R' y)
+                                × (x R' y → x R y))
+Alter-Z-Last {n = n} {n>2 = n>2} {_R_ = _R_} p z 
+  = _R'_ , (p' , (λ {a ¬a≡z (z-last .a) → ¬a≡z Eq.refl
+                   ; a ¬a≡z (original .z .a ¬z≡z _) → ¬z≡z Eq.refl}) 
+               , agree-non-z) 
+  where
+    data _R'_ : Fin n → Fin n → Set where
+      z-last   : ∀ a                     → a R' z 
+      original : ∀ a b → ¬ a ≡ z → a R b → a R' b
+      
+    R'-trans : ∀ a b c → a R' b → b R' c → a R' c
+    R'-trans a b c _ (z-last .b) = z-last a
+    R'-trans a b c (z-last .a) (original .b .c ¬z≡z _) = ⊥-elim (¬z≡z Eq.refl)
+    R'-trans a b c (original .a .b ¬a≡z aRb) (original .b .c _ bRc) 
+      = original a c ¬a≡z (R-trans p a b c aRb bRc)
+
+    R'-complete : ∀ a b → (a R' b) ⊎ (b R' a)
+    R'-complete a b with a Fin.≟ z | b Fin.≟ z | R-complete p a b 
+    ... | false because ofⁿ ¬a≡z | _ | inj₁ aRb 
+      = inj₁ (original a b ¬a≡z aRb)
+    ... | false because ofⁿ ¬a≡z | false because ofⁿ ¬b≡z | inj₂ bRa 
+      = inj₂ (original b a ¬b≡z bRa)
+    ... | _ | true because ofʸ b≡z | _ rewrite b≡z = inj₁ (z-last a)
+    ... | true because ofʸ a≡z | _ | _ rewrite a≡z = inj₂ (z-last b)
+    
+    R'-dec : ∀ a b → (a R' b) ⊎ ¬ (a R' b)
+    R'-dec a b with a Fin.≟ z | b Fin.≟ z | R-dec p a b 
+    ... | false because ofⁿ ¬a≡z | _ | inj₁ aRb 
+      = inj₁ (original a b ¬a≡z aRb)
+    ... | false because ofⁿ ¬a≡z | false because ofⁿ ¬b≡z | inj₂ bPa 
+      = inj₂ (λ {(z-last .a) → ¬b≡z Eq.refl
+               ; (original .a .b _ aRb) → bPa aRb})
+    ... | _ | true  because ofʸ  b≡z | _ rewrite b≡z = inj₁ (z-last a)
+    ... | true because ofʸ a≡z | false because ofⁿ ¬b≡z | _ rewrite a≡z 
+      = inj₂ (λ {(z-last .z) → ¬b≡z Eq.refl
+               ; (original .z .b ¬z≡z _) → ¬z≡z Eq.refl})
+
+    p' : Preference n n>2 _R'_
+    p' = record { 
+         R-trans    = R'-trans 
+       ; R-complete = R'-complete 
+       ; R-dec      = R'-dec }
+    
+    agree-non-z : ∀ x y → (¬ x ≡ z) → (¬ y ≡ z) 
+                → (x R y → x R' y) × (x R' y → x R y)
+    agree-non-z x y ¬x≡z ¬y≡z = (λ xRy → original x y ¬x≡z xRy) 
+                              , (λ {(z-last .x) → ⊥-elim (¬y≡z Eq.refl)
+                                  ; (original .x .y _ xRy) → xRy})
+
+Alter-Z-First : {_R_ : Fin n → Fin n → Set}
+              → (p : Preference n n>2 _R_)
+              → (z : Fin n)
+              → Σ (Fin n → Fin n → Set) λ _R'_ 
+                → Σ (Preference n n>2 _R'_) 
+                  λ p' → (∀ a   → ¬ a ≡ z → P p' z a)
+                       × (∀ x y → ¬ x ≡ z → ¬ y ≡ z
+                                → (x R y → x R' y)
+                                × (x R' y → x R y))
+Alter-Z-First {n = n} {n>2 = n>2} {_R_ = _R_} p z 
+  = _R'_ , (p' , (λ {a ¬a≡z (z-first .a) → ¬a≡z Eq.refl
+                   ; a ¬a≡z (original .a .z ¬z≡z _) → ¬z≡z Eq.refl}) 
+               , agree-non-z) 
+  where
+    data _R'_ : Fin n → Fin n → Set where
+      z-first  : ∀ a                     → z R' a
+      original : ∀ a b → ¬ b ≡ z → a R b → a R' b
+      
+    R'-trans : ∀ a b c → a R' b → b R' c → a R' c
+    R'-trans a b c (z-first .b) _ = z-first c
+    R'-trans a b c (original .a .b ¬b≡b _) (z-first .c) = ⊥-elim (¬b≡b Eq.refl)
+    R'-trans a b c (original .a .b ¬b≡z aRb) (original .b .c ¬c≡z bRc) 
+      = original a c ¬c≡z (R-trans p a b c aRb bRc)
+
+    R'-complete : ∀ a b → (a R' b) ⊎ (b R' a)
+    R'-complete a b with a Fin.≟ z | b Fin.≟ z | R-complete p a b 
+    ... | _ | false because ofⁿ ¬b≡z | inj₁ aRb 
+      = inj₁ (original a b ¬b≡z aRb)
+    ... | false because ofⁿ ¬a≡z | _ | inj₂ bRa 
+      = inj₂ (original b a ¬a≡z bRa)
+    ... | _ | true because ofʸ b≡z | _ rewrite b≡z = inj₂ (z-first a)
+    ... | true because ofʸ a≡z | _ | _ rewrite a≡z = inj₁ (z-first b)
+    
+    R'-dec : ∀ a b → (a R' b) ⊎ ¬ (a R' b)
+    R'-dec a b with a Fin.≟ z | b Fin.≟ z | R-dec p a b
+    ... | true because ofʸ a≡z | _ | _ rewrite a≡z = inj₁ (z-first b) 
+    ... | _ | false because ofⁿ ¬b≡z | inj₁ aRb = inj₁ (original a b ¬b≡z aRb)
+    ... | false because ofⁿ ¬a≡z | true because ofʸ b≡z | _ = 
+      inj₂ (λ {(z-first .b) → ¬a≡z Eq.refl
+              ; (original .a .b ¬b≡z _) → ¬b≡z b≡z})
+    ... | false because ofⁿ ¬a≡z | false because ofⁿ ¬b≡z | inj₂ bPa = 
+      inj₂ (λ {(z-first .b) → ¬a≡z Eq.refl
+              ; (original .a .b ¬b≡z aRb) → bPa aRb})
+
+    p' : Preference n n>2 _R'_
+    p' = record { 
+         R-trans    = R'-trans 
+       ; R-complete = R'-complete 
+       ; R-dec      = R'-dec }
+    
+    agree-non-z : ∀ x y → (¬ x ≡ z) → (¬ y ≡ z) 
+                → (x R y → x R' y) × (x R' y → x R y)
+    agree-non-z x y ¬x≡z ¬y≡z 
+      = (λ {xRy → original x y ¬y≡z xRy})
+      , (λ { (z-first .y) → ⊥-elim (¬x≡z Eq.refl)
+           ; (original .x .y _ xRy) → xRy})

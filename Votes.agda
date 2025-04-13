@@ -63,7 +63,9 @@ Zipped n>2 a b (x ∷ v1) (y ∷ v2) = z-cons x y (Zipped n>2 a b v1 v2)
 
 Similar : {n : ℕ} → {n>2 : n ℕ.> 2} → (m : ℕ) → (a b : Fin n) → Zip n>2 a b m → Set
 Similar .0 a b z-nil = ⊤
-Similar (suc m) a b (z-cons p1 p2 zip) = (P→Bool p1 a b ≡ P→Bool p2 a b) × (Similar m a b zip)
+Similar (suc m) a b (z-cons p1 p2 zip) = ((P→Bool p1 a b ≡ P→Bool p2 a b) 
+                                       × (P→Bool p1 b a ≡ P→Bool p2 b a))
+                                       × (Similar m a b zip)
 
 Get : {n : ℕ} → {n>2 : n ℕ.> 2} → (m idx : ℕ) → (m ℕ.> idx) → Votes n n>2 m → Σ (Fin n → Fin n → Set) λ _R_ → Preference n n>2 _R_
 Get (suc m') zero (s≤s m>idx) votes = HeadVotes m' votes
