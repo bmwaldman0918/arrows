@@ -104,7 +104,7 @@ module PreferenceEquality where
                → Set
   ≡-Preference p p' = ∀ x y → R→Bool p x y ≡ R→Bool p' x y
   
-Alter-Z-Last : {_R_ : Fin n → Fin n → Set}
+Alter-Last : {_R_ : Fin n → Fin n → Set}
               → (p : Preference n n>2 _R_)
               → (z : Fin n)
               → Σ (Fin n → Fin n → Set) λ _R'_ 
@@ -113,7 +113,7 @@ Alter-Z-Last : {_R_ : Fin n → Fin n → Set}
                        × (∀ x y → ¬ x ≡ z → ¬ y ≡ z
                                 → (x R y → x R' y)
                                 × (x R' y → x R y))
-Alter-Z-Last {n = n} {n>2 = n>2} {_R_ = _R_} p z 
+Alter-Last {n = n} {n>2 = n>2} {_R_ = _R_} p z 
   = _R'_ , (p' , (λ {a ¬a≡z (z-last .a) → ¬a≡z Eq.refl
                    ; a ¬a≡z (original .z .a ¬z≡z _) → ¬z≡z Eq.refl}) 
                , agree-non-z) 
@@ -161,7 +161,7 @@ Alter-Z-Last {n = n} {n>2 = n>2} {_R_ = _R_} p z
                               , (λ {(z-last .x) → ⊥-elim (¬y≡z Eq.refl)
                                   ; (original .x .y _ xRy) → xRy})
 
-Alter-Z-First : {_R_ : Fin n → Fin n → Set}
+Alter-First : {_R_ : Fin n → Fin n → Set}
               → (p : Preference n n>2 _R_)
               → (z : Fin n)
               → Σ (Fin n → Fin n → Set) λ _R'_ 
@@ -170,7 +170,7 @@ Alter-Z-First : {_R_ : Fin n → Fin n → Set}
                        × (∀ x y → ¬ x ≡ z → ¬ y ≡ z
                                 → (x R y → x R' y)
                                 × (x R' y → x R y))
-Alter-Z-First {n = n} {n>2 = n>2} {_R_ = _R_} p z 
+Alter-First {n = n} {n>2 = n>2} {_R_ = _R_} p z 
   = _R'_ , (p' , (λ {a ¬a≡z (z-first .a) → ¬a≡z Eq.refl
                    ; a ¬a≡z (original .a .z ¬z≡z _) → ¬z≡z Eq.refl}) 
                , agree-non-z) 
