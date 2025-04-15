@@ -41,10 +41,9 @@ Decisive-a>b : Coalition m
              → (Votes n n>2 m → Fin n → Fin n → Set) 
              → (a b : Fin n)
              → Set₁
---- what if all of this is defined wrt similar coalition
---- lemmas are actually producing this "similar coalition" instead of decisiveness
-Decisive-a>b c result a b = 
-  ∀ v → (CoalitionAgrees a b c v) → result v a b
+Decisive-a>b c result a b = ∀ v
+  → (CoalitionAgrees a b c v)
+  → result v a b
 
 Decisive : Coalition m
          → (v : Votes n n>2 m) 
@@ -59,6 +58,4 @@ Dictator : (v : Votes n n>2 m)
          → Set₁
 Dictator {m = m} v result = 
   Σ (SingletonCoalition m) 
-    λ c → ∀ a b 
-        → (CoalitionAgrees a b (c .proj₁) v) 
-        → result v a b
+    λ c → Decisive (c .proj₁) v result

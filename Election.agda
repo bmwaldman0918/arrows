@@ -11,6 +11,7 @@ open import Data.Bool as Bool
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ; _,_; _×_; proj₁)
 open import Relation.Nullary using (¬_; Dec; _because_; ofⁿ; ofʸ)
+open import Relation.Binary.PropositionalEquality as Eq using (_≡_)
 open import Data.Unit
 
 private
@@ -50,7 +51,8 @@ record SWF {n : ℕ} {n>2 : n ℕ.> 2}
 
     Complete    : {m : ℕ} 
                 → (v : Votes n n>2 m) 
-                → (a b : Fin n)   
+                → (a b : Fin n)
+                → ¬ (a ≡ b) 
                 → (Result v a b) 
                 ⊎ (Result v b a)
 

@@ -21,28 +21,6 @@ data Votes (n : ℕ) (n>2 : n ℕ.> 2) : ℕ → Set₁ where
   _∷_ : {_R_ : Fin n → Fin n → Set} → {m : ℕ} → Preference n n>2 _R_ → Votes n n>2 m → Votes n n>2 (suc m)
 open Votes
 
-PredVotes : {n : ℕ} → {n>2 : n ℕ.> 2} → (m : ℕ) → Votes n n>2 (suc m) → Votes n n>2 m 
-PredVotes m (x ∷ v) = v
-
-HeadVotes : {n : ℕ} → {n>2 : n ℕ.> 2} → (m : ℕ) → Votes n n>2 (suc m) → Σ (Fin n → Fin n → Set) λ _R_ → Preference n n>2 _R_
-HeadVotes m (_∷_ {_R_ = _R_} x v) = _R_ , x
-
-Contains : {n m : ℕ} 
-         → {n>2 : n ℕ.> 2} 
-         → {_R_ : Fin n → Fin n → Set} 
-         → Votes n n>2 m
-         → Preference n n>2 _R_
-         → Set
-Contains {n} (p' ∷ votes) p = ≡-Preference p' p ⊎ Contains votes p
-Contains [] R = ⊥
-
-_⊆_ : {n m m' : ℕ} 
-       → {n>2 : n ℕ.> 2} 
-       → Votes n n>2 m
-       → Votes n n>2 m'
-       → Set
-_⊆_ [] outer = ⊤
-_⊆_ (p ∷ inner) outer = (Contains outer p) × (inner ⊆ outer)
 
 Length : {n m : ℕ} → {n>2 : n ℕ.> 2} → Votes n n>2 m → ℕ
 Length {m = m} _ = m
@@ -66,10 +44,6 @@ Similar .0 a b z-nil = ⊤
 Similar (suc m) a b (z-cons p1 p2 zip) = ((P→Bool p1 a b ≡ P→Bool p2 a b) 
                                        × (P→Bool p1 b a ≡ P→Bool p2 b a))
                                        × (Similar m a b zip)
-
-Get : {n : ℕ} → {n>2 : n ℕ.> 2} → (m idx : ℕ) → (m ℕ.> idx) → Votes n n>2 m → Σ (Fin n → Fin n → Set) λ _R_ → Preference n n>2 _R_
-Get (suc m') zero (s≤s m>idx) votes = HeadVotes m' votes
-Get (suc m') (suc idx) (s≤s m>idx) (x ∷ votes) = Get m' idx m>idx votes
 
 ElectionAgrees : {m n : ℕ} → {n>2 : n ℕ.> 2} → (v : Votes n n>2 m) → (a b : Fin n) → Set
 ElectionAgrees [] a b = ⊤ 
