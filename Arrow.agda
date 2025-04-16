@@ -173,15 +173,34 @@ LemmaTwo {result = result} c v swf x y z ¬x≡z ¬y≡z inv-y>x ca-x>y res-x>y 
       (BinaryIIA swf new-v v x y sim-x-y res-x>y)
       (Pareto swf new-v y z ea-y>z)) 
 
+CorollaryOne : {m : ℕ} 
+             → (c : NonEmptyCoalition m) 
+             → (v : Votes n n>2 m)
+             → SWF result
+             → (x y w : Fin n) 
+             → CoalitionAgrees x y (Unwrap c) v
+             → (CoalitionAgrees y x (InverseCoalition (Unwrap c)) v) 
+             → result v x y
+             → CoalitionAgrees x w (Unwrap c) v
+             ------------------------------
+             → result v x w
+CorollaryOne {n} {n>2} c v swf x y w ca-x>y in-ca-y>x swfx>y ca-x>w 
+  with x Fin.≟ w
+... | true  because ofʸ  x≡w = ⊥-elim (Decisive-x>x v c x w x≡w ca-x>w)
+... | false because ofⁿ ¬x≡w with y Fin.≟ w
+... | false because ofⁿ ¬y≡w = 
+  LemmaTwo c v swf x y w ¬x≡w ¬y≡w in-ca-y>x ca-x>y swfx>y ca-x>w 
+... | true  because ofʸ  y≡w rewrite y≡w = swfx>y
+
 LemmaThree : {m : ℕ} 
          → (c : NonEmptyCoalition m) 
          → (v : Votes n n>2 m) 
          → SWF result
          → (x y z : Fin n)
          → ¬ (x ≡ z)
-         → ¬ (y ≡ z) 
+         → ¬ (y ≡ z)
+         → CoalitionAgrees x y (Unwrap c) v 
          → CoalitionAgrees y x (InverseCoalition (Unwrap c)) v
-         → CoalitionAgrees x y (Unwrap c) v
          → result v x y
          → CoalitionAgrees z y (Unwrap c) v
          ------------------------------
@@ -191,6 +210,136 @@ LemmaThree c v swf x y z ¬x≡z ¬y≡z inv-y>x ca-x>y res-x>y ca-z>y =
     (Transitive swf {!   !} z x y
       {!   !}
       {!   !}) 
+
+CorollaryTwo : {m : ℕ} 
+             → (c : NonEmptyCoalition m) 
+             → (v : Votes n n>2 m)
+             → SWF result
+             → (x y w : Fin n) 
+             → CoalitionAgrees x y (Unwrap c) v
+             → (CoalitionAgrees y x (InverseCoalition (Unwrap c)) v) 
+             → result v x y
+             → CoalitionAgrees w y (Unwrap c) v
+             ------------------------------
+             → result v w y
+CorollaryTwo {n} {n>2} c v swf x y w ca-x>y in-ca-y>x swfx>y ca-w>y
+  with x Fin.≟ w
+... | true  because ofʸ  x≡w rewrite x≡w = swfx>y
+... | false because ofⁿ ¬x≡w with y Fin.≟ w
+... | false because ofⁿ ¬y≡w = 
+  LemmaThree c v swf x y w ¬x≡w ¬y≡w ca-x>y in-ca-y>x swfx>y ca-w>y
+... | true  because ofʸ  y≡w rewrite y≡w = ⊥-elim (Decisive-x>x v c w w refl ca-w>y)
+
+LemmaFourSimilar : {m : ℕ}
+                 → (c : Coalition m) 
+                 → (v : Votes n n>2 m) 
+                 → (a b x y : Fin n)
+                 → ¬ (x ≡ a) 
+                 → ¬ (y ≡ b)
+                 → ¬ (x ≡ b) 
+                 → ¬ (y ≡ a)
+                 → (CoalitionAgrees x y c v)
+                 → (CoalitionAgrees y x (InverseCoalition c) v)
+                 → (CoalitionAgrees a b c v)
+                 → Σ (Votes n n>2 m) 
+                  λ v' → (Similar m a b (Zipped n>2 a b v v')
+                        × Similar m x y (Zipped n>2 x y v' v)
+                        ×  ElectionAgrees v' a x
+                        ×  ElectionAgrees v' y b)
+LemmaFourSimilar [] [] a b x y ¬x≡a ¬y≡b _ _ _ _ _ = [] , tt , tt , tt , tt
+LemmaFourSimilar (false ∷ c) (p ∷ votes) a b x y ¬x≡a ¬y≡b ¬x≡b ¬y≡a
+  (false-agrees c v₁ ca-x>y p) 
+  (true-agrees .(InverseCoalition c) .v₁ inv-y>x .p yPx) 
+  (false-agrees .c .v₁ ca-a>b .p) 
+  with LemmaFourSimilar c votes a b x y ¬x≡a ¬y≡b ¬x≡b ¬y≡a ca-x>y inv-y>x ca-a>b 
+... | votes' , sim-a-b , sim-x-y , ea-a-x , ea-y-b 
+  with Alter-First p y
+... | _ , p' , y-first , non-y-same
+  with Alter-Last p' x
+... | _ , p'' , x-last , non-x-same = p'' ∷ votes'
+    , ((aPb-agree , bPa-agree) , sim-a-b) 
+    , ((xPy-agree , yPx-agree) , sim-x-y) 
+    , (x-last a (λ a≡x → ¬x≡a (Eq.sym a≡x)) , ea-a-x) 
+    , (y>b , ea-y-b)
+    where
+      aPb-agree : P→Bool p a b ≡ P→Bool p'' a b
+      aPb-agree with R-dec p b a | R-dec p'' b a
+      ... | inj₁ _ | inj₁ _ = refl
+      ... | inj₂ _ | inj₂ _ = refl
+      ... | inj₁ bRa | inj₂ aP''b = {!   !}
+      ... | inj₂ aPb | inj₁ bP''a = {!   !}
+
+      bPa-agree : P→Bool p b a ≡ P→Bool p'' b a
+      bPa-agree with R-dec p a b | R-dec p'' a b 
+      ... | inj₁ aRb | inj₁ aR''b = refl
+      ... | inj₂ bPa | inj₂ bP''a = refl
+      ... | inj₁ aRb | inj₂ bP''a = {!   !}
+      ... | inj₂ bPa | inj₁ aR''b = {!   !}
+
+      xPy-agree : P→Bool p'' x y ≡ P→Bool p x y
+      xPy-agree with R-dec p y x | R-dec p'' y x
+      ... | inj₁ _ | inj₁ _ = refl
+      ... | _ | inj₂ xPy = ⊥-elim (yPx {!  xRy !})
+      ... | inj₂ xPy | _ = ⊥-elim (yPx (P→R {v = p} xPy))
+      
+      yPx-agree : P→Bool p'' y x ≡ P→Bool p y x
+      yPx-agree with R-dec p x y | R-dec p'' x y 
+      ... | inj₁ xRy | _ = ⊥-elim (yPx xRy)  
+      ... | _ | inj₁ xR''y = ⊥-elim (x-last y (P↛≡ {v = p} yPx) xR''y)   
+      ... | inj₂ yPx | inj₂ yP''x = refl   
+
+      y>b : P p'' y b
+      y>b yR''b = {!   !}
+      
+LemmaFourSimilar (true ∷ c) (p ∷ votes) a b x y ¬x≡a ¬y≡b ¬x≡b ¬y≡a
+  (true-agrees c .votes ca-x>y .p xPy) 
+  (false-agrees .(InverseCoalition c) .votes inv-y>x .p) 
+  (true-agrees .c votes ca-a>b .p aPb) 
+  with LemmaFourSimilar c votes a b x y ¬x≡a ¬y≡b ¬x≡b ¬y≡a ca-x>y inv-y>x ca-a>b 
+... | votes' , sim-a-b , sim-x-y , ea-a-x , ea-y-b 
+  with Alter-First p a 
+... | _ , p' , a-first , non-a-same
+  with Alter-Last p' b 
+... | _ , p'' , b-last , non-b-same
+    = (p'' ∷ votes') 
+    , ((aPb-agree , bPa-agree) , sim-a-b) 
+    , ((xPy-agree , yPx-agree) , sim-x-y) 
+    , (a>x , ea-a-x) 
+    , (b-last y ¬y≡b , ea-y-b)
+    where
+      aPb-agree : P→Bool p a b ≡ P→Bool p'' a b
+      aPb-agree with R-dec p b a | R-dec p'' b a
+      ... | inj₁ bRa | _ = ⊥-elim (aPb bRa)
+      ... | _ | inj₁ bR''a = ⊥-elim (b-last a (P↛≡ {v = p} aPb) bR''a)
+      ... | inj₂ _ | inj₂ _ = refl
+
+      bPa-agree : P→Bool p b a ≡ P→Bool p'' b a
+      bPa-agree with R-dec p a b | R-dec p'' a b 
+      ... | inj₁ _ | inj₁ _ = refl
+      ... | _ | inj₂ bP''a = 
+        ⊥-elim (bP''a (P→R {v = p''} (b-last a (P↛≡ {v = p} aPb))))
+      ... | inj₂ bPa | _ = 
+        ⊥-elim (bPa (P→R {v = p} aPb))
+
+      xPy-agree : P→Bool p'' x y ≡ P→Bool p x y
+      xPy-agree with R-dec p y x | R-dec p'' y x
+      ... | inj₁ yRx | _ = ⊥-elim (xPy yRx)
+      ... | inj₂ xPy | inj₂ xP''y = refl
+      ... | inj₂ xPy | inj₁ yR''x with non-b-same y x ¬y≡b ¬x≡b
+      ... | R'→R'' , R''→R' with non-a-same y x ¬y≡a ¬x≡a
+      ... | R→R' , R'→R = ⊥-elim (xPy (R'→R (R''→R' yR''x)))
+
+      yPx-agree : P→Bool p'' y x ≡ P→Bool p y x
+      yPx-agree with R-dec p x y | R-dec p'' x y
+      ... | inj₁ _ | inj₁ _ = refl
+      ... | inj₂ yPx | _ = ⊥-elim (xPy (P→R {v = p} yPx))
+      ... | _ | inj₂ yP''x with non-b-same y x ¬y≡b ¬x≡b
+      ... | R'→R'' , R''→R' with non-a-same y x ¬y≡a ¬x≡a
+      ... | R→R' , R'→R = ⊥-elim (xPy (R'→R (R''→R' (P→R {v = p''} yP''x))))
+
+      a>x : P p'' a x
+      a>x xR''a with non-b-same x a ¬x≡b (P↛≡ {v = p} aPb)
+      ... | R'→R'' , R''→R' = a-first x ¬x≡a (R''→R' xR''a)
 
 LemmaFour : {m : ℕ}
           → (c : NonEmptyCoalition m)
@@ -203,18 +352,33 @@ LemmaFour : {m : ℕ}
           → Decisive (Unwrap c) v result
 LemmaFour c v x y swf ca-x>y inv-y>x res-x>y a b ca-a>b 
   with x Fin.≟ a | y Fin.≟ b 
-... | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b =
-  BinaryIIA swf v {!  v' !} a b {!   !} --sim-a-b
-    (Transitive swf {! v'  !} a x b 
-      (Pareto swf {! v'  !} a x {!   !}) -- a>x
-      (Transitive swf {! v'  !} x y b 
-        (BinaryIIA swf {!  v' !} v x y {!   !} res-x>y) --sim-x>y
-        (Pareto swf {!  v' !} y b {!   !}))) -- y>b
-... | true because ofʸ x≡a | false because ofⁿ ¬y≡b rewrite x≡a = 
-    LemmaTwo c v swf a y b {!   !} ¬y≡b inv-y>x ca-x>y res-x>y ca-a>b
-... | false because ofⁿ ¬x≡a | true because ofʸ y≡b rewrite y≡b = 
-    LemmaThree c v swf x b a ¬x≡a {!   !} inv-y>x ca-x>y res-x>y ca-a>b
-... | true because ofʸ x≡a | true because ofʸ y≡b rewrite x≡a | y≡b = res-x>y
+... | true because ofʸ x≡a | _ rewrite x≡a = 
+    CorollaryOne c v swf a y b ca-x>y inv-y>x res-x>y ca-a>b
+... | _ | true because ofʸ y≡b rewrite y≡b = 
+    CorollaryTwo c v swf x b a ca-x>y inv-y>x res-x>y ca-a>b 
+... | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b with y Fin.≟ a | x Fin.≟ b
+... | true because ofʸ y≡a | false because ofⁿ ¬x≡b rewrite y≡a = {!   !}
+LemmaFour c v x y swf ca-x>y inv-y>x res-x>y a b ca-a>b 
+  | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b
+  | false because ofⁿ ¬y≡a | true because ofʸ x≡b rewrite x≡b = {!   !} 
+  {-
+  with CorollaryTwo c v swf b y a ca-x>y inv-y>x res-x>y
+... | aPy with CorollaryOne c v swf b y a ca-x>y inv-y>x res-x>y
+... | f = CorollaryOne c v swf a y b {!   !} {!   !} {!   !} {!   !}-}
+LemmaFour c v x y swf ca-x>y inv-y>x res-x>y a b ca-a>b 
+  | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b
+  | true because ofʸ y≡a | true because ofʸ x≡b rewrite x≡b | y≡a = {! contradcition  !}
+LemmaFour c v x y swf ca-x>y inv-y>x res-x>y a b ca-a>b 
+  | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b 
+  | false because ofⁿ ¬y≡a | false because ofⁿ ¬x≡b
+  with LemmaFourSimilar (Unwrap c) v a b x y ¬x≡a ¬y≡b ¬x≡b ¬y≡a ca-x>y inv-y>x ca-a>b 
+... | v' , sim-a-b , sim-x-y , ea-a-x , ea-y-b =
+  BinaryIIA swf v v' a b sim-a-b
+    (Transitive swf v' a x b 
+      (Pareto swf v' a x ea-a-x)
+      (Transitive swf v' x y b 
+        (BinaryIIA swf v' v x y sim-x-y res-x>y)
+        (Pareto swf v' y b ea-y-b)))
 
 LemmaFive : {m s : ℕ}
           → (c : Coalition m)
@@ -272,4 +436,4 @@ ArrowsTheorem {n} {s≤s (s≤s n>2)} {m = (suc m)} v swf
     (LemmaOne v swf) swf zero (suc zero) 0P1
 ... | inj₂ 1P0 =
   LemmaSix {s = m} (Whole (suc m)) {!   !} v 
-    (LemmaOne v swf) swf (suc zero) zero 1P0 
+    (LemmaOne v swf) swf (suc zero) zero 1P0   
