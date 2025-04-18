@@ -109,8 +109,8 @@ LemmaTwoSimilar c (p ∷ v) x y z ¬x≡z ¬y≡z
 ... | new-v , sim-x-z , sim-x-y , ea-y>z 
   with Alter-First p y 
 ... | _ , p' , p'-y-first , p'-sim-non-y = (p' ∷ new-v) 
-    , ((p-x-z-sim , {!   !}) , sim-x-z) 
-    , (({!   !} , {!   !}) , sim-x-y) 
+    , ((p-x-z-sim , p-z-x-sim) , sim-x-z) 
+    , ((p-x-y-sim , p-y-x-sim) , sim-x-y) 
     , p'-y-first z (λ z≡y → ¬y≡z (Eq.sym z≡y)) , ea-y>z
       where 
         ¬x≡y : ¬ x ≡ y 
@@ -123,6 +123,26 @@ LemmaTwoSimilar c (p ∷ v) x y z ¬x≡z ¬y≡z
         ... | inj₁ zRx | inj₂ xP'z = ⊥-elim (xP'z (R→R' zRx))
         ... | inj₂ xPz | inj₁ zR'x = ⊥-elim (xPz (R'→R zR'x))
         ... | inj₂ xPz | inj₂ xP'z = refl
+
+        p-z-x-sim : P→Bool p z x ≡ P→Bool p' z x
+        p-z-x-sim with p'-sim-non-y x z ¬x≡y (λ z≡y → ¬y≡z (Eq.sym z≡y)) 
+        ... | R→R' , R'→R with R-dec p x z | R-dec p' x z
+        ... | inj₁ xRz | inj₁ xR'z = refl
+        ... | inj₁ xRz | inj₂ zP'x = ⊥-elim (zP'x (R→R' xRz))
+        ... | inj₂ zPx | inj₁ xR'z = ⊥-elim (zPx (R'→R xR'z))
+        ... | inj₂ zPx | inj₂ zP'z = refl
+
+        p-x-y-sim : P→Bool p' x y ≡ P→Bool p x y
+        p-x-y-sim with R-dec p y x | R-dec p' y x
+        ... | inj₁ yRx | inj₁ yR'x = refl
+        ... | _ | inj₂ xP'y = ⊥-elim (xP'y (P→R {v = p'} (p'-y-first x ¬x≡y)))
+        ... | inj₂ xPy | _ = ⊥-elim (xPy (P→R {v = p} yPx))
+
+        p-y-x-sim : P→Bool p' y x ≡ P→Bool p y x
+        p-y-x-sim with R-dec p x y | R-dec p' x y
+        ... | inj₁ xRy | _ = ⊥-elim (yPx xRy)
+        ... | _ | inj₁ xR'y = ⊥-elim (p'-y-first x ¬x≡y xR'y)
+        ... | inj₂ yPx | inj₂ yP'x = refl
         
 LemmaTwoSimilar c (p ∷ v) x y z ¬x≡z ¬y≡z 
   (false-agrees inv-c-rem .v inv-y>x .p)
@@ -133,7 +153,7 @@ LemmaTwoSimilar c (p ∷ v) x y z ¬x≡z ¬y≡z
   with Alter-Last p z
 ... | _ , p' , p'-z-last , p'-sim-non-z = (p' ∷ new-v) 
     , ((sim-xPz , sim-zPx) , sim-x-z) 
-    , (({!   !} , {!   !}) , sim-x-y) 
+    , ((p-x-y-sim , p-y-x-sim) , sim-x-y) 
     , p'-z-last y ¬y≡z , ea-y>z
       where
         ¬x≡y : ¬ x ≡ y 
@@ -151,6 +171,20 @@ LemmaTwoSimilar c (p ∷ v) x y z ¬x≡z ¬y≡z
         ... | inj₁ _ | inj₁ _ = refl
         ... | _ | inj₂ zPx = ⊥-elim (zPx (P→R {v = p} xPz))
         ... | inj₂ zP'x | _ = ⊥-elim (zP'x (P→R {v = p'} (p'-z-last x ¬x≡z)))
+
+        p-x-y-sim : P→Bool p' x y ≡ P→Bool p x y
+        p-x-y-sim with p'-sim-non-z y x ¬y≡z ¬x≡z
+        ... | R→R' , R'→R with R-dec p y x | R-dec p' y x
+        ... | inj₁ yRx | _ = ⊥-elim (xPy yRx)
+        ... | _ | inj₁ yR'x = ⊥-elim (xPy (R'→R yR'x))
+        ... | inj₂ _ | inj₂ _ = refl
+
+        p-y-x-sim : P→Bool p' y x ≡ P→Bool p y x
+        p-y-x-sim with p'-sim-non-z y x ¬y≡z ¬x≡z
+        ... | R→R' , R'→R with R-dec p x y | R-dec p' x y
+        ... | inj₁ xRy | inj₁ xR'y = refl
+        ... | _ | inj₂ yP'x = ⊥-elim (xPy (R'→R (P→R {v = p'} yP'x)))
+        ... | inj₂ yPx | _ = ⊥-elim (xPy (P→R {v = p} yPx))
 
 LemmaTwo : {m : ℕ} 
          → (c : NonEmptyCoalition m) 
@@ -262,37 +296,35 @@ LemmaFourSimilar (false ∷ c) (p ∷ votes) a b x y ¬x≡a ¬y≡b ¬x≡b ¬y
     , (x-last a (λ a≡x → ¬x≡a (Eq.sym a≡x)) , ea-a-x) 
     , (y>b , ea-y-b)
     where
-      aPb-agree : P→Bool p a b ≡ P→Bool p'' a b
-      aPb-agree with R-dec p b a | R-dec p'' b a
-      ... | inj₁ _ | inj₁ _ = refl
-      ... | inj₂ _ | inj₂ _ = refl
-      ... | inj₁ bRa | inj₂ aP''b = {!   !}
-      ... | inj₂ aPb | inj₁ bP''a = {!   !}
-
-      bPa-agree : P→Bool p b a ≡ P→Bool p'' b a
-      bPa-agree with R-dec p a b | R-dec p'' a b 
-      ... | inj₁ aRb | inj₁ aR''b = refl
-      ... | inj₂ bPa | inj₂ bP''a = refl
-      ... | inj₂ bPa | inj₁ aR''b = {!   !}
-      ... | inj₁ aRb | inj₂ bP''a with b Fin.≟ x
-      ... | true because ofʸ b≡x rewrite b≡x = 
-        ⊥-elim (x-last a (λ a≡b → P↛≡ {v = p''} bP''a (Eq.sym a≡b)) (P→R {v = p''} bP''a))
-      ... | false because ofⁿ ¬b≡x with non-x-same b a ¬b≡x (λ a≡x → ¬x≡a (Eq.sym a≡x))
-      ... | R''→R' , R'→R'' with a Fin.≟ y 
-      ... | true because ofʸ a≡y rewrite a≡y = ⊥-elim (bP''a {! R''→R'  !})
-      ... | false because ofⁿ ¬a≡y = {!   !}
-
       xPy-agree : P→Bool p'' x y ≡ P→Bool p x y
       xPy-agree with R-dec p y x | R-dec p'' y x
       ... | inj₁ _ | inj₁ _ = refl
-      ... | _ | inj₂ xPy = ⊥-elim (yPx {!  xRy !})
       ... | inj₂ xPy | _ = ⊥-elim (yPx (P→R {v = p} xPy))
+      ... | _ | inj₂ xP''y = ⊥-elim (xP''y (P→R {v = p''} (x-last y (P↛≡ {v = p} yPx))))
       
       yPx-agree : P→Bool p'' y x ≡ P→Bool p y x
       yPx-agree with R-dec p x y | R-dec p'' x y 
       ... | inj₁ xRy | _ = ⊥-elim (yPx xRy)  
       ... | _ | inj₁ xR''y = ⊥-elim (x-last y (P↛≡ {v = p} yPx) xR''y)   
       ... | inj₂ yPx | inj₂ yP''x = refl   
+
+      aPb-agree : P→Bool p a b ≡ P→Bool p'' a b
+      aPb-agree with non-x-same b a (λ b≡x → ¬x≡b (Eq.sym b≡x)) (λ a≡x → ¬x≡a (Eq.sym a≡x)) 
+      ... | R''→R' , R'→R'' with non-y-same b a (λ b≡y → ¬y≡b (Eq.sym b≡y)) (λ a≡y → ¬y≡a (Eq.sym a≡y)) 
+      ... | R→R' , R'→R with R-dec p b a | R-dec p'' b a
+      ... | inj₁ _ | inj₁ _ = refl
+      ... | inj₂ _ | inj₂ _ = refl
+      ... | inj₁ bRa | inj₂ aP''b = ⊥-elim (aP''b (R''→R' (R→R' bRa)))
+      ... | inj₂ aPb | inj₁ bR''a = ⊥-elim (aPb (R'→R (R'→R'' bR''a))) 
+
+      bPa-agree : P→Bool p b a ≡ P→Bool p'' b a
+      bPa-agree with non-x-same a b (λ a≡x → ¬x≡a (Eq.sym a≡x)) (λ b≡x → ¬x≡b (Eq.sym b≡x)) 
+      ... | R''→R' , R'→R'' with non-y-same a b (λ a≡y → ¬y≡a (Eq.sym a≡y)) (λ b≡y → ¬y≡b (Eq.sym b≡y)) 
+      ... | R→R' , R'→R with R-dec p a b | R-dec p'' a b 
+      ... | inj₁ aRb | inj₁ aR''b = refl
+      ... | inj₂ bPa | inj₂ bP''a = refl
+      ... | inj₂ bPa | inj₁ aR''b = ⊥-elim (bPa (R'→R (R'→R'' aR''b)))
+      ... | inj₁ aRb | inj₂ bP''a = ⊥-elim (bP''a (R''→R' (R→R' aRb)))
 
       y>b : P p'' y b
       y>b yR''b with b Fin.≟ x
