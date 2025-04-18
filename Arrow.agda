@@ -273,8 +273,14 @@ LemmaFourSimilar (false ∷ c) (p ∷ votes) a b x y ¬x≡a ¬y≡b ¬x≡b ¬y
       bPa-agree with R-dec p a b | R-dec p'' a b 
       ... | inj₁ aRb | inj₁ aR''b = refl
       ... | inj₂ bPa | inj₂ bP''a = refl
-      ... | inj₁ aRb | inj₂ bP''a = {!   !}
       ... | inj₂ bPa | inj₁ aR''b = {!   !}
+      ... | inj₁ aRb | inj₂ bP''a with b Fin.≟ x
+      ... | true because ofʸ b≡x rewrite b≡x = 
+        ⊥-elim (x-last a (λ a≡b → P↛≡ {v = p''} bP''a (Eq.sym a≡b)) (P→R {v = p''} bP''a))
+      ... | false because ofⁿ ¬b≡x with non-x-same b a ¬b≡x (λ a≡x → ¬x≡a (Eq.sym a≡x))
+      ... | R''→R' , R'→R'' with a Fin.≟ y 
+      ... | true because ofʸ a≡y rewrite a≡y = ⊥-elim (bP''a {! R''→R'  !})
+      ... | false because ofⁿ ¬a≡y = {!   !}
 
       xPy-agree : P→Bool p'' x y ≡ P→Bool p x y
       xPy-agree with R-dec p y x | R-dec p'' y x
@@ -289,7 +295,10 @@ LemmaFourSimilar (false ∷ c) (p ∷ votes) a b x y ¬x≡a ¬y≡b ¬x≡b ¬y
       ... | inj₂ yPx | inj₂ yP''x = refl   
 
       y>b : P p'' y b
-      y>b yR''b = {!   !}
+      y>b yR''b with b Fin.≟ x
+      ... | true because ofʸ b≡x rewrite b≡x = x-last y ¬y≡b yR''b
+      ... | false because ofⁿ ¬b≡x with non-x-same b y ¬b≡x (P↛≡ {v = p} yPx) 
+      ... | R→R' , R'→R = y-first b (λ b≡y → ¬y≡b (Eq.sym b≡y)) (R'→R yR''b)
       
 LemmaFourSimilar (true ∷ c) (p ∷ votes) a b x y ¬x≡a ¬y≡b ¬x≡b ¬y≡a
   (true-agrees c .votes ca-x>y .p xPy) 
@@ -360,7 +369,9 @@ LemmaFour c v x y swf ca-x>y inv-y>x res-x>y a b ca-a>b
 ... | true because ofʸ y≡a | false because ofⁿ ¬x≡b rewrite y≡a = {!   !}
 LemmaFour c v x y swf ca-x>y inv-y>x res-x>y a b ca-a>b 
   | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b
-  | false because ofⁿ ¬y≡a | true because ofʸ x≡b rewrite x≡b = {!   !} 
+  | false because ofⁿ ¬y≡a | true because ofʸ x≡b rewrite x≡b 
+  with CorollaryTwo c v swf b y a ca-x>y inv-y>x res-x>y {!   !} 
+... | f = {!   !} 
   {-
   with CorollaryTwo c v swf b y a ca-x>y inv-y>x res-x>y
 ... | aPy with CorollaryOne c v swf b y a ca-x>y inv-y>x res-x>y
