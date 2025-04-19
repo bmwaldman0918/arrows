@@ -186,15 +186,13 @@ LemmaTwo : {m : ℕ}
          → (v : Votes n n>2 m) 
          → SWF result
          → (x y z : Fin n)         
-         → ¬ (x ≡ z) 
-         → ¬ (y ≡ z) 
-        → (∀ v' → (CoalitionAgrees x y (Unwrap c) v')
-                → (CoalitionAgrees y x (InverseCoalition (Unwrap c)) v')
-                → result v' x y)
+         → (∀ v' → CoalitionAgrees x y (Unwrap c) v'
+                 → CoalitionAgrees y x (InverseCoalition (Unwrap c)) v'
+                 → result v' x y)
          → (CoalitionAgrees x z (Unwrap c) v)
          ------------------------------
          → result v x z
-LemmaTwo {result = result} c v swf x y z ¬x≡z ¬y≡z dec-x>y ca-x>z = 
+LemmaTwo {result = result} c v swf x y z dec-x>y ca-x>z = 
   BinaryIIA swf v {!   !} x z {!   !}
     (Transitive swf {!   !} x y z 
       (dec-x>y {!   !} {!   !} {!   !})
@@ -224,15 +222,13 @@ LemmaThree : {m : ℕ}
          → (v : Votes n n>2 m) 
          → SWF result
          → (x y z : Fin n)
-         → ¬ (x ≡ z)
-         → ¬ (y ≡ z)
          → (∀ v' → CoalitionAgrees x y (Unwrap c) v'
                  → CoalitionAgrees y x (InverseCoalition (Unwrap c)) v'
                  → result v' x y)
          → CoalitionAgrees z y (Unwrap c) v
          ------------------------------
          → result v z y
-LemmaThree c v swf x y z ¬x≡z ¬y≡z dec-x>y ca-z>y = 
+LemmaThree c v swf x y z dec-x>y ca-z>y = 
   BinaryIIA swf v {!   !} z y {!   !}
     (Transitive swf {!   !} z x y
       {!   !}
@@ -241,29 +237,17 @@ LemmaThree c v swf x y z ¬x≡z ¬y≡z dec-x>y ca-z>y =
 LemmaFour : {m : ℕ}
           → (c : NonEmptyCoalition m)
           → (v : Votes n n>2 m)
-          → (x y : Fin n)
           → SWF result
+          → (x y : Fin n)
           → (∀ v' → CoalitionAgrees x y (Unwrap c) v'
                   → CoalitionAgrees y x (InverseCoalition (Unwrap c)) v'
                   → result v' x y)
           → Decisive (Unwrap c) v result
-LemmaFour c v x y swf dec-x>y a b ca-a>b 
-  with x Fin.≟ a | y Fin.≟ b 
-... | true because ofʸ x≡a | _ rewrite x≡a = {!   !}
-... | _ | true because ofʸ y≡b rewrite y≡b = {!   !}
-... | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b with y Fin.≟ a | x Fin.≟ b
-... | true because ofʸ y≡a | false because ofⁿ ¬x≡b rewrite y≡a = {!   !}
-LemmaFour c v x y swf dec-x>y a b ca-a>b 
-  | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b
-  | false because ofⁿ ¬y≡a | true because ofʸ x≡b rewrite x≡b = {!   !}
-LemmaFour c v x y swf dec-x>y a b ca-a>b 
-  | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b
-  | true because ofʸ y≡a | true because ofʸ x≡b rewrite x≡b | y≡a = {! contradcition  !}
-LemmaFour c v x y swf dec-x>y a b ca-a>b 
-  | false because ofⁿ ¬x≡a | false because ofⁿ ¬y≡b 
-  | false because ofⁿ ¬y≡a | false because ofⁿ ¬x≡b = {!   !}
+LemmaFour c v swf x y dec a b ca-a>b with LemmaTwo c v swf x y b (λ v' ca-x>y inv-y>x → dec v' ca-x>y inv-y>x)
+... | f with LemmaThree c v swf x y a (λ v' ca-x>y inv-y>x → dec v' ca-x>y inv-y>x) 
+... | g = {!   !}
 
-LemmaFive : (m : ℕ)
+LemmaFive' : (m : ℕ)
           → (SWF result)
           → Σ ℕ λ n → 
               Σ (Coalition m) λ c → 
@@ -274,7 +258,29 @@ LemmaFive : (m : ℕ)
                              (∀ v → (Decisive c v result))
                              × (MembersCount c ≡ n')
                              × (n' ℕ.< n))
-LemmaFive zero swf = 0 , [] , λ {[] → (λ a b _ → Pareto swf [] a b tt) 
+LemmaFive' zero swf = 0 , [] , λ {[] → (λ a b _ → Pareto swf [] a b tt) 
                                     , refl 
                                     , (λ {(_ , _ , ())})}
-LemmaFive (suc m) swf = {!   !} 
+LemmaFive' (suc m) swf = {!   !} 
+
+LemmaFive : {m s : ℕ}
+         → (c : Coalition m) 
+         → (MembersCount c ≡ (suc s))
+         → (x y : Fin n)
+         → (∀ v' → CoalitionAgrees x y c v'
+                 → result v' x y)
+         → SWF result
+         → (v : Votes n n>2 m) → Σ (SingletonCoalition m) λ c → Decisive (c .proj₁) v result
+LemmaFive {n} {s≤s (s≤s n>2)} {m = zero} [] mc x y _ swf v' = 
+  ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
+    (SWF.Pareto swf [] zero (suc zero) tt) 
+    (SWF.Pareto swf [] (suc zero) zero tt))
+LemmaFive {s = zero} c mc x y dec swf v = {!   !}
+LemmaFive {n} {n>2} {m = suc m} {s = suc s'} c mc x y dec swf v
+  with FreshCandidate n n>2 x y 
+... | z , ¬x≡z , ¬y≡z 
+  with Complete swf v x z ¬x≡z
+... | inj₁ xPz = ((true ∷ (FalseCoalition m)) , {!   !}) , 
+  LemmaFour ((true ∷ (FalseCoalition m)) , (s≤s z≤n)) v swf x z λ v' x₁ x₂ → {!   !}
+... | inj₂ zPx = ((true ∷ (FalseCoalition m)) , {!   !}) , 
+  LemmaFour ((true ∷ (FalseCoalition m)) , (s≤s z≤n)) v swf z x λ v' x₁ x₂ → LemmaThree (c , {!   !}) v' swf y x z {!   !} {!  x₁ !}
