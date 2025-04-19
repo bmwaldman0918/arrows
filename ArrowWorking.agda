@@ -85,7 +85,7 @@ FreshCandidate (suc (suc (suc n))) n>2 (suc a) (suc b)
   = zero , ((λ {()}) , (λ {()}))
 FreshCandidate (suc (suc (suc n))) n>2 (suc (suc a)) zero 
   = (suc zero) , ((λ {()}) , (λ {()}))
-{-
+
 LemmaTwoSimilar : {m : ℕ}
                 → (c : Coalition m) 
                 → (v : Votes n n>2 m) 
@@ -98,89 +98,34 @@ LemmaTwoSimilar : {m : ℕ}
                   λ v' → ((CoalitionAgrees x y c v') 
                        ×  (CoalitionAgrees y x (InverseCoalition c) v')
                        ×  (ElectionAgrees v' y z))
-LemmaTwoSimilar [] [] x y z ¬x≡z ¬y≡z ea-x>y ca-x>y ca-y>z = 
-  [] , (tt , tt , tt)
-LemmaTwoSimilar c (p ∷ v) x y z ¬x≡z ¬y≡z
-  (false-agrees c-rem .v ca-x>z .p)
-  with LemmaTwoSimilar c-rem v x y z ¬x≡z ¬y≡z inv-y>x ca-x>y ca-x>z
-... | new-v , sim-x-z , sim-x-y , ea-y>z 
+LemmaTwoSimilar [] [] x y z ¬x≡z ¬y≡z inv-y>x ca-x>y = 
+  [] , (empty-coalition-agrees , empty-coalition-agrees , tt)
+LemmaTwoSimilar (c ∷ c-rem) (p ∷ v) x y z ¬x≡z ¬y≡z
+  (false-agrees inv .v inv-y>x .p)
+  (true-agrees .c-rem .v ca-x>y .p xPy)
+  with LemmaTwoSimilar c-rem v x y z ¬x≡z ¬y≡z inv-y>x ca-x>y
+... | v' , c'-x>y , inv'-y>x , ea-y>z 
   with Alter-First p y 
-... | _ , p' , p'-y-first , p'-sim-non-y = (p' ∷ new-v) 
-    , ((p-x-z-sim , p-z-x-sim) , sim-x-z) 
-    , ((p-x-y-sim , p-y-x-sim) , sim-x-y) 
+... | _ , p' , p'-y-first , p'-sim-non-y = (p' ∷ v') 
+    , true-agrees c-rem v' c'-x>y p' x>y
+    , false-agrees inv v' inv'-y>x p'
     , p'-y-first z (λ z≡y → ¬y≡z (Eq.sym z≡y)) , ea-y>z
       where 
-        ¬x≡y : ¬ x ≡ y 
-        ¬x≡y x≡y = P↛≡ {v = p} yPx (Eq.sym x≡y)
-        
-        p-x-z-sim : P→Bool p x z ≡ P→Bool p' x z
-        p-x-z-sim with p'-sim-non-y z x (λ z≡y → ¬y≡z (Eq.sym z≡y)) ¬x≡y 
-        ... | R→R' , R'→R with R-dec p z x | R-dec p' z x
-        ... | inj₁ zRx | inj₁ zR'x = refl
-        ... | inj₁ zRx | inj₂ xP'z = ⊥-elim (xP'z (R→R' zRx))
-        ... | inj₂ xPz | inj₁ zR'x = ⊥-elim (xPz (R'→R zR'x))
-        ... | inj₂ xPz | inj₂ xP'z = refl
-
-        p-z-x-sim : P→Bool p z x ≡ P→Bool p' z x
-        p-z-x-sim with p'-sim-non-y x z ¬x≡y (λ z≡y → ¬y≡z (Eq.sym z≡y)) 
-        ... | R→R' , R'→R with R-dec p x z | R-dec p' x z
-        ... | inj₁ xRz | inj₁ xR'z = refl
-        ... | inj₁ xRz | inj₂ zP'x = ⊥-elim (zP'x (R→R' xRz))
-        ... | inj₂ zPx | inj₁ xR'z = ⊥-elim (zPx (R'→R xR'z))
-        ... | inj₂ zPx | inj₂ zP'z = refl
-
-        p-x-y-sim : P→Bool p' x y ≡ P→Bool p x y
-        p-x-y-sim with R-dec p y x | R-dec p' y x
-        ... | inj₁ yRx | inj₁ yR'x = refl
-        ... | _ | inj₂ xP'y = ⊥-elim (xP'y (P→R {v = p'} (p'-y-first x ¬x≡y)))
-        ... | inj₂ xPy | _ = ⊥-elim (xPy (P→R {v = p} yPx))
-
-        p-y-x-sim : P→Bool p' y x ≡ P→Bool p y x
-        p-y-x-sim with R-dec p x y | R-dec p' x y
-        ... | inj₁ xRy | _ = ⊥-elim (yPx xRy)
-        ... | _ | inj₁ xR'y = ⊥-elim (p'-y-first x ¬x≡y xR'y)
-        ... | inj₂ yPx | inj₂ yP'x = refl
-        
-LemmaTwoSimilar c (p ∷ v) x y z ¬x≡z ¬y≡z 
-  (true-agrees c-rem .v ca-x>z .p xPz)
-  with LemmaTwoSimilar c-rem v x y z ¬x≡z ¬y≡z inv-y>x ca-x>y ca-x>z
-... | new-v , sim-x-z , sim-x-y , ea-y>z   
+        x>y : P p' x y
+        x>y = {!   !}
+LemmaTwoSimilar (c ∷ c-rem) (p ∷ v) x y z ¬x≡z ¬y≡z 
+  (true-agrees inv .v inv-y>x .p yPx)
+  (false-agrees .c-rem .v ca-x>y .p)
+  with LemmaTwoSimilar c-rem v x y z ¬x≡z ¬y≡z inv-y>x ca-x>y
+... | v' , c'-x>y , inv'-y>x , ea-y>z 
   with Alter-Last p z
-... | _ , p' , p'-z-last , p'-sim-non-z = (p' ∷ new-v) 
-    , ((sim-xPz , sim-zPx) , sim-x-z) 
-    , ((p-x-y-sim , p-y-x-sim) , sim-x-y) 
-    , p'-z-last y ¬y≡z , ea-y>z
-      where
-        ¬x≡y : ¬ x ≡ y 
-        ¬x≡y = P↛≡ {v = p} xPy
-
-        sim-xPz : P→Bool p x z ≡ P→Bool p' x z
-        sim-xPz with R-dec p z x
-        ... | inj₁ zRx = ⊥-elim (xPz zRx)
-        ... | inj₂ xPx with R-dec p' z x
-        ... | inj₁ zR'x = ⊥-elim (p'-z-last x ¬x≡z zR'x)
-        ... | inj₂ zP'x = refl
-
-        sim-zPx : P→Bool p z x ≡ P→Bool p' z x
-        sim-zPx with R-dec p' x z | R-dec p x z
-        ... | inj₁ _ | inj₁ _ = refl
-        ... | _ | inj₂ zPx = ⊥-elim (zPx (P→R {v = p} xPz))
-        ... | inj₂ zP'x | _ = ⊥-elim (zP'x (P→R {v = p'} (p'-z-last x ¬x≡z)))
-
-        p-x-y-sim : P→Bool p' x y ≡ P→Bool p x y
-        p-x-y-sim with p'-sim-non-z y x ¬y≡z ¬x≡z
-        ... | R→R' , R'→R with R-dec p y x | R-dec p' y x
-        ... | inj₁ yRx | _ = ⊥-elim (xPy yRx)
-        ... | _ | inj₁ yR'x = ⊥-elim (xPy (R'→R yR'x))
-        ... | inj₂ _ | inj₂ _ = refl
-
-        p-y-x-sim : P→Bool p' y x ≡ P→Bool p y x
-        p-y-x-sim with p'-sim-non-z y x ¬y≡z ¬x≡z
-        ... | R→R' , R'→R with R-dec p x y | R-dec p' x y
-        ... | inj₁ xRy | inj₁ xR'y = refl
-        ... | _ | inj₂ yP'x = ⊥-elim (xPy (R'→R (P→R {v = p'} yP'x)))
-        ... | inj₂ yPx | _ = ⊥-elim (xPy (P→R {v = p} yPx))
--}
+... | _ , p' , p'-z-last , p'-sim-non-z = (p' ∷ v') 
+    , false-agrees c-rem v' c'-x>y p'
+    , true-agrees inv v' inv'-y>x p' y>x
+    , (p'-z-last y ¬y≡z , ea-y>z)
+    where
+        y>x : P p' y x 
+        y>x = {!   !} 
 LemmaTwo : {m : ℕ} 
          → (c : NonEmptyCoalition m) 
          → (v : Votes n n>2 m) 
@@ -270,17 +215,44 @@ LemmaFive : {m s : ℕ}
          → (∀ v' → CoalitionAgrees x y c v'
                  → result v' x y)
          → SWF result
-         → (v : Votes n n>2 m) → Σ (SingletonCoalition m) λ c → Decisive (c .proj₁) v result
+         → (v : Votes n n>2 m) 
+         → Dictator v result
 LemmaFive {n} {s≤s (s≤s n>2)} {m = zero} [] mc x y _ swf v' = 
   ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
     (SWF.Pareto swf [] zero (suc zero) tt) 
     (SWF.Pareto swf [] (suc zero) zero tt))
 LemmaFive {s = zero} c mc x y dec swf v = {!   !}
-LemmaFive {n} {n>2} {m = suc m} {s = suc s'} c mc x y dec swf v
+LemmaFive {n} {n>2} {m = suc m} {s = suc s'} c mc x y dec-x>y swf v
   with FreshCandidate n n>2 x y 
-... | z , ¬x≡z , ¬y≡z 
-  with Complete swf v x z ¬x≡z
-... | inj₁ xPz = ((true ∷ (FalseCoalition m)) , {!   !}) , 
-  LemmaFour ((true ∷ (FalseCoalition m)) , (s≤s z≤n)) v swf x z λ v' x₁ x₂ → {!   !}
-... | inj₂ zPx = ((true ∷ (FalseCoalition m)) , {!   !}) , 
-  LemmaFour ((true ∷ (FalseCoalition m)) , (s≤s z≤n)) v swf z x λ v' x₁ x₂ → LemmaThree (c , {!   !}) v' swf y x z {!   !} {!  x₁ !}
+... | z , ¬x≡z , ¬y≡z = {!   !} ,  
+    LemmaFour {!   !} v swf z y 
+      λ v' c-z>y inv-y>z → LemmaThree {!   !} v' swf x y z 
+        (λ v'' d-x>y rem-y>x → 
+        Transitive swf {!   !} x z y 
+          (BinaryIIA swf v'' {!   !} x z {!   !} 
+            (Transitive swf {!   !} x y z 
+              (dec-x>y {!   !} {!   !}) 
+              (Pareto swf {!   !} y z {!   !}))) 
+          (BinaryIIA swf v'' {!   !} z y {!   !} 
+            (Transitive swf {!   !} z x y 
+              (Pareto swf {!   !} z x {!   !}) 
+              (dec-x>y {!   !} {!   !})))) 
+          c-z>y
+  where
+    LemmaFiveAlter : (v : Votes n n>2 m)
+                   → (x y z : Fin n)
+                   → (c c' : Coalition m)
+                   → Σ (Votes n n>2 m)
+                      λ v' → Similar m z y (Zipped n>2 z y v v')
+ArrowsTheorem : {m : ℕ}
+              → (v : Votes n n>2 m)
+              → SWF result
+              → Dictator v result       
+ArrowsTheorem {n} {s≤s (s≤s n>2)} {m = zero} [] swf 
+  = ⊥-elim (SWF.Asymmetric swf [] zero (suc zero) 
+    (SWF.Pareto swf [] zero (suc zero) tt) 
+    (SWF.Pareto swf [] (suc zero) zero tt))
+ArrowsTheorem {n} {s≤s (s≤s n>2)} {m = (suc m)} v swf = 
+  LemmaFive {s = (suc m)} (Whole (suc m)) {!   !} zero (suc zero) 
+    (λ v' whole-agrees → LemmaOne v' swf zero (suc zero) whole-agrees)
+    swf v
